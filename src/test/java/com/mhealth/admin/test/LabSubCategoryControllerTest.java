@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class LabSubCategoryControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/lab-sub-categories";
+    private static final String BASE_URL = "/api/v1/admin/lab-sub-categories";
     private static final String LAB_SUB_CATEGORY_ADDED_MESSAGE = "Lab subcategory added successfully";
     private static final String LAB_SUB_CATEGORY_UPDATED_MESSAGE = "Lab subcategory updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

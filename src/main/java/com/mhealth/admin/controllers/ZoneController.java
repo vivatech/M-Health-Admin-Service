@@ -23,7 +23,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Zone Management", description = "APIs for managing zones")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/zones")
+@RequestMapping("/api/v1/admin/zones")
 public class ZoneController {
 
     @Autowired

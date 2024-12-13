@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Locale;
 
 @RestController
-@RequestMapping("/api/v1/healthtip-durations")
+@RequestMapping("/api/v1/admin/healthtip-durations")
 @Tag(name = "Health Tip Duration Management", description = "APIs for managing Health Tip Durations")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 public class HealthTipDurationController {

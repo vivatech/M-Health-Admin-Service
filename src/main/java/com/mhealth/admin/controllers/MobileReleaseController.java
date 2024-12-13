@@ -18,7 +18,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Mobile Release Management", description = "APIs for managing mobile releases")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/mobile-releases")
+@RequestMapping("/api/v1/admin/mobile-releases")
 public class MobileReleaseController {
 
     @Autowired

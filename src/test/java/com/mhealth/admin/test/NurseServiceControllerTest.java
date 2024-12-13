@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class NurseServiceControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/nurse-services";
+    private static final String BASE_URL = "/api/v1/admin/nurse-services";
     private static final String CREATED_MESSAGE = "Nurse service created successfully";
     private static final String UPDATED_MESSAGE = "Nurse service updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Nurse service status updated successfully";

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class EmailTemplateControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/email-templates";
+    private static final String BASE_URL = "/api/v1/admin/email-templates";
     private static final String CREATED_MESSAGE = "Email template created successfully";
     private static final String UPDATED_MESSAGE = "Email template updated successfully";
 

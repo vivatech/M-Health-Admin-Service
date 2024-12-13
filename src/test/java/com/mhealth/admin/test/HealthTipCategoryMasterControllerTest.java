@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class HealthTipCategoryMasterControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/health-tip-categories";
+    private static final String BASE_URL = "/api/v1/admin/health-tip-categories";
 
     @MockBean
     private HealthTipCategoryMasterRepository repository;

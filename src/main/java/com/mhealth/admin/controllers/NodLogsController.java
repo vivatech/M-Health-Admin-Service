@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Tag(name = "NOD Log Management", description = "APIs for managing NOD Logs")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/nod-logs")
+@RequestMapping("/api/v1/admin/nod-logs")
 public class NodLogsController {
 
     @Autowired

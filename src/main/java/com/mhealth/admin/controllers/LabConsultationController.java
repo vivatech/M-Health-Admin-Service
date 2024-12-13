@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @RestController
 @Tag(name = "Lab Consultation Management", description = "APIs for managing lab consultation")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/lab-consultations")
+@RequestMapping("/api/v1/admin/lab-consultations")
 public class LabConsultationController {
     @Autowired
     private LabConsultationService labConsultationService;

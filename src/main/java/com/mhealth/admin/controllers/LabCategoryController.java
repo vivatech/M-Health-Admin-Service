@@ -24,7 +24,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Lab Category Management", description = "APIs for managing lab categories")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/lab-categories")
+@RequestMapping("/api/v1/admin/lab-categories")
 public class LabCategoryController {
 
     @Autowired

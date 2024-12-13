@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Tag(name = "NOD Report orders", description = "APIs for managing NOD orders")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/nurse-demand-orders")
+@RequestMapping("/api/v1/admin/nurse-demand-orders")
 public class NurseDemandOrdersController {
 
     @Autowired

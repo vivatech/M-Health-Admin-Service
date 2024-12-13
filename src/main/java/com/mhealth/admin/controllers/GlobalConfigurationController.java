@@ -19,7 +19,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Global Configuration", description = "API for managing global configurations")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/configurations")
+@RequestMapping("/api/v1/admin/configurations")
 public class GlobalConfigurationController {
 
     @Autowired

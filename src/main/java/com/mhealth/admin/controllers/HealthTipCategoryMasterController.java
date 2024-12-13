@@ -22,7 +22,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Health Tip Category Management", description = "APIs for managing health tip categories")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/health-tip-categories")
+@RequestMapping("/api/v1/admin/health-tip-categories")
 public class HealthTipCategoryMasterController {
 
     @Autowired

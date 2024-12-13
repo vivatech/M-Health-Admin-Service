@@ -25,7 +25,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Health Tip Package Management", description = "APIs for managing health tip packages")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/health-tip-packages")
+@RequestMapping("/api/v1/admin/health-tip-packages")
 public class HealthTipPackageController {
 
     @Autowired

@@ -14,7 +14,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "App Banner Management", description = "APIs for managing app banners")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/app-banners")
+@RequestMapping("/api/v1/admin/app-banners")
 public class AppBannerController {
 
     @Autowired

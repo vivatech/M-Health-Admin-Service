@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Tag(name = "Lab Refund requests", description = "APIs for lab refund requests")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/lab-refund-requests")
+@RequestMapping("/api/v1/admin/lab-refund-requests")
 public class LabRefundRequestController {
 
     @Autowired

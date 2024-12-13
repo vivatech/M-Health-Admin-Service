@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class MobileReleaseControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/mobile-releases";
+    private static final String BASE_URL = "/api/v1/admin/mobile-releases";
     private static final String CREATED_MESSAGE = "Mobile release created successfully";
     private static final String UPDATED_MESSAGE = "Mobile release updated successfully";
 

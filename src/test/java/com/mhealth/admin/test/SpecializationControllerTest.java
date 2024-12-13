@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class SpecializationControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/specializations";
+    private static final String BASE_URL = "/api/v1/admin/specializations";
     private static final String SPECIALIZATION_ADDED_MESSAGE = "Specialization added successfully";
     private static final String SPECIALIZATION_UPDATED_MESSAGE = "Specialization updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

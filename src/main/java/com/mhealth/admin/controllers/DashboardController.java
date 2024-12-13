@@ -11,7 +11,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Dashboard Controller", description = "APIs for Dashboard statistics and details")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/dashboard")
+@RequestMapping("/api/v1/admin/dashboard")
 public class DashboardController {
 
     @Autowired

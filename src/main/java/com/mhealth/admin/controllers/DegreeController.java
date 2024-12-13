@@ -22,7 +22,7 @@ import java.util.Locale;
 
 @RestController
 @Tag(name = "Degree Management", description = "APIs for managing degrees")
-@RequestMapping("/api/v1/degrees")
+@RequestMapping("/api/v1/admin/degrees")
 public class DegreeController {
 
     @Autowired

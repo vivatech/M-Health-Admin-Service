@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class GlobalConfigurationControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/configurations";
+    private static final String BASE_URL = "/api/v1/admin/configurations";
     private static final String CREATED_MESSAGE = "Configuration created successfully";
     private static final String UPDATED_MESSAGE = "Configuration updated successfully";
 

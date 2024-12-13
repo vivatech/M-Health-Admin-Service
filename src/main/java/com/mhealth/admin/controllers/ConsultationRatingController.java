@@ -20,7 +20,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Consultation Rating Management", description = "APIs for managing consultation ratings")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/consultation-ratings")
+@RequestMapping("/api/v1/admin/consultation-ratings")
 public class ConsultationRatingController {
 
     @Autowired

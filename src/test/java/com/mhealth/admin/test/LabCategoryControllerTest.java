@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class LabCategoryControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/lab-categories";
+    private static final String BASE_URL = "/api/v1/admin/lab-categories";
     private static final String LAB_CATEGORY_ADDED_MESSAGE = "Lab category added successfully";
     private static final String LAB_CATEGORY_UPDATED_MESSAGE = "Lab category updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

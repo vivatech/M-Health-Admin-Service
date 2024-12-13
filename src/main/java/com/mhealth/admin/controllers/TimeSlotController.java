@@ -18,7 +18,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Slot Type Management", description = "APIs for managing slot types")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/slot-types")
+@RequestMapping("/api/v1/admin/slot-types")
 public class TimeSlotController {
     @Autowired
     private SlotTypeService service;

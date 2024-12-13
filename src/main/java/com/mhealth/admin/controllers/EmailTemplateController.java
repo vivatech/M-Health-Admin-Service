@@ -20,7 +20,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "EmailTemplate Management", description = "APIs for managing email templates")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/email-templates")
+@RequestMapping("/api/v1/admin/email-templates")
 public class EmailTemplateController {
 
     @Autowired

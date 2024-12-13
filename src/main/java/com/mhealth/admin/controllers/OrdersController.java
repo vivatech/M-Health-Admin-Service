@@ -20,7 +20,7 @@ import java.util.Locale;
 
 @RestController
 @Tag(name = "Orders Management", description = "APIs for managing orders")
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/v1/admin/orders")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 public class OrdersController {
 

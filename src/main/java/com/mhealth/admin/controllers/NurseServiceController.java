@@ -18,7 +18,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Nurse Service Management", description = "APIs for managing nurse services")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/nurse-services")
+@RequestMapping("/api/v1/admin/nurse-services")
 public class NurseServiceController {
     @Autowired
     private NurseServiceService service;

@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ZoneControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/zones";
+    private static final String BASE_URL = "/api/v1/admin/zones";
     private static final String ZONE_ADDED_MESSAGE = "Zone added successfully";
     private static final String ZONE_UPDATED_MESSAGE = "Zone updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

@@ -19,7 +19,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Support Ticket Management", description = "APIs for managing support tickets")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/support-tickets")
+@RequestMapping("/api/v1/admin/support-tickets")
 public class SupportTicketController {
 
     @Autowired

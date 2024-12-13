@@ -20,7 +20,7 @@ import java.util.Locale;
 
 @RestController
 @Tag(name = "Health Tips Management", description = "APIs for managing health tips")
-@RequestMapping("/api/v1/health-tips")
+@RequestMapping("/api/v1/admin/health-tips")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 public class HealthTipController {
 

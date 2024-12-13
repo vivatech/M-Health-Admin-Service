@@ -24,7 +24,7 @@ import java.util.Locale;
 @RestController
 @Tag(name = "Specialization Management", description = "APIs for managing specializations")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/specializations")
+@RequestMapping("/api/v1/admin/specializations")
 public class SpecializationController {
 
     @Autowired

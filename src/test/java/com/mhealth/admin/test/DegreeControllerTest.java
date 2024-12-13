@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class DegreeControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/degrees";
+    private static final String BASE_URL = "/api/v1/admin/degrees";
     private static final String DEGREE_ADDED_MESSAGE = "Degree added successfully";
     private static final String DEGREE_UPDATED_MESSAGE = "Degree updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

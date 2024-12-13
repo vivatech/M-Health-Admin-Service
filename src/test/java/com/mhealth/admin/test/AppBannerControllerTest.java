@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AppBannerControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/app-banners";
+    private static final String BASE_URL = "/api/v1/admin/app-banners";
 
     @MockBean
     private AppBannerRepository repository;

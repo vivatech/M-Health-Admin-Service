@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class HealthTipDurationControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/healthtip-durations";
+    private static final String BASE_URL = "/api/v1/admin/healthtip-durations";
     private static final String DURATION_CREATED_MESSAGE = "Duration created successfully";
     private static final String DURATION_UPDATED_MESSAGE = "Duration updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

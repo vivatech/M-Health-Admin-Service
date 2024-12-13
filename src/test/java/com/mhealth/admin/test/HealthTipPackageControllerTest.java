@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class HealthTipPackageControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/health-tip-packages";
+    private static final String BASE_URL = "/api/v1/admin/health-tip-packages";
     private static final String PACKAGE_ADDED_MESSAGE = "Health tip package added successfully";
     private static final String PACKAGE_UPDATED_MESSAGE = "Health tip package updated successfully";
     private static final String STATUS_UPDATED_MESSAGE = "Status updated successfully";

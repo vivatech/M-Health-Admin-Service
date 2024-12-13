@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ConsultationRatingControllerTest extends BaseControllerTest {
 
-    private static final String BASE_URL = "/api/v1/consultation-ratings";
+    private static final String BASE_URL = "/api/v1/admin/consultation-ratings";
 
     @MockBean
     private ConsultationRatingRepository repository;
