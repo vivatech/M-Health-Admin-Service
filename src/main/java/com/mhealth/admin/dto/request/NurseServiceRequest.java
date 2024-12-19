@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class NurseServiceRequest {
     @NotBlank(message = "Service name is mandatory")
+    @NotNull(message = "Service name is mandatory")
     private String seviceName;
 
     private String serviceImage;
@@ -28,12 +29,15 @@ public class NurseServiceRequest {
     @NotNull(message = "Total service price is mandatory")
     private Float totalServicePrice;
 
+    @NotNull(message = "Commission type is mandatory")
     @NotBlank(message = "Commission type is mandatory")
     private String commissionType;
 
+    @NotNull(message = "Status is mandatory")
     @NotBlank(message = "Status is mandatory")
     private String status;
 
+    @NotNull(message = "Description is mandatory")
     @NotBlank(message = "Description is mandatory")
     private String description;
 }

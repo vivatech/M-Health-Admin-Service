@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MobileReleaseRequest {
     @NotBlank(message = "App version is mandatory")
+    @NotNull(message = "App version is mandatory")
     private String appVersion;
 
     private String clientName;

@@ -13,12 +13,15 @@ import org.springframework.web.multipart.MultipartFile;
 public class HealthTipCategoryRequest {
 
     @NotBlank(message = "Name is required")
+    @NotNull(message = "Name is required")
     private String name;
 
     @NotBlank(message = "Name in second language is required")
+    @NotNull(message = "Name in second language is required")
     private String nameSl;
 
     @NotBlank(message = "Description is required")
+    @NotNull(message = "Description is required")
     private String description;
 
     private String descriptionSl;
@@ -29,6 +32,7 @@ public class HealthTipCategoryRequest {
     private MultipartFile photo;
 
     @NotBlank(message = "Is Featured is required")
+    @NotNull(message = "Is Featured is required")
     @Pattern(regexp = "0|1", message = "Is Featured must be 0 or 1")
     private String isFeatured;
 

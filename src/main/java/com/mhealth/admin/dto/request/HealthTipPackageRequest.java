@@ -17,6 +17,7 @@ import lombok.Setter;
 public class HealthTipPackageRequest {
 
     @NotBlank(message = "Package name is required.")
+    @NotNull(message = "Package name is required.")
     private String packageName;
 
     private String packageNameSl;
@@ -25,6 +26,7 @@ public class HealthTipPackageRequest {
     private Integer durationId;
 
     @Positive(message = "Package price must be positive.")
+    @NotNull(message = "Package price must be positive.")
     private Float packagePrice;
 
     @Positive(message = "Package video price must be positive.")

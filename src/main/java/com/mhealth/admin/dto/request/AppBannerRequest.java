@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AppBannerRequest {
     @NotBlank(message = "Type is required")
+    @NotNull(message = "Type is required")
     private String type;
 
     private String iname;

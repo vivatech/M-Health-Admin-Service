@@ -11,9 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SlotTypeRequest {
+    @NotNull(message = "Type is mandatory")
     @NotBlank(message = "Type is mandatory")
     private String type;
 
+    @NotNull(message = "Value is mandatory")
     @NotBlank(message = "Value is mandatory")
     private String value;
 

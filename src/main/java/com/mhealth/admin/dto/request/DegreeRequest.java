@@ -13,10 +13,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DegreeRequest {
     @NotBlank(message = "Name cannot be blank")
+    @NotNull(message = "Name cannot be blank")
     @Size(max = 50, message = "Name cannot be longer than 50 characters")
     private String name;
 
     @NotBlank(message = "Description cannot be blank")
+    @NotNull(message = "Description cannot be blank")
     private String description;
 
     @NotNull(message = "Status is required")

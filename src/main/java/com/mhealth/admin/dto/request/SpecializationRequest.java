@@ -13,15 +13,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class SpecializationRequest {
+    @NotNull(message = "Name is required")
     @NotBlank(message = "Name is required")
     private String name;
 
+    @NotNull(message = "Name (local) is required")
     @NotBlank(message = "Name (local) is required")
     private String nameSl;
 
+    @NotNull(message = "Photo is required")
     @NotBlank(message = "Photo is required")
     private String photo;
 
+    @NotNull(message = "Description is required")
     @NotBlank(message = "Description is required")
     private String description;
 

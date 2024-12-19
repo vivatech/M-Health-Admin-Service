@@ -19,9 +19,11 @@ public class HealthTipRequest {
     private Integer categoryId;
 
     @NotBlank(message = "Topic is required")
+    @NotNull(message = "Topic is required")
     private String topic;
 
     @NotBlank(message = "Description is required")
+    @NotNull(message = "Description is required")
     private String description;
 
     private MultipartFile photo;

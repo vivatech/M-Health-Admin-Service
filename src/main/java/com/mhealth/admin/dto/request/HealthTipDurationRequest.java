@@ -18,6 +18,7 @@ import lombok.Setter;
 public class HealthTipDurationRequest {
 
     @NotBlank(message = "Duration name is required")
+    @NotBlank(message = "Duration name is required")
     @Size(max = 255, message = "Duration name cannot exceed 255 characters")
     private String durationName;
 
