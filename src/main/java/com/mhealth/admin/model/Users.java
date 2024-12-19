@@ -48,6 +48,7 @@ public class Users {
     private UserType type = UserType.Doctor;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private StatusAI status = StatusAI.I;
 
     @Column(name = "slot_type_id")

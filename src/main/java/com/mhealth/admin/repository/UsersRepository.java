@@ -47,7 +47,8 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     List<Users> findNearbyDoctors(List<Integer> hospitalIds);
 
 
-    Users findByContactNumberAndType(String contactNumber, UserType userType);
+    @Query("select u from Users u where u.contactNumber = ?1 and u.type = ?2")
+    Optional<Users> findByContactNumberAndType(String contactNumber, UserType userType);
 
     @Query("Select count(u) from Users u where u.type = ?1")
     Long countUsersByType(UserType userType);

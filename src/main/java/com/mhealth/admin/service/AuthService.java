@@ -47,7 +47,7 @@ public class AuthService {
         LoginResponseDto data = null; // Using DTO instead of Map
 
         // Fetch user by contact number and type
-        Users superAdmin = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin);
+        Users superAdmin = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin).orElse(null);
 
         if (superAdmin == null || !superAdmin.getCountryCode().equalsIgnoreCase(request.getCountryCode())) {
             // User not found or country code mismatch
