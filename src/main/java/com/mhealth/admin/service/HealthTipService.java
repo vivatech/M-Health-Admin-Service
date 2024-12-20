@@ -54,7 +54,7 @@ public class HealthTipService {
         healthTip.setHealthTipCategory(category);
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
-        healthTip.setPhoto(photoFileName);
+        healthTip.setPhoto(photoFileName == null ? "" : photoFileName);
         healthTip.setVideo(videoFileName);
         healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());

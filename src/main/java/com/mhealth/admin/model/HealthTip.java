@@ -42,7 +42,7 @@ public class HealthTip {
     @Column(name = "video_thumb")
     private String videoThumb;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private StatusAI status;
 

@@ -2,6 +2,8 @@ package com.mhealth.admin.config;
 
 public class Constants {
 
+    public static final Integer DEFAULT_PAGE_SIZE = 30;
+
     public static final String SUCCESS_CODE="200";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
     public static final String USER_NOT_FOUND_CODE = "10004";
@@ -95,6 +97,7 @@ public class Constants {
     public static final String HEALTH_TIP_CATEGORY_UPDATED_SUCCESSFULLY = "app.health.tip.category.updated.success";
     public static final String HEALTH_TIP_CATEGORY_DELETED_SUCCESSFULLY = "app.health.tip.category.deleted.success";
     public static final String HEALTH_TIP_CATEGORIES_FETCHED_SUCCESSFULLY = "app.health.tip.categories.fetched.success";
+    public static final String HEALTH_TIP_CATEGORIES_FETCHED_EMPTY = "app.health.tip.categories.empty.fetched";
     public static final String HEALTH_TIP_CATEGORY_STATUS_UPDATED_SUCCESSFULLY = "app.health.tip.category.status.updated.success";
 
     public static final String HEALTH_TIP_DURATION_DURATION_CREATED = "app.health.tip.duration.created";
