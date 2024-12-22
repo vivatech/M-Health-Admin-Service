@@ -105,6 +105,7 @@ public class Constants {
     public static final String HEALTH_TIP_DURATION_STATUS_UPDATED = "app.health.tip.status.updated";
     public static final String HEALTH_TIP_DURATION_DELETED = "app.health.tip.duration.deleted";
     public static final String HEALTH_TIP_DURATION_FETCHED = "app.health.tip.durations.fetched";
+    public static final String HEALTH_TIP_DURATION_FETCHED_EMPTY = "app.health.tip.durations.fetched.empty";
     public static final String HEALTH_TIP_DURATION_NOT_FOUND = "app.health.tip.duration.not.found";
 
     public static final String HEALTH_TIP_NOT_FOUND = "app.health.tip.not.found";
@@ -118,6 +119,7 @@ public class Constants {
     public static final String HEALTH_TIP_PACKAGE_CREATED_SUCCESS = "app.health.tip.package.created.success";
     public static final String HEALTH_TIP_PACKAGE_UPDATED_SUCCESS = "app.health.tip.package.updated.success";
     public static final String HEALTH_TIP_PACKAGE_FETCHED_SUCCESS = "app.health.tip.package.fetched.success";
+    public static final String HEALTH_TIP_PACKAGE_FETCHED_EMPTY = "app.health.tip.package.fetched.empty";
     public static final String HEALTH_TIP_PACKAGE_DELETED_SUCCESS = "app.health.tip.package.deleted.success";
     public static final String HEALTH_TIP_PACKAGE_STATUS_UPDATED_SUCCESS = "app.health.tip.package.status.updated.success";
 

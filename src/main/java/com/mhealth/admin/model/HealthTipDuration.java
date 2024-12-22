@@ -5,6 +5,8 @@ import com.mhealth.admin.dto.enums.StatusAI;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
+
 @Builder
 @Entity
 @Setter
@@ -31,4 +33,11 @@ public class HealthTipDuration {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StatusAI status;
+
+    @Column(name = "created_at")
+    private String createdAt;
+
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updatedAt;
 }

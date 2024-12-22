@@ -33,7 +33,8 @@ public class HealthTipPackageController {
 
     @Operation(summary = "Add a new health tip package", responses = {
             @ApiResponse(responseCode = "200", description = "Health tip package added successfully", content = @Content(schema = @Schema(implementation = Response.class))),
-            @ApiResponse(responseCode = "409", description = "Health tip package already exists", content = @Content)
+            @ApiResponse(responseCode = "409", description = "Health tip package already exists", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Health tip duration not found", content = @Content)
     })
     @PostMapping
     public ResponseEntity<Response> addHealthTipPackage(
@@ -99,7 +100,7 @@ public class HealthTipPackageController {
     @PostMapping("/search-report")
     public ResponseEntity<PaginationResponse<HealthTipPackage>> searchHealthTipPackages(
             @RequestBody HealthTipPackageSearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
         return service.searchPackages(request.getPackageName(), request.getStartDate(), request.getEndDate(), pageable);
     }
 

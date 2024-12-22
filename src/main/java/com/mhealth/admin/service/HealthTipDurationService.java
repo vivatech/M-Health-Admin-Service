@@ -9,6 +9,7 @@ import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.HealthTipDuration;
 import com.mhealth.admin.repository.HealthTipDurationRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Locale;
 
 @Service
@@ -35,6 +39,7 @@ public class HealthTipDurationService {
         duration.setDurationType(request.getDurationType());
         duration.setDurationValue(request.getDurationValue());
         duration.setStatus(request.getStatus());
+        duration.setCreatedAt("0000-00-00" + " 00:00:00");
 
         repository.save(duration);
 
@@ -91,9 +96,18 @@ public class HealthTipDurationService {
 
     public ResponseEntity<PaginationResponse<HealthTipDuration>> searchDurations(
             HealthTipDurationSearchRequest request, Locale locale) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
+        StatusAI status = StringUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus());
         Page<HealthTipDuration> page = repository.findByDurationNameContainingAndStatus(
-                request.getDurationName(), request.getStatus(), pageable);
+                request.getDurationName(), status, pageable);
+
+        if (page.getContent().isEmpty()) {
+            return ResponseEntity.ok(new PaginationResponse<>(
+                    Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.HEALTH_TIP_DURATION_FETCHED_EMPTY, null, locale),
+                    page.getContent(), page.getTotalElements(),
+                    (long) page.getSize(), (long) page.getNumber()));
+        }
 
         return ResponseEntity.ok(new PaginationResponse<>(
                 Status.SUCCESS, Constants.SUCCESS_CODE,

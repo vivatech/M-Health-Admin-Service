@@ -16,13 +16,11 @@ public class HealthTipSearchRequest {
 
     private String topic;
 
-    private StatusAI status;
+    private String status;
 
     @NotNull(message = "Page number is required")
     @Min(value = 0, message = "Page number must be 0 or greater")
     private Integer page;
 
-    @NotNull(message = "Page size is required")
-    @Min(value = 1, message = "Page size must be 1 or greater")
     private Integer size;
 }

@@ -12,19 +12,14 @@ import lombok.Setter;
 @Setter
 public class HealthTipDurationSearchRequest {
 
-    @Size(max = 255, message = "Duration name cannot exceed 255 characters")
     private String durationName;
 
-    @NotNull(message = "Status is required")
-    private StatusAI status;
+    private String status;
 
     @NotNull(message = "Page number is required")
     @Min(value = 0, message = "Page number must be 0 or greater")
     private Integer page;
 
-    @NotNull(message = "Page size is required")
-    @Min(value = 1, message = "Page size must be at least 1")
-    @Max(value = 100, message = "Page size cannot exceed 100")
     private Integer size;
 }
 

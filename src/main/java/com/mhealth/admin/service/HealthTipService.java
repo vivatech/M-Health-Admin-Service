@@ -11,6 +11,7 @@ import com.mhealth.admin.model.HealthTip;
 import com.mhealth.admin.model.HealthTipCategoryMaster;
 import com.mhealth.admin.repository.HealthTipCategoryMasterRepository;
 import com.mhealth.admin.repository.HealthTipRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -89,7 +90,7 @@ public class HealthTipService {
         healthTip.setHealthTipCategory(category);
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
-        healthTip.setPhoto(photoFileName);
+        healthTip.setPhoto(StringUtils.isEmpty(photoFileName) ? "" : photoFileName);
         healthTip.setVideo(videoFileName);
         healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());
@@ -102,8 +103,9 @@ public class HealthTipService {
     }
 
     public ResponseEntity<PaginationResponse<HealthTip>> searchHealthTips(HealthTipSearchRequest request, Locale locale) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        Page<HealthTip> page = repository.findByTopicContainingAndStatus(request.getTopic(), request.getStatus(), pageable);
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
+        StatusAI status = StringUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus());
+        Page<HealthTip> page = repository.findByTopicContainingAndStatus(request.getTopic(), status, pageable);
 
         return ResponseEntity.ok(new PaginationResponse<>(Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.HEALTH_TIP_FETCHED_SUCCESS, null, locale),

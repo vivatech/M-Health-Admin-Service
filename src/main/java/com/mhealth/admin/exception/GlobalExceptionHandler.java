@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             messages.add(error.getDefaultMessage());
         }
-        return new ResponseEntity<>(messages, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(messages, HttpStatus.PRECONDITION_FAILED);
     }
 
 }

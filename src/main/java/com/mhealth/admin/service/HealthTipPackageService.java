@@ -11,6 +11,7 @@ import com.mhealth.admin.model.HealthTipDuration;
 import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.repository.HealthTipDurationRepository;
 import com.mhealth.admin.repository.HealthTipPackageRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -143,13 +145,19 @@ public class HealthTipPackageService {
 
 
     public ResponseEntity<PaginationResponse<HealthTipPackage>> searchHealthTipPackages(HealthTipPackageSearchRequest request, Locale locale) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
+        StatusAI status = !StringUtils.isEmpty(request.getStatus()) ? StatusAI.valueOf(request.getStatus()) : null;
         Page<HealthTipPackage> page = repository.findByNameAndStatusAndDuration(
                 request.getPackageName(),
-                request.getStatus(),
+                status,
                 request.getDurationId(),
                 pageable
         );
+        if (page.getContent().isEmpty()) {
+            return ResponseEntity.ok(new PaginationResponse<>(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_FETCHED_EMPTY, null, locale),
+                    page.getContent(), page.getTotalElements(), (long) page.getSize(), (long) page.getNumber()));
+        }
 
         return ResponseEntity.ok(new PaginationResponse<>(Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_FETCHED_SUCCESS, null, locale),
