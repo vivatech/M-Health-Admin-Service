@@ -122,6 +122,7 @@ public class Constants {
     public static final String HEALTH_TIP_PACKAGE_FETCHED_EMPTY = "app.health.tip.package.fetched.empty";
     public static final String HEALTH_TIP_PACKAGE_DELETED_SUCCESS = "app.health.tip.package.deleted.success";
     public static final String HEALTH_TIP_PACKAGE_STATUS_UPDATED_SUCCESS = "app.health.tip.package.status.updated.success";
+    public static final String HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND = "app.health.tip.package.duplicate.category";
 
     public static final String RATINGS_FETCHED_SUCCESS = "app.consultation.rating.fetched.success";
     public static final String CONSULTATION_RATING_NOT_FOUND = "app.consultation.rating.not.found";
