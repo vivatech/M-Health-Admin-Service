@@ -58,10 +58,10 @@ public class AuthService {
 
         try {
             // Fetch user by contact number and type
-            Users superAdmin = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin).orElse(null);
+            Users existingUser = usersRepository.findByContactNumber(request.getContactNumber()).orElse(null);
 
             String countryCode = request.getCountryCode().replace("+", "");
-            if (superAdmin == null || !superAdmin.getCountryCode().equalsIgnoreCase(countryCode)) {
+            if (existingUser == null || !existingUser.getCountryCode().equalsIgnoreCase(countryCode)) {
                 // User not found or country code mismatch
                 message = messageSource.getMessage(Constants.USER_NOT_FOUND, null, locale);
                 responseDto.setStatus(Status.FAILED);
@@ -70,7 +70,15 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDto);
             }
 
-            if (!utility.md5Hash(request.getPassword()).equals(superAdmin.getPassword())) {
+            if (existingUser.getType().equals(UserType.Patient)) {
+                message = messageSource.getMessage(Constants.USER_NOT_FOUND, null, locale);
+                responseDto.setStatus(Status.FAILED);
+                responseDto.setMessage(message);
+                responseDto.setCode(Constants.BLANK_DATA_GIVEN_CODE);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDto);
+            }
+
+            if (!utility.md5Hash(request.getPassword()).equals(existingUser.getPassword())) {
                 // Password mismatch
                 message = messageSource.getMessage(Constants.INVALID_PASSWORD, null, locale);
                 responseDto.setStatus(Status.FAILED);
@@ -80,12 +88,12 @@ public class AuthService {
             }
 
             // Successful login
-            String token = authConfig.generateToken(request.getContactNumber(), superAdmin.getUserId());
-            boolean isInternational = superAdmin.getIsInternational().equals(YesNo.Yes);
+            String token = authConfig.generateToken(request.getContactNumber(), existingUser.getUserId());
+            boolean isInternational = existingUser.getIsInternational().equals(YesNo.Yes);
 
             // Populate the DTO
             data = new LoginResponseDto(
-                    superAdmin.getUserId().toString(),
+                    existingUser.getUserId().toString(),
                     token,
                     isInternational
             );
@@ -94,7 +102,7 @@ public class AuthService {
             statusCode = Constants.SUCCESS_CODE;
             status = Status.SUCCESS;
 
-            saveNewSession(superAdmin.getUserId(), token, UUID.randomUUID().toString(), UserType.Superadmin);
+            saveNewSession(existingUser.getUserId(), token, UUID.randomUUID().toString(), UserType.Superadmin);
 
             responseDto.setStatus(status);
             responseDto.setMessage(message);
