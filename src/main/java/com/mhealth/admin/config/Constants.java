@@ -6,8 +6,12 @@ public class Constants {
 
     public static final String SUCCESS_CODE="200";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
+    public static final String DATA_NOT_FOUND_CODE = "203";
+    public static final String NO_RECORD_FOUND = "app.no.record.found";
+    public static final String BLANK_DATA_GIVEN = "blank.data.given";
     public static final String USER_NOT_FOUND_CODE = "10004";
     public static final String NO_RECORD_FOUND_CODE = "404";
+    public static final String BLANK_DATA_GIVEN_CODE = "403";
     public static final String INVALID_PASSWORD_CODE = "401";
     public static final String CONFLICT_CODE = "409";
 
@@ -15,6 +19,7 @@ public class Constants {
     public static final String FAIL="FAIL";
     public static final String USER_NOT_FOUND= "user.not.found";
     public static final String INVALID_PASSWORD = "app.invalid.password";
+    public static final String SOMETHING_WENT_WRONG = "app.something.went.wrong";
     public static final String USER_LOGIN_IS_SUCCESS = "app.user.login.success";
 
     public static final String GLOBAL_CONFIG_DELETED_SUCCESSFULLY = "app.global.config.delete.success";
@@ -84,7 +89,7 @@ public class Constants {
     public static final String LAB_CATEGORY_UPDATED_SUCCESSFULLY = "app.lab.master.category.updated.successfully";
     public static final String LAB_CATEGORY_FETCHED_SUCCESSFULLY = "app.lab.master.category.fetched.successfully";
     public static final String LAB_CATEGORY_NOT_FOUND = "app.lab.master.category.not.found";
-    
+
     public static final String LAB_SUB_CATEGORY_ADDED = "app.lab.sub.category.added.successfully";
     public static final String LAB_SUB_CATEGORY_NOT_FOUND = "app.lab.sub.category.not.found";
     public static final String LAB_SUB_CATEGORY_UPDATED = "app.lab.sub.category.updated.successfully";
@@ -127,11 +132,17 @@ public class Constants {
     public static final String RATINGS_FETCHED_SUCCESS = "app.consultation.rating.fetched.success";
     public static final String CONSULTATION_RATING_NOT_FOUND = "app.consultation.rating.not.found";
     public static final String CONSULTATION_RATING_STATUS_UPDATED_SUCCESS = "app.consultation.rating.status.success";
-    
+
     public static final String SUPPORT_TICKETS_FETCHED_SUCCESS = "app.support.ticket.fetch.success";
     public static final String SUPPORT_TICKET_NOT_FOUND = "app.support.ticket.not.found";
 
     public static final String ORDERS_FETCHED_SUCCESS = "app.order.fetch.success";
     public static final String ORDER_NOT_FOUND = "app.order.not.found";
     public static final String ORDER_FETCHED_SUCCESS = "app.order.fetch.successfully";
+    public static final String OTP_SEND_SUCCESSFULLY = "otp.send.successfully";
+    public static final String CONTACT_NUMBER_NOT_EXIST = "contact.number.not.exist";
+    public static final String OTP_TO_RESET_PASSWORD = "app.otp.to.reset.password";
+    public static final String OTP_NOT_MATCHED = "app.otp.not.matched";
+    public static final String OTP_EXPIRES = "app.otp.expires";
+    public static final String Password_Reset = "app.password.reset";
 }

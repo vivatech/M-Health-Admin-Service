@@ -5,14 +5,18 @@ import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.dto.LoginResponseDto;
+import com.mhealth.admin.dto.dto.VerifyLoginOtp;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.LoginRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.AuthKey;
+import com.mhealth.admin.model.UserOTP;
 import com.mhealth.admin.model.Users;
 import com.mhealth.admin.repository.AuthKeyRepository;
+import com.mhealth.admin.repository.UserOTPRepository;
 import com.mhealth.admin.repository.UsersRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -21,8 +25,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service
 public class AuthService {
+    @Autowired
+    private UserOTPRepository userOTPRepository;
 
     @Autowired
     private UsersRepository usersRepository;
@@ -39,6 +46,9 @@ public class AuthService {
     @Autowired
     private Utility utility;
 
+    @Autowired
+    private PublicService publicService;
+
     public ResponseEntity<Response> login(LoginRequest request, Locale locale) {
         Response responseDto = new Response();
         String message;
@@ -46,50 +56,121 @@ public class AuthService {
         Status status = Status.FAILED;
         LoginResponseDto data = null; // Using DTO instead of Map
 
-        // Fetch user by contact number and type
-        Users superAdmin = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin).orElse(null);
+        try {
+            // Fetch user by contact number and type
+            Users superAdmin = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin).orElse(null);
 
-        if (superAdmin == null || !superAdmin.getCountryCode().equalsIgnoreCase(request.getCountryCode())) {
-            // User not found or country code mismatch
-            message = messageSource.getMessage(Constants.USER_NOT_FOUND, null, locale);
-            responseDto.setStatus(Status.FAILED);
+            String countryCode = request.getCountryCode().replace("+", "");
+            if (superAdmin == null || !superAdmin.getCountryCode().equalsIgnoreCase(countryCode)) {
+                // User not found or country code mismatch
+                message = messageSource.getMessage(Constants.USER_NOT_FOUND, null, locale);
+                responseDto.setStatus(Status.FAILED);
+                responseDto.setMessage(message);
+                responseDto.setCode(Constants.BLANK_DATA_GIVEN_CODE);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDto);
+            }
+
+            if (!utility.md5Hash(request.getPassword()).equals(superAdmin.getPassword())) {
+                // Password mismatch
+                message = messageSource.getMessage(Constants.INVALID_PASSWORD, null, locale);
+                responseDto.setStatus(Status.FAILED);
+                responseDto.setMessage(message);
+                responseDto.setCode(Constants.DATA_NOT_FOUND_CODE); // Use a specific code for invalid password
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseDto); // 401 Unauthorized
+            }
+
+            // Successful login
+            String token = authConfig.generateToken(request.getContactNumber(), superAdmin.getUserId());
+            boolean isInternational = superAdmin.getIsInternational().equals(YesNo.Yes);
+
+            // Populate the DTO
+            data = new LoginResponseDto(
+                    superAdmin.getUserId().toString(),
+                    token,
+                    isInternational
+            );
+
+            message = messageSource.getMessage(Constants.USER_LOGIN_IS_SUCCESS, null, locale);
+            statusCode = Constants.SUCCESS_CODE;
+            status = Status.SUCCESS;
+
+            saveNewSession(superAdmin.getUserId(), token, UUID.randomUUID().toString(), UserType.Superadmin);
+
+            responseDto.setStatus(status);
             responseDto.setMessage(message);
-            responseDto.setCode(Constants.NO_RECORD_FOUND_CODE);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDto); // 401 Unauthorized
+            responseDto.setCode(statusCode);
+            responseDto.setData(data);
+
+            return ResponseEntity.ok(responseDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Error found in super-admin login : {}", e);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+                    Status.FAILED,
+                    Constants.BLANK_DATA_GIVEN_CODE,
+                    messageSource.getMessage(Constants.SOMETHING_WENT_WRONG, null, locale)
+            ));
         }
+    }
 
-        if (!utility.md5Hash(request.getPassword()).equals(superAdmin.getPassword())) {
-            // Password mismatch
-            message = messageSource.getMessage(Constants.INVALID_PASSWORD, null, locale);
-            responseDto.setStatus(Status.FAILED);
-            responseDto.setMessage(message);
-            responseDto.setCode(Constants.INVALID_PASSWORD_CODE); // Use a specific code for invalid password
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDto); // 401 Unauthorized
+    public ResponseEntity<?> generateOtpForForgotPassword(String contactNumber, Locale locale) {
+
+        if (contactNumber == null || contactNumber.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+                    Status.FAILED,
+                    Constants.BLANK_DATA_GIVEN_CODE,
+                    messageSource.getMessage(Constants.BLANK_DATA_GIVEN, null, locale)
+            ));
         }
+        Optional<Users> user = usersRepository.findByContactNumberAndType(contactNumber, UserType.Superadmin);
+        if (user.isPresent()) {
+            int otp = publicService.saveNewOtp(user.get());
 
-        // Successful login
-        String token = authConfig.generateToken(request.getContactNumber(), superAdmin.getUserId());
-        boolean isInternational = superAdmin.getIsInternational().equals(YesNo.Yes);
+            Map<String, Object> temp = new HashMap<>();
+            temp.put("user", user.get());
+            temp.put("otp", String.valueOf(otp));
+            String message = publicService.sendMessage(temp, Constants.OTP_TO_RESET_PASSWORD, locale);
 
-        // Populate the DTO
-        data = new LoginResponseDto(
-                superAdmin.getUserId().toString(),
-                token,
-                isInternational
-        );
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(
+                    Status.SUCCESS,
+                    Constants.SUCCESS_CODE,
+                    messageSource.getMessage(Constants.OTP_SEND_SUCCESSFULLY, null, locale)
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+                Status.SUCCESS,
+                Constants.SUCCESS_CODE,
+                messageSource.getMessage(Constants.CONTACT_NUMBER_NOT_EXIST, null, locale)
+        ));
+    }
 
-        message = messageSource.getMessage(Constants.USER_LOGIN_IS_SUCCESS, null, locale);
-        statusCode = Constants.SUCCESS_CODE;
-        status = Status.SUCCESS;
-
-        saveNewSession(superAdmin.getUserId(), token, UUID.randomUUID().toString(), UserType.Doctor);
-
-        responseDto.setStatus(status);
-        responseDto.setMessage(message);
-        responseDto.setCode(statusCode);
-        responseDto.setData(data);
-
-        return ResponseEntity.ok(responseDto);
+    public ResponseEntity<?> verifyOtpForForgotPassword(VerifyLoginOtp request, Locale locale) {
+        if(request.getOtp() == null || request.getOtp().isEmpty()
+                || request.getNewPassword() == null || request.getNewPassword().isEmpty()
+                || request.getContactNumber() == null || request.getContactNumber().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+                    Status.FAILED,
+                    Constants.BLANK_DATA_GIVEN_CODE,
+                    messageSource.getMessage(Constants.BLANK_DATA_GIVEN, null, locale)
+            ));
+        }
+        Optional<Users> user = usersRepository.findByContactNumberAndType(request.getContactNumber(), UserType.Superadmin);
+        if (user.isPresent()) {
+            UserOTP userOTP = userOTPRepository.findFirstByUserIdAndIsFromOrderByIdDesc(user.get().getUserId(), "Forgotpassword");
+            if(userOTP != null){
+                return publicService.processOtp(user.get(), userOTP, request, locale);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(new Response(
+                    Status.FAILED,
+                    Constants.DATA_NOT_FOUND_CODE,
+                    messageSource.getMessage(Constants.NO_RECORD_FOUND, null, locale)
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+                Status.FAILED,
+                Constants.DATA_NOT_FOUND_CODE,
+                messageSource.getMessage(Constants.CONTACT_NUMBER_NOT_EXIST, null, locale)
+        ));
     }
 
     public boolean isSessionValid(String username, String authKey) {
