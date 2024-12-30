@@ -1,5 +1,6 @@
 package com.mhealth.admin.service;
 
+import com.mhealth.admin.sms.SMSApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.mhealth.admin.config.Constants;
@@ -43,8 +44,12 @@ public class PublicService {
     private boolean smsSent;
     @Autowired
     private MessageSource messageSource;
+
+    @Value("${m-health.country}")
+    private String mHealthCountry;
+
     @Autowired
-    private SMSService smsService;
+    private SMSApiService smsApiService;
 
     public int saveNewOtp(Users user) {
         int otp = isFixedOtp ? 123456 : new Random().nextInt(900000) + 100000;
@@ -73,7 +78,7 @@ public class PublicService {
             message = message.replace("{{otp}}", (String)temp.get("otp"));
 
             if(smsSent){
-                smsService.sendOTPSMS("+" + users.getCountryCode() + users.getContactNumber(), message);
+                smsApiService.sendMessage("+" + users.getCountryCode() + users.getContactNumber(), message, mHealthCountry);
             }
         }
         return message;

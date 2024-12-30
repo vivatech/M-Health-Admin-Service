@@ -145,4 +145,6 @@ public class Constants {
     public static final String OTP_NOT_MATCHED = "app.otp.not.matched";
     public static final String OTP_EXPIRES = "app.otp.expires";
     public static final String Password_Reset = "app.password.reset";
+    public static final String COUNTRY_SOMALIA = "SOMALIA";
+    public static final String COUNTRY_KENYA = "KENYA";
 }
