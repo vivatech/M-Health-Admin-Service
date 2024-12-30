@@ -32,8 +32,8 @@ public class SMSApiService {
 
     public SMSAggregator getSMSAggregator(String country) {
         HashMap<String, SMSAggregator> map = new HashMap<>();
-        map.put("KE", SMSAggregator.KANNEL);
-        map.put("SO", SMSAggregator.SDP);
+        map.put("KE", SMSAggregator.SDP);
+        map.put("SO", SMSAggregator.KANNEL);
         return map.get(country);
     }
 }
