@@ -1,5 +1,4 @@
-package com.mhealth.admin.service;
-
+package com.mhealth.admin.sms;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpGet;
@@ -12,20 +11,33 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class SMSService {
-    @Value("${sms.api.url}")
+public class SendKannelSMS implements SendMessages {
+
+
+    @Value("${kannel.api.url}")
     private String smsApiUrl;
 
-    @Value("${sms.password}")
+    @Value("${kannel.password}")
     private String password;
 
-    @Value("${sms.from}")
+    @Value("${kannel.from}")
     private String from;
 
-    @Value("${sms.username}")
+    @Value("${kannel.username}")
     private String username;
 
-    public void sendOTPSMS(String to, String msg) {
+
+    @Override
+    public boolean supports(SMSAggregator smsAggregator) {
+        return smsAggregator.equals(SMSAggregator.KANNEL);
+    }
+
+    @Override
+    public void sendSms(String msisdn, String message) {
+        sendSMSByKANNEL(msisdn, message);
+    }
+
+    public void sendSMSByKANNEL(String to, String msg) {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             URIBuilder uriBuilder = new URIBuilder(smsApiUrl)
                     .addParameter("charset", "UTF-8")
@@ -36,20 +48,19 @@ public class SMSService {
                     .addParameter("username", username);
 
             String requestUrl = uriBuilder.build().toString();
-            log.info("Sending SMS - Request URL: {}", requestUrl);
+            log.info("Sending SMS To Kannel - Request URL: {}", requestUrl);
 
             HttpGet request = new HttpGet(requestUrl);
             request.setHeader("Accept", "application/json");
 
             client.execute(request, httpResponse -> {
                 String responseBody = EntityUtils.toString(httpResponse.getEntity());
-                log.info("Received SMS - Response: {}", responseBody);
-                return responseBody;
+                log.info("Received SMS From Kannel - Response: {}", responseBody);
+                return true;
             });
 
         } catch (Exception e) {
-            log.error("Failed to send SMS", e);
-            throw new RuntimeException("Failed to send SMS", e);
+            log.error("exception occurred while sending sms via kannel: ", e);
         }
     }
 }
