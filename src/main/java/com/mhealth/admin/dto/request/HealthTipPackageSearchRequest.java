@@ -1,6 +1,8 @@
 package com.mhealth.admin.dto.request;
 
 import com.mhealth.admin.dto.enums.StatusAI;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,11 +19,13 @@ public class HealthTipPackageSearchRequest {
 
     private Integer durationId;
 
-    private StatusAI status;
+    private String status;
 
-    private int page = 0;
+    @NotNull(message = "Page number is required")
+    @Min(value = 0, message = "Page number must be 0 or greater")
+    private Integer page;
 
-    private int size = 10;
+    private Integer size;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

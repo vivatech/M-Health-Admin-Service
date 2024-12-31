@@ -1,0 +1,32 @@
+<configuration>
+
+    <springProperty name="appVersion" source="app.version"/>
+
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} - [AdminModule.jar] - ${appVersion} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender -->
+    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/home/core/logs/mhealthprovider.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Custom file name pattern for backup logs -->
+            <fileNamePattern>/home/core/logs/mhealthprovider.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <maxHistory>7</maxHistory> <!-- Keep logs for 7 days -->
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} - AdminModule.jar - ${appVersion} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root Logger -->
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ROLLING"/>
+    </root>
+
+</configuration>

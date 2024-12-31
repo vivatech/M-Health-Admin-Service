@@ -32,7 +32,7 @@ public interface HealthTipRepository extends JpaRepository<HealthTip, Integer> {
     @Query("Select u from HealthTip u where u.topic LIKE %?1% order by u.healthTipCategory.categoryId ASC, u.healthTipId DESC")
     List<HealthTip> findAllByTopic(String title);
 
-    @Query("Select u from HealthTip u where (:topic is null or u.topic LIKE %?1%) AND (:status is null or u.status = :status)")
+    @Query("Select u from HealthTip u where (:topic is null or u.topic LIKE %:topic%) AND (:status is null or u.status = :status)")
     Page<HealthTip> findByTopicContainingAndStatus(
             @Param("topic") String topic,@Param("status")  StatusAI status, Pageable pageable);
 }

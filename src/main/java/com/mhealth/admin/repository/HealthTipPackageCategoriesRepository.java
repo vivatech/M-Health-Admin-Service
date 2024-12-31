@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.StatusAI;
+import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.model.HealthTipPackageCategories;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -96,4 +97,7 @@ public interface HealthTipPackageCategoriesRepository extends JpaRepository<Heal
 
     @Query("Select u from HealthTipPackageCategories u where u.healthTipPackage.packageId = ?1")
     List<HealthTipPackageCategories> findByPackageIds(Integer packageIds);
+
+    HealthTipPackageCategories findByHealthTipPackage(HealthTipPackage healthTipPackage);
+
 }

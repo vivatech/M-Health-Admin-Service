@@ -37,4 +37,7 @@ public class HealthTipPackageRequest {
 
     @NotNull(message = "Status is required.")
     private StatusAI status;
+
+    @NotNull(message = "Category ID is required.")
+    private Integer categoryId;
 }

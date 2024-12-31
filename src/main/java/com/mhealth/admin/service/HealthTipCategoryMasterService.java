@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -97,9 +98,17 @@ public class HealthTipCategoryMasterService {
 
     public ResponseEntity<PaginationResponse<HealthTipCategoryMaster>> searchCategories(
             HealthTipCategorySearchRequest request, Locale locale) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
         Page<HealthTipCategoryMaster> page = repository.findByNameContainingAndStatus(
-                request.getName(), request.getStatus(), pageable);
+                request.getName(), ObjectUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus()), pageable);
+
+        if (page.getContent().isEmpty()) {
+            return ResponseEntity.ok(new PaginationResponse<>(
+                    Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.HEALTH_TIP_CATEGORIES_FETCHED_EMPTY, null, locale),
+                    page.getContent(), page.getTotalElements(),
+                    Long.valueOf(page.getSize()), Long.valueOf(page.getNumber())));
+        }
 
         return ResponseEntity.ok(new PaginationResponse<>(
                 Status.SUCCESS, Constants.SUCCESS_CODE,

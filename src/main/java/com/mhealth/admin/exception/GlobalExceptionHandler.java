@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -66,12 +68,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        List<ValidationError> validationErrors = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> new ValidationError(((FieldError) error).getField(), error.getDefaultMessage()))
-                .collect(Collectors.toList());
-        ValidationErrorResponse errorResponse = new ValidationErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation Failed", validationErrors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Set<String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Set<String> messages = new HashSet<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            messages.add(error.getDefaultMessage());
+        }
+        return new ResponseEntity<>(messages, HttpStatus.PRECONDITION_FAILED);
     }
 
 }
