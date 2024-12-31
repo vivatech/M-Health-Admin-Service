@@ -133,42 +133,6 @@ public class AuthService {
         }
     }
 
-        if (!utility.md5Hash(request.getPassword()).equals(superAdmin.getPassword())) {
-            // Password mismatch
-            message = messageSource.getMessage(Constants.INVALID_PASSWORD, null, locale);
-            responseDto.setStatus(Status.FAILED);
-            responseDto.setMessage(message);
-            responseDto.setCode(Constants.INVALID_PASSWORD_CODE); // Use a specific code for invalid password
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDto); // 401 Unauthorized
-        }
-
-        // Successful login
-        String token = authConfig.generateToken(request.getContactNumber(), superAdmin.getUserId());
-        boolean isInternational = superAdmin.getIsInternational().equals(YesNo.Yes);
-
-
-        PermissionRoleDto permissionRoleDto = null;
-        if(superAdmin.getType() !=null){
-            PermissionRole role = permissionRoleRepository
-                    .findByUserType(superAdmin.getType()).orElse(null);
-            if(role!=null){
-                permissionRoleDto = getPermissions(role);
-            }
-        }
-
-        // Populate the DTO
-        data = new LoginResponseDto(
-                superAdmin.getUserId().toString(),
-                token,
-                isInternational,
-                permissionRoleDto
-        );
-
-        message = messageSource.getMessage(Constants.USER_LOGIN_IS_SUCCESS, null, locale);
-        statusCode = Constants.SUCCESS_CODE;
-        status = Status.SUCCESS;
-
-        saveNewSession(superAdmin.getUserId(), token, UUID.randomUUID().toString(), UserType.Doctor);
     public ResponseEntity<?> generateOtpForForgotPassword(String contactNumber, Locale locale) {
 
         if (contactNumber == null || contactNumber.isEmpty()) {
