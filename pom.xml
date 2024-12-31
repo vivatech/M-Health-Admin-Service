@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.mhealth.admin</groupId>
 	<artifactId>m-health-admin-service</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<name>m-health-admin-service</name>
 	<description>M-Health Admin service</description>
 	<properties>
@@ -143,6 +143,7 @@
 	</profiles>
 
 	<build>
+		<finalName>mhealthprovider</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
