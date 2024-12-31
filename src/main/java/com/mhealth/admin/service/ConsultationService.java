@@ -18,11 +18,13 @@ import com.mhealth.admin.repository.UsersRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -147,9 +149,9 @@ public class ConsultationService {
 
         Users patient = usersRepository.findByContactNumber(request.getContactNumber().trim()).orElse(null);
         if(patient != null){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(
                     Status.FAILED,
-                    Constants.DATA_NOT_FOUND_CODE,
+                    Constants.CONFLICT_CODE,
                     messageSource.getMessage(Constants.CONTACT_NUMBER_EXIST, null, locale)
             ));
         }
@@ -184,8 +186,7 @@ public class ConsultationService {
         users.setContactNumber(request.getContactNumber());
         users.setCountryCode(countryCode);
         Country country = countryRepository.findById(request.getCountryId() == null ? 0 : request.getCountryId()).orElse(null);
-        if(country!=null) users.setCountry(country);
-        else users.setCountry(null);
+        users.setCountry(country);
         users.setState(request.getStateId());
         users.setCity(request.getCityId());
         users.setGender(request.getGender() == null || request.getGender().isEmpty() ? "" : request.getGender());
@@ -216,14 +217,8 @@ public class ConsultationService {
     }
 
     public ResponseEntity<Response> getPatient(Integer patientId, Locale locale) {
-        Users patient = usersRepository.findById(patientId).orElse(null);
-        if(patient==null){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response(
-                    Status.FAILED,
-                    Constants.BLANK_DATA_GIVEN_CODE,
-                    messageSource.getMessage(Constants.NO_RECORD_FOUND, null, locale)
-            ));
-        }
+        Users patient = usersRepository.findById(patientId).orElseThrow(() -> new UsernameNotFoundException("Patient not found"));
+
         PatientResponse response = getPatientResponseDto(patient);
 
         return ResponseEntity.status(HttpStatus.OK).body(new Response(
@@ -237,14 +232,14 @@ public class ConsultationService {
     private PatientResponse getPatientResponseDto(Users patient) {
         PatientResponse response = new PatientResponse();
         response.setPatientId(patient.getUserId());
-        response.setFullName(patient.getFirstName() + " " + patient.getLastName());
-        response.setEmailId(patient.getEmail() == null ? "" : patient.getEmail());
+        response.setFullName(patient.getFullName());
+        response.setEmailId(StringUtils.isEmpty(patient.getEmail()) ? "" : patient.getEmail());
         response.setContactNumber(patient.getContactNumber());
         response.setCountryId(patient.getCountry() == null ? 0 : patient.getCountry().getId());
-        response.setCountryName(patient.getCountry()== null ? "" :patient.getCountry().getName());
+        response.setCountryName(patient.getCountry() == null ? "" : patient.getCountry().getName());
 
-        State state = stateRepository.findById(patient.getState() == null ?0:patient.getState()).orElse(null);
-        if(state!= null){
+        State state = stateRepository.findById(patient.getState() == null ? 0 : patient.getState()).orElse(null);
+        if(state != null) {
             response.setProvinceId(state.getId());
             response.setProvinceName(state.getName());
         }

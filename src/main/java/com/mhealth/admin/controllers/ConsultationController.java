@@ -6,6 +6,7 @@ import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.ConsultationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class ConsultationController {
      */
     @PostMapping
     @Operation(method = "POST",description = "Create patient api")
-    public ResponseEntity<Response> createPatient(@ModelAttribute CreateAndEditPatientRequest request,
+    public ResponseEntity<Response> createPatient(@Valid @ModelAttribute CreateAndEditPatientRequest request,
                                                   @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
         return consultationService.createPatient(request,locale);
     }
