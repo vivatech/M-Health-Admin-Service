@@ -25,22 +25,22 @@ public class MarketingUserController {
 
     @GetMapping("/list")
     public ResponseEntity<?> getMarketingUserList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                  @RequestParam(required = false) String firstName,
-                                                  @RequestParam(required = false) Long userId,
-                                                  @RequestParam(required = false) String status,
+                                                  @RequestParam(required = false) String name,
                                                   @RequestParam(required = false) String email,
+                                                  @RequestParam(required = false) String status,
                                                   @RequestParam(required = false) String contactNumber,
-                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "1") String sortBy,
+                                                  @RequestParam(defaultValue = "1") int page,
                                                   @RequestParam(defaultValue = "10") int size) {
         try {
             log.info("Request Received For /api/v1/admin/user/marketing/list");
-            log.info("Request Parameters: firstName={}, userId={}, status={}, email={}, contactNumber={}, page={}, size={}",
-                    firstName, userId, status, email, contactNumber, page, size);
+            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortBy, page, size);
 
+            Object response = marketingUserService.getMarketingUserList(name, email, status,contactNumber, sortBy, page, size);
 
+            log.info("Response Sent For /api/v1/admin/user/marketing/list: {}", response);
 
-            log.info("Response Send For /api/v1/admin/user/marketing/list");
-            return null;
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception: ", e);
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
