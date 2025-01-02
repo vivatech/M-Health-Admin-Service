@@ -15,6 +15,7 @@ public class MarketingUserListResponseDto {
     private String promoCode;
     private Long totalRegistration;
     private Long totalConsultation;
+    private String contactNumber;
     private String status;
 }
 

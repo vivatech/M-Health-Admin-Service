@@ -36,6 +36,7 @@ public class MarketingUserService {
                 .append("p.promo_code AS promoCode, ")
                 .append("COUNT(DISTINCT cwp.user_id) AS totalRegistration, ")
                 .append("COUNT(DISTINCT co.case_id) AS totalConsultation, ")
+                .append("u.contact_number AS contactNumber, ")
                 .append("u.status ")
                 .append("FROM mh_users u ")
                 .append("LEFT JOIN mh_users_promo_code p ON u.user_id = p.user_id ")
@@ -57,7 +58,7 @@ public class MarketingUserService {
             baseQuery.append(" AND CONCAT(u.country_code, '', u.contact_number) LIKE :contactNumber");
         }
 
-        baseQuery.append(" GROUP BY u.user_id, p.promo_code, u.status");
+        baseQuery.append(" GROUP BY u.user_id, p.promo_code, u.contact_number, u.status");
 
         // Determine sorting based on sortBy
         String sortOrder = " ORDER BY u.user_id ";
@@ -141,10 +142,11 @@ public class MarketingUserService {
             String promoCode = (String) row[3];
             Long totalRegistration = (Long) row[4];
             Long totalConsultation = (Long) row[5];
-            String status = (String) row[6];
+            String contactNumber = (String) row[6];
+            String status = (String) row[7];
 
             return new MarketingUserListResponseDto(
-                    userId, name, email, promoCode, totalRegistration, totalConsultation, status
+                    userId, name, email, promoCode, totalRegistration, totalConsultation, contactNumber, status
             );
         }).collect(Collectors.toList());
     }
