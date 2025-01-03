@@ -97,4 +97,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
 
     @Query("Select COUNT(u) from Consultation u where u.requestType = ?1 and DATE(u.consultationDate) = DATE(?2)")
     Long getTotalConsultations(RequestType requestType,LocalDate date);
+
+    Consultation findByCaseIdAndRequestType(Integer caseId, RequestType requestType);
 }

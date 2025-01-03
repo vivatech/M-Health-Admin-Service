@@ -1,5 +1,6 @@
 package com.mhealth.admin.repository;
 
+import com.mhealth.admin.model.Users;
 import com.mhealth.admin.model.WalletTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +38,8 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
 
     @Query("Select u from WalletTransaction u where u.orderId = ?1")
     List<WalletTransaction> findByOrderId(Integer id);
+
+    @Query(value = "SELECT * FROM mh_wallet_transaction WHERE order_id = ?1 AND patient_id = ?2 AND is_debit_credit = 'debit' AND service_type = 'consultation'", nativeQuery = true)
+    WalletTransaction findByOrderIdAndPatientIdAndServiceTypeAndisDebitCredit(Integer id, Integer patientId);
+
 }

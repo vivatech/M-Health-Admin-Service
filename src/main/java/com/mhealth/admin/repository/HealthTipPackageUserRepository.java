@@ -142,12 +142,12 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
 
     @Query("SELECT h FROM HealthTipPackageUser h WHERE " +
             "(:packageName IS NULL OR h.healthTipPackage.packageName = :packageName) AND " +
-            "(h.createdAt BETWEEN :startDate AND :endDate)")
-    Page<HealthTipPackageUser> findByPackageNameAndCreatedAtRange(
+            "(:filterDate IS NULL OR DATE(h.createdAt) = :filterDate)")
+    Page<HealthTipPackageUser> findByPackageNameAndCreatedAtDate(
             @Param("packageName") String packageName,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
+            @Param("filterDate") LocalDate filterDate,
             Pageable pageable);
+
 
 
 
