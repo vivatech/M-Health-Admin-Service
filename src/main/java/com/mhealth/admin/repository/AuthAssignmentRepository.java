@@ -14,11 +14,11 @@ public interface AuthAssignmentRepository extends JpaRepository<AuthAssignment, 
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM auth_assignment WHERE user_id = :userId", nativeQuery = true)
-    void deleteByUserId(@Param("userId") Integer userId);
+    void deleteByUserId(@Param("userId") String userId);
 
     @Transactional
     @Modifying
     @Query(value = "INSERT INTO auth_assignment (item_name, user_id, created_at) VALUES (:itemName, :userId, :createdAt)", nativeQuery = true)
-    void insertRole(@Param("itemName") String itemName, @Param("userId") Integer userId, @Param("createdAt") Long createdAt);
+    void insertRole(@Param("itemName") String itemName, @Param("userId") String userId, @Param("createdAt") Integer createdAt);
 }
 

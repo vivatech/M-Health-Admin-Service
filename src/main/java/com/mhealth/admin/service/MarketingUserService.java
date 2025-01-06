@@ -233,10 +233,10 @@ public class MarketingUserService {
     public void assignRole(Integer userId, String roleType) {
         try {
             // Delete existing roles
-            authAssignmentRepository.deleteByUserId(userId);
+            authAssignmentRepository.deleteByUserId(String.valueOf(userId));
 
             // Insert new role
-            authAssignmentRepository.insertRole(roleType, userId, System.currentTimeMillis());
+            authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
 
         } catch (Exception ex) {
             log.error("exception occurred while assigning role to the user", ex);

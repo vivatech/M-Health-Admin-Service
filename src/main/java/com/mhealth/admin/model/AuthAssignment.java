@@ -12,13 +12,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "auth_assignment")
 public class AuthAssignment {
 
-    @Column(name = "item_name", nullable = false)
-    private String itemName;
-
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @EmbeddedId
+    private AuthAssignmentKey id;
 
     @Column(name = "created_at")
     private Integer createdAt;
 }
-
