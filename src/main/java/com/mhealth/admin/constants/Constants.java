@@ -140,4 +140,8 @@ public interface Constants {
     public static final String Payment_Failed = "Payment Failed";
     public static final String Status_IN_ACTIVE = "I";
     String SOMETHING_WENT_WRONG = "Something Went Wrong";
+
+    String DEFAULT_LANGUAGE = "sl";
+    String LOCALE_SOMALIA = "so";
+    String LOCALE_ENGLISH = "en";
 }

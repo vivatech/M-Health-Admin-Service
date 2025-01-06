@@ -1,32 +1,66 @@
 package com.mhealth.admin.service;
 
 
+import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
-import com.mhealth.admin.dto.request.MarketingUserListResponseDto;
+import com.mhealth.admin.dto.enums.UserType;
+import com.mhealth.admin.dto.request.MarketingUserCreateRequestDto;
+import com.mhealth.admin.dto.response.MarketingUserListResponseDto;
 import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.model.Users;
+import com.mhealth.admin.model.UsersPromoCode;
+import com.mhealth.admin.repository.AuthAssignmentRepository;
+import com.mhealth.admin.repository.UsersPromoCodeRepository;
+import com.mhealth.admin.repository.UsersRepository;
+import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class MarketingUserService {
 
+    @Value("${m-health.country.code}")
+    private String countryCode;
+
+    @Value("${m-health.country}")
+    private String country;
+
+    @Value("${app.sms.sent}")
+    private boolean smsSent;
+
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private UsersPromoCodeRepository usersPromoCodeRepository;
+
+    @Autowired
+    private AuthAssignmentRepository authAssignmentRepository;
+
+    @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
+    private SMSApiService smsApiService;
 
     public Object getMarketingUserList(String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
         StringBuilder baseQuery = new StringBuilder("SELECT ")
@@ -149,6 +183,65 @@ public class MarketingUserService {
                     userId, name, email, promoCode, totalRegistration, totalConsultation, contactNumber, status
             );
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Object createMarketingUser(Locale locale, MarketingUserCreateRequestDto requestDto) {
+        // Step 1: Create Marketing User
+        Users marketingUser = new Users();
+        marketingUser.setType(UserType.Marketing);
+        marketingUser.setFirstName(requestDto.getFirstName());
+        marketingUser.setLastName(requestDto.getLastName());
+        marketingUser.setEmail(requestDto.getEmail());
+        marketingUser.setContactNumber(requestDto.getContactNumber());
+        marketingUser.setCountryCode(countryCode);
+        marketingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+
+        marketingUser = usersRepository.save(marketingUser);
+
+        // Step 2: Assign Role
+        assignRole(marketingUser.getUserId(), UserType.Marketing.name());
+
+        // Step 3: Create Promo Code
+        String uniquePromoCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        UsersPromoCode usersPromoCode = new UsersPromoCode();
+        usersPromoCode.setUserId(marketingUser.getUserId());
+        usersPromoCode.setPromoCode(uniquePromoCode);
+        usersPromoCodeRepository.save(usersPromoCode);
+
+        // Step 4: Send SMS
+        try {
+            locale = Utility.getUserNotificationLanguageLocale(marketingUser.getNotificationLanguage(), locale);
+            String smsMessage = messageSource.getMessage(Messages.REGISTER_MARKETING_USER, new Object[]{marketingUser.getFirstName() + " " + marketingUser.getLastName(), uniquePromoCode}, locale);
+            String smsNumber = "+" + countryCode + requestDto.getContactNumber();
+            if(smsSent){
+                smsApiService.sendMessage(smsNumber, smsMessage, country);
+            }
+        } catch (Exception ex) {
+            log.error("exception occurred while sending the sms", ex);
+        }
+
+        Response response = new Response();
+        response.setCode(Constants.SUCCESS);
+        response.setMessage(Messages.USER_CREATED);
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
+    @Transactional
+    public void assignRole(Integer userId, String roleType) {
+        try {
+            // Delete existing roles
+            authAssignmentRepository.deleteByUserId(userId);
+
+            // Insert new role
+            authAssignmentRepository.insertRole(roleType, userId, System.currentTimeMillis());
+
+        } catch (Exception ex) {
+            log.error("exception occurred while assigning role to the user", ex);
+            throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
+        }
     }
 
 }

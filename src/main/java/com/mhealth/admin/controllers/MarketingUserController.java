@@ -1,7 +1,7 @@
 package com.mhealth.admin.controllers;
 
 import com.mhealth.admin.constants.Constants;
-import com.mhealth.admin.service.DashboardService;
+import com.mhealth.admin.dto.request.MarketingUserCreateRequestDto;
 import com.mhealth.admin.service.MarketingUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,23 @@ public class MarketingUserController {
             Object response = marketingUserService.getMarketingUserList(name, email, status,contactNumber, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/marketing/list: {}", response);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
+    @PostMapping("/create")
+    public ResponseEntity<?> createMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                 @RequestBody MarketingUserCreateRequestDto marketingUserRequest) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/marketing/create");
+            log.info("Request Body: {}", marketingUserRequest);
+
+            Object response = marketingUserService.createMarketingUser(locale, marketingUserRequest);
+
+            log.info("Marketing user created successfully");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception: ", e);
