@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<?> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
         Response response = new Response(Status.FAILED,Constants.INVALID_PASSWORD_CODE,Constants.INVALID_PASSWORD,null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(NoSuchMessageException.class)
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> badCredentialsException(BadCredentialsException ex, WebRequest request) {
         Response response = new Response(Status.FAILED,Constants.INVALID_PASSWORD_CODE,Constants.INVALID_PASSWORD,null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)
