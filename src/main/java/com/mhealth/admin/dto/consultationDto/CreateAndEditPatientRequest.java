@@ -1,5 +1,6 @@
 package com.mhealth.admin.dto.consultationDto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,5 +38,6 @@ public class CreateAndEditPatientRequest {
     private String residentAddress;
 
     @NotNull(message = "Terms and condition should be checked")
+    @AssertTrue(message = "Terms and conditions must be accepted")
     private boolean termsAndCondition;
 }

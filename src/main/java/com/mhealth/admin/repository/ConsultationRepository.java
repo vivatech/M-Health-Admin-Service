@@ -6,7 +6,9 @@ import com.mhealth.admin.model.Consultation;
 import com.mhealth.admin.model.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
@@ -15,7 +17,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface ConsultationRepository extends JpaRepository<Consultation, Integer> {
+public interface ConsultationRepository extends JpaRepository<Consultation, Integer>, JpaSpecificationExecutor<Consultation> {
     //TODO fix this query (this is based on date we need time)
     @Query("SELECT c FROM Consultation c WHERE c.patientId.userId = ?1 AND c.requestType IN ('Book', 'Cancel', 'Pending', 'Failed') AND c.consultationDate > CURRENT_DATE  ORDER BY c.caseId DESC")
     List<Consultation> findUpcomingConsultationsForPatient(Integer userId);

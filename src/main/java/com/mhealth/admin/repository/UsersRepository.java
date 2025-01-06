@@ -59,4 +59,6 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
 
     @Query("Select count(u) from Users u where u.type = ?1 AND u.status = ?2")
     Long countUsersByTypeAndStatus(UserType userType, StatusAI statusAI);
+
+    Users findByUserIdAndType(Users userId, String userType);
 }

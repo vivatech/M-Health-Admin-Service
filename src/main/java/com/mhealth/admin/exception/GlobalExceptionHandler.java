@@ -76,4 +76,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(messages, HttpStatus.PRECONDITION_FAILED);
     }
 
+    @ExceptionHandler(AdminModuleExceptionHandler.class)
+    public ResponseEntity<?> handleCustomException(AdminModuleExceptionHandler ex, WebRequest request) {
+        ErrorDetails response = new ErrorDetails(HttpStatus.PRECONDITION_FAILED, ex.getMessage(), request.getDescription(false));
+        return new ResponseEntity<>(response, HttpStatus.PRECONDITION_FAILED);
+    }
+
 }

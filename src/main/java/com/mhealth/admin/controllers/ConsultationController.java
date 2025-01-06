@@ -2,7 +2,12 @@ package com.mhealth.admin.controllers;
 
 import com.mhealth.admin.dto.consultationDto.CreateAndEditPatientRequest;
 import com.mhealth.admin.dto.consultationDto.SearchPatientRequest;
+import com.mhealth.admin.dto.request.RescheduleRequest;
+import com.mhealth.admin.dto.request.ViewConsultationRequest;
+import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.dto.response.ViewConsultationResponse;
+import com.mhealth.admin.model.Consultation;
 import com.mhealth.admin.service.ConsultationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +31,7 @@ public class ConsultationController {
      */
     @PostMapping("/search-patient")
     @Operation(method = "POST",description = "search patient api")
-    public ResponseEntity<Response> searchPatient(@RequestBody SearchPatientRequest request,
+    public ResponseEntity<Response> searchPatient(@Valid @RequestBody SearchPatientRequest request,
                                           @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
         return consultationService.searchPatient(request,locale);
     }
@@ -58,5 +63,19 @@ public class ConsultationController {
                                                   @ModelAttribute CreateAndEditPatientRequest request,
                                                   @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
         return consultationService.updatePatient(id, request, locale);
+    }
+
+    @PostMapping("/reschedule-time")
+    @Operation(method = "POST",description = "Reschedule patient consultation time by ADMIN")
+    public ResponseEntity<Response> reScheduleTime(@Valid @RequestBody RescheduleRequest request,
+                                                  @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
+        return consultationService.rescheduleAppointment(request, locale);
+    }
+
+    @PostMapping("/open-consultation")
+    @Operation(method = "POST",description = "Open consultation of Doctors")
+    public ResponseEntity<PaginationResponse<ViewConsultationResponse>> openConsultation(@Valid @RequestBody ViewConsultationRequest request,
+                                                                                         @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
+        return consultationService.openActiveConsultation(request, locale);
     }
 }
