@@ -36,7 +36,7 @@ public class MarketingUserController {
             log.info("Request Received For /api/v1/admin/user/marketing/list");
             log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortBy, page, size);
 
-            Object response = marketingUserService.getMarketingUserList(name, email, status,contactNumber, sortBy, page, size);
+            Object response = marketingUserService.getMarketingUserList(locale, name, email, status,contactNumber, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/marketing/list: {}", response);
             return new ResponseEntity<>(response, HttpStatus.OK);

@@ -144,4 +144,7 @@ public interface Constants {
     String DEFAULT_LANGUAGE = "sl";
     String LOCALE_SOMALIA = "so";
     String LOCALE_ENGLISH = "en";
+
+    String CODE_O = "0";
+    String CODE_1 = "1";
 }

@@ -6,6 +6,7 @@ import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.enums.UserType;
+import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.MarketingUserCreateRequestDto;
 import com.mhealth.admin.dto.response.MarketingUserListResponseDto;
 import com.mhealth.admin.dto.response.Response;
@@ -18,6 +19,7 @@ import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -62,7 +64,7 @@ public class MarketingUserService {
     @Autowired
     private SMSApiService smsApiService;
 
-    public Object getMarketingUserList(String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
+    public Object getMarketingUserList(Locale locale, String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
                 .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
@@ -160,9 +162,9 @@ public class MarketingUserService {
         data.put("totalCount", pageableResponse.getTotalElements());
 
         Response response = new Response();
-        response.setCode(Constants.SUCCESS);
+        response.setCode(Constants.CODE_1);
         response.setData(data);
-        response.setMessage(Messages.USER_LIST_FETCHED);
+        response.setMessage(messageSource.getMessage(Messages.USER_LIST_FETCHED, null, locale));
         response.setStatus(Status.SUCCESS);
 
         return response;
@@ -187,7 +189,34 @@ public class MarketingUserService {
 
     @Transactional
     public Object createMarketingUser(Locale locale, MarketingUserCreateRequestDto requestDto) {
-        // Step 1: Create Marketing User
+        Response response = new Response();
+
+        // Validate Request
+        String validationMessage = requestDto.validate();
+        if (validationMessage != null) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(validationMessage);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Check Existing Users For Give Email & Contact Number
+        long emailCount = usersRepository.countByEmail(requestDto.getEmail());
+        long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Marketing);
+        if (emailCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        } else if (contactNumberCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+
+        // Create Marketing User
         Users marketingUser = new Users();
         marketingUser.setType(UserType.Marketing);
         marketingUser.setFirstName(requestDto.getFirstName());
@@ -195,21 +224,22 @@ public class MarketingUserService {
         marketingUser.setEmail(requestDto.getEmail());
         marketingUser.setContactNumber(requestDto.getContactNumber());
         marketingUser.setCountryCode(countryCode);
+        marketingUser.setIsInternational(YesNo.No);
         marketingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
         marketingUser = usersRepository.save(marketingUser);
 
-        // Step 2: Assign Role
+        // Assign Role
         assignRole(marketingUser.getUserId(), UserType.Marketing.name());
 
-        // Step 3: Create Promo Code
+        // Create Promo Code
         String uniquePromoCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         UsersPromoCode usersPromoCode = new UsersPromoCode();
         usersPromoCode.setUserId(marketingUser.getUserId());
         usersPromoCode.setPromoCode(uniquePromoCode);
         usersPromoCodeRepository.save(usersPromoCode);
 
-        // Step 4: Send SMS
+        // Send SMS
         try {
             locale = Utility.getUserNotificationLanguageLocale(marketingUser.getNotificationLanguage(), locale);
             String smsMessage = messageSource.getMessage(Messages.REGISTER_MARKETING_USER, new Object[]{marketingUser.getFirstName() + " " + marketingUser.getLastName(), uniquePromoCode}, locale);
@@ -221,9 +251,8 @@ public class MarketingUserService {
             log.error("exception occurred while sending the sms", ex);
         }
 
-        Response response = new Response();
-        response.setCode(Constants.SUCCESS);
-        response.setMessage(Messages.USER_CREATED);
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_CREATED, null, locale));
         response.setStatus(Status.SUCCESS);
 
         return response;
