@@ -12,5 +12,9 @@ public enum UserType {
     Agentuser,
     Marketing,
     Translator_Nurse,
-    Supervisor_Doctor
+    Supervisor_Doctor,
+    Ambulance,
+    KPIUser,
+    NursePartner,
+
 }

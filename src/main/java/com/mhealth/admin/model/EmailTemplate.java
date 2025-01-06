@@ -22,9 +22,6 @@ public class EmailTemplate {
     @Column(name = "`key`", nullable = false, unique = true)
     private String key;
 
-    @Column(name = "value", nullable = false, columnDefinition = "TEXT")
-    private String value;
-
     @Column(name = "subject", columnDefinition = "TEXT")
     private String subject;
 

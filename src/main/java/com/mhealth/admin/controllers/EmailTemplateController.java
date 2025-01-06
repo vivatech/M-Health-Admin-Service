@@ -44,7 +44,7 @@ public class EmailTemplateController {
     @PutMapping("/{id}")
     public ResponseEntity<Response> updateEmailTemplate(
             @PathVariable Integer id,
-            @Valid @RequestBody EmailTemplateRequest request,
+            @RequestBody EmailTemplateRequest request,
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.updateEmailTemplate(id, request, locale);
     }
@@ -54,18 +54,9 @@ public class EmailTemplateController {
     })
     @PostMapping("/search")
     public ResponseEntity<Response> searchEmailTemplates(
-            @Valid @RequestBody EmailTemplateSearchRequest request,
+            @RequestBody EmailTemplateSearchRequest request,
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.searchEmailTemplates(request.getKey(), request.getValue(), locale);
-    }
-
-    @Operation(summary = "Get all email templates", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllEmailTemplates(
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.getAllEmailTemplates(locale);
+        return service.searchEmailTemplates(request.getKey(), request.getSubject(), locale);
     }
 
     @Operation(summary = "Get email template by ID", responses = {

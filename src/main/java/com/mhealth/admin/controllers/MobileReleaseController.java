@@ -47,15 +47,6 @@ public class MobileReleaseController {
         return service.updateMobileRelease(id, request, locale);
     }
 
-    @Operation(summary = "Get all mobile releases", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllMobileReleases(
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.getAllMobileReleases(locale);
-    }
-
     @Operation(summary = "Get mobile release by ID", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "Mobile release not found", content = @Content)
@@ -67,16 +58,6 @@ public class MobileReleaseController {
         return service.getMobileReleaseById(id, locale);
     }
 
-    @Operation(summary = "Delete mobile release by ID", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully deleted", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Mobile release not found", content = @Content)
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Response> deleteMobileReleaseById(
-            @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.deleteMobileReleaseById(id, locale);
-    }
 
     @Operation(summary = "Search mobile release by app version", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
@@ -84,8 +65,11 @@ public class MobileReleaseController {
     })
     @GetMapping("/search")
     public ResponseEntity<Response> searchMobileRelease(
-            @RequestParam String appVersion,
+            @RequestParam(required = false) String appVersion,
+            @RequestParam(defaultValue = "0") int page, // Default to page 0
+            @RequestParam(defaultValue = "10") int size, // Default to 10 records per page
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.searchMobileReleaseByAppVersion(appVersion, locale);
+        return service.searchMobileReleaseByAppVersion(appVersion, locale, page, size);
     }
+
 }

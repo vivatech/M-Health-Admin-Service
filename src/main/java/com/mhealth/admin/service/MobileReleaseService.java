@@ -8,6 +8,9 @@ import com.mhealth.admin.model.MobileRelease;
 import com.mhealth.admin.repository.MobileReleaseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -71,13 +74,6 @@ public class MobileReleaseService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Response> getAllMobileReleases(Locale locale) {
-        List<MobileRelease> mobileReleases = repository.findAll();
-
-        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.MOBILE_RELEASE_FETCHED, null, locale), mobileReleases);
-        return ResponseEntity.ok(response);
-    }
 
     public ResponseEntity<Response> getMobileReleaseById(Integer id, Locale locale) {
         MobileRelease mobileRelease = repository.findById(id).orElse(null);
@@ -93,22 +89,10 @@ public class MobileReleaseService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Response> deleteMobileReleaseById(Integer id, Locale locale) {
-        if (!repository.existsById(id)) {
-            Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
-                    messageSource.getMessage(Constants.MOBILE_RELEASE_NOT_FOUND, null, locale));
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
 
-        repository.deleteById(id);
-
-        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.MOBILE_RELEASE_DELETED, null, locale));
-        return ResponseEntity.ok(response);
-    }
-
-    public ResponseEntity<Response> searchMobileReleaseByAppVersion(String appVersion, Locale locale) {
-        List<MobileRelease> mobileReleases = repository.findByAppVersionContainingIgnoreCase(appVersion);
+    public ResponseEntity<Response> searchMobileReleaseByAppVersion(String appVersion, Locale locale, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MobileRelease> mobileReleases = repository.findByAppVersionContainingIgnoreCase(appVersion, pageable);
 
         if (mobileReleases.isEmpty()) {
             Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
@@ -116,8 +100,13 @@ public class MobileReleaseService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
+        // Create a simplified response with only content and totalElements
         Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.MOBILE_RELEASE_FETCHED, null, locale), mobileReleases);
+                messageSource.getMessage(Constants.MOBILE_RELEASE_FETCHED, null, locale),
+                mobileReleases.getContent(), mobileReleases.getTotalElements());
+
         return ResponseEntity.ok(response);
     }
+
+
 }
