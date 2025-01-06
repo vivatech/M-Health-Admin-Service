@@ -3,6 +3,7 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.consultationDto.*;
+import com.mhealth.admin.dto.enums.NotificationType;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
@@ -41,6 +42,7 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
 
+import static com.mhealth.admin.config.Constants.RESCHEDULE_CREATED_SUCCESS;
 import static com.mhealth.admin.constants.Constants.*;
 
 @Service
@@ -290,7 +292,7 @@ public class ConsultationService {
 
         SlotMaster oldSlotMaster = slotMasterRepository.findById(consultation.getSlotId().getSlotId()).orElseThrow(() -> new AdminModuleExceptionHandler("Slot not found"));
         String oldTime = consultation.getConsultationDate() + ", " + oldSlotMaster.getSlotStartTime();
-        String newTime = consultation.getConsultationDate() + ", " + master.getSlotStartTime();
+        String newTime = request.getConsultationDate() + ", " + master.getSlotStartTime();
         consultation.setConsultationDate(request.getConsultationDate());
         consultation.setSlotId(master);
         consultation.setUpdatedAt(LocalDateTime.now(ZoneId.of(zone)));
@@ -300,19 +302,25 @@ public class ConsultationService {
         consultationRepository.save(consultation);
 
         //notification
-        Users patient = usersRepository.findByUserIdAndType(consultation.getPatientId(), PATIENT);
+        Users patient = usersRepository.findByUserIdAndType(consultation.getPatientId().getUserId(), UserType.Patient);
 
-        Users doctor = usersRepository.findByUserIdAndType(consultation.getDoctorId(), TYPE_DOCTOR);
+        Users doctor = usersRepository.findByUserIdAndType(consultation.getDoctorId().getUserId(), UserType.Doctor);
 
         //TODO: send doctor notification for rescheduling of the time slot
-        String message = getMessage("aap.reschedule.created.success", locale, patient.getFullName(), oldTime, doctor.getFullName(), newTime);
 
+        if(!org.apache.commons.lang.StringUtils.isEmpty(patient.getNotificationLanguage()) && patient.getNotificationLanguage().equalsIgnoreCase("en")){
+            locale = Locale.ENGLISH;
+        }
+        else locale = new Locale(mHealthCountry.toLowerCase());
+        String patientMessage = getMessage(RESCHEDULE_CREATED_SUCCESS, locale, patient.getFullName(), oldTime, doctor.getFullName(), newTime);
+        publicService.addNewNotificationMessage(patientMessage, patient, request.getUserId(), NotificationType.Consult, consultation.getCaseId());
+        log.info("Message : {}", patientMessage);
         if(smsSent){
             String patientNumber = "+"+patient.getCountryCode()+patient.getContactNumber();
-            smsApiService.sendMessage(patientNumber, message, mHealthCountry);
+            smsApiService.sendMessage(patientNumber, patientMessage, mHealthCountry);
         }
 
-        responseDto.setMessage(message);
+        responseDto.setMessage(patientMessage);
         responseDto.setData(consultation.getSlotId());
         responseDto.setStatus(Status.SUCCESS);
         responseDto.setCode(SUCCESS);

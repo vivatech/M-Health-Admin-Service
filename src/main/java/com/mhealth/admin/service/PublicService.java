@@ -1,9 +1,12 @@
 package com.mhealth.admin.service;
 
+import com.mhealth.admin.dto.enums.NotificationType;
 import com.mhealth.admin.dto.enums.YesNo;
+import com.mhealth.admin.repository.NotificationRepository;
 import com.mhealth.admin.sms.SMSAggregator;
 import com.mhealth.admin.sms.SMSApiService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.config.Utility;
@@ -30,6 +33,8 @@ import java.util.Random;
 @Service
 @Slf4j
 public class PublicService {
+    @Autowired
+    private NotificationRepository notificationRepository;
     @Autowired
     private UsersRepository usersRepository;
     @Autowired
@@ -69,13 +74,13 @@ public class PublicService {
 
     public String sendMessage(Map<String, Object> temp, String scenario, Locale locale) {
         Users users = (Users) temp.get("user");
-        if(users.getNotificationLanguage().equalsIgnoreCase("en")){
+        if(!StringUtils.isEmpty(users.getNotificationLanguage()) && users.getNotificationLanguage().equalsIgnoreCase("en")){
             locale = Locale.ENGLISH;
         }else locale = new Locale("so");
 
         Notification notification = new Notification();
 
-        String message = messageSource.getMessage(Constants.OTP_TO_RESET_PASSWORD, null, locale);;
+        String message = messageSource.getMessage(scenario, null, locale);
         if(scenario.equalsIgnoreCase(Constants.OTP_TO_RESET_PASSWORD)){
             message = message.replace("{{otp}}", (String)temp.get("otp"));
 
@@ -117,4 +122,17 @@ public class PublicService {
         ));
     }
 
+    public void addNewNotificationMessage(String message, Users toId, Integer fromId, NotificationType type, Integer caseId) {
+
+        Notification notification = new Notification();
+        notification.setMessage(message);
+        notification.setIsRead("0");
+        notification.setType(type);
+        notification.setFromId(fromId);
+        notification.setToId(toId.getUserId());
+        notification.setCaseId(caseId);
+        notification.setCreatedAt(LocalDateTime.now(ZoneId.of(zone)));
+
+        notificationRepository.save(notification);
+    }
 }

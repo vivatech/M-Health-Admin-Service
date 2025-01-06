@@ -151,4 +151,5 @@ public class Constants {
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
     public static final String COUNTRY_SOMALIA = "SOMALIA";
     public static final String COUNTRY_KENYA = "KENYA";
+    public static final String RESCHEDULE_CREATED_SUCCESS = "app.reschedule.created.success";
 }
