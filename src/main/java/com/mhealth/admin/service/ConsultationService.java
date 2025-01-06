@@ -371,6 +371,7 @@ public class ConsultationService {
             dto.setPatientAddress(ele.getPatientId().getResidenceAddress());
             dto.setConsultationTime(ele.getSlotId().getSlotTime());
             dto.setDoctorCharge(ele.getDoctorId().getTotalMoney());
+            //TODO: admin commission is required
             dto.setAdminCommission(0.0);
             dto.setFinalPrice(dto.getDoctorCharge() + dto.getAdminCommission());
             dto.setStatus(ele.getConsultStatus().toString());
