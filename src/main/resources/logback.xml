@@ -11,10 +11,10 @@
 
     <!-- Rolling File Appender -->
     <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/home/core/logs/mhealthprovider.log</file>
+        <file>D:/mHealth/logs/mhealthprovider.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- Custom file name pattern for backup logs -->
-            <fileNamePattern>/home/core/logs/mhealthprovider.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>D:/mHealth/logs/mhealthprovider.log.%d{yyyy-MM-dd}</fileNamePattern>
             <maxHistory>7</maxHistory> <!-- Keep logs for 7 days -->
         </rollingPolicy>
 
