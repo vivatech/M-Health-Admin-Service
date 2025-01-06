@@ -38,25 +38,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<?> handleInvalidCredentialsException(InvalidCredentialsException ex, WebRequest request) {
         Response response = new Response(Status.FAILED,Constants.INVALID_PASSWORD_CODE,Constants.INVALID_PASSWORD,null);
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoSuchMessageException.class)
     public ResponseEntity<?> handleNoSuchMessageException(NoSuchMessageException ex, WebRequest request) {
         Response response = new Response(Status.FAILED, "10001", "Message not found for the specified locale.", null);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
         ErrorDetails response = new ErrorDetails(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getDescription(false));
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> badCredentialsException(BadCredentialsException ex, WebRequest request) {
         Response response = new Response(Status.FAILED,Constants.INVALID_PASSWORD_CODE,Constants.INVALID_PASSWORD,null);
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
         log.error("Exception: ",ex);
         ErrorDetails response = new ErrorDetails(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getDescription(false));
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -73,13 +73,12 @@ public class GlobalExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             messages.add(error.getDefaultMessage());
         }
-        return new ResponseEntity<>(messages, HttpStatus.PRECONDITION_FAILED);
+        return new ResponseEntity<>(messages, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(AdminModuleExceptionHandler.class)
     public ResponseEntity<?> handleCustomException(AdminModuleExceptionHandler ex, WebRequest request) {
         ErrorDetails response = new ErrorDetails(HttpStatus.PRECONDITION_FAILED, ex.getMessage(), request.getDescription(false));
-        return new ResponseEntity<>(response, HttpStatus.PRECONDITION_FAILED);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
 }
