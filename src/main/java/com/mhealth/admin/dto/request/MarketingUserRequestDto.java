@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MarketingUserCreateRequestDto {
+public class MarketingUserRequestDto {
     private String firstName;
     private String lastName;
     private String email;

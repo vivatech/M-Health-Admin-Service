@@ -8,6 +8,10 @@ public interface Messages {
 
     String CONTACT_NUMBER_ALREADY_EXISTS = "contact-number.already.exists";
 
+    String USER_NOT_FOUND = "user.not.found";
+
+    String USER_UPDATED = "user.updated";
+
     // Marketing User's Messages
     String REGISTER_MARKETING_USER = "register.marketing.user";
 }

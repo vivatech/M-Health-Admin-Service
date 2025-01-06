@@ -62,4 +62,9 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
 
     long countByEmail(String email);
     long countByContactNumberAndType(String contactNumber, UserType type);
+    long countByEmailAndUserIdNot(String email, Integer userId);
+
+    long countByContactNumberAndTypeAndUserIdNot(String contactNumber, UserType type, Integer userId);
+
+    Optional<Users> findByUserIdAndType(Integer userId, UserType type);
 }

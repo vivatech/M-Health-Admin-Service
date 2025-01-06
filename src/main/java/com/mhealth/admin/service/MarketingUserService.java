@@ -7,7 +7,7 @@ import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
-import com.mhealth.admin.dto.request.MarketingUserCreateRequestDto;
+import com.mhealth.admin.dto.request.MarketingUserRequestDto;
 import com.mhealth.admin.dto.response.MarketingUserListResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.Users;
@@ -19,7 +19,6 @@ import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -188,10 +187,10 @@ public class MarketingUserService {
     }
 
     @Transactional
-    public Object createMarketingUser(Locale locale, MarketingUserCreateRequestDto requestDto) {
+    public Object createMarketingUser(Locale locale, MarketingUserRequestDto requestDto) {
         Response response = new Response();
 
-        // Validate Request
+        // Validate the input
         String validationMessage = requestDto.validate();
         if (validationMessage != null) {
             response.setCode(Constants.CODE_O);
@@ -200,9 +199,10 @@ public class MarketingUserService {
             return response;
         }
 
-        // Check Existing Users For Give Email & Contact Number
+        // Check for duplicate email and contact number
         long emailCount = usersRepository.countByEmail(requestDto.getEmail());
         long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Marketing);
+
         if (emailCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
@@ -216,7 +216,7 @@ public class MarketingUserService {
         }
 
 
-        // Create Marketing User
+        // Create marketing user
         Users marketingUser = new Users();
         marketingUser.setType(UserType.Marketing);
         marketingUser.setFirstName(requestDto.getFirstName());
@@ -229,10 +229,10 @@ public class MarketingUserService {
 
         marketingUser = usersRepository.save(marketingUser);
 
-        // Assign Role
+        // Assign role
         assignRole(marketingUser.getUserId(), UserType.Marketing.name());
 
-        // Create Promo Code
+        // Create promo code
         String uniquePromoCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         UsersPromoCode usersPromoCode = new UsersPromoCode();
         usersPromoCode.setUserId(marketingUser.getUserId());
@@ -251,6 +251,7 @@ public class MarketingUserService {
             log.error("exception occurred while sending the sms", ex);
         }
 
+        // Prepare success response
         response.setCode(Constants.CODE_1);
         response.setMessage(messageSource.getMessage(Messages.USER_CREATED, null, locale));
         response.setStatus(Status.SUCCESS);
@@ -272,5 +273,63 @@ public class MarketingUserService {
             throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
         }
     }
+
+    @Transactional
+    public Object updateMarketingUser(Locale locale, Integer userId, MarketingUserRequestDto requestDto) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        // Validate the input
+        String validationMessage = requestDto.validate();
+        if (validationMessage != null) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(validationMessage);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Check for duplicate email and contact number
+        long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+        long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Marketing, userId);
+
+        if (emailCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        } else if (contactNumberCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Update the user fields
+        existingUser.setFirstName(requestDto.getFirstName());
+        existingUser.setLastName(requestDto.getLastName());
+        existingUser.setEmail(requestDto.getEmail());
+        existingUser.setContactNumber(requestDto.getContactNumber());
+        existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+
+        usersRepository.save(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_UPDATED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
 
 }
