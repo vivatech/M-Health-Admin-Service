@@ -12,6 +12,8 @@ public interface Messages {
 
     String USER_UPDATED = "user.updated";
 
-    // Marketing User's Messages
+    String USER_FETCHED = "user.fetched";
+
+    // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
 }

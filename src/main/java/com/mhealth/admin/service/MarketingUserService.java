@@ -9,6 +9,7 @@ import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.MarketingUserRequestDto;
 import com.mhealth.admin.dto.response.MarketingUserListResponseDto;
+import com.mhealth.admin.dto.response.MarketingUserResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.Users;
 import com.mhealth.admin.model.UsersPromoCode;
@@ -331,5 +332,42 @@ public class MarketingUserService {
         return response;
     }
 
+    public Object getMarketingUser(Locale locale, Integer userId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        // Construct users entity to marketing user response dto
+        MarketingUserResponseDto marketingUserResponseDto = convertToMarketingUserResponseDto(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setData(marketingUserResponseDto);
+        response.setMessage(messageSource.getMessage(Messages.USER_FETCHED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+
+    }
+
+    private MarketingUserResponseDto convertToMarketingUserResponseDto(Users users) {
+        MarketingUserResponseDto responseDto = new MarketingUserResponseDto();
+        responseDto.setUserId(users.getUserId());
+        responseDto.setFirstName(users.getFirstName());
+        responseDto.setLastName(users.getLastName());
+        responseDto.setEmail(users.getEmail());
+        responseDto.setContactNumber(users.getContactNumber());
+        responseDto.setNotificationLanguage(users.getNotificationLanguage());
+        return responseDto;
+    }
 
 }
