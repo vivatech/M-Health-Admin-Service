@@ -5,6 +5,7 @@ import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.MarketingUserRequestDto;
@@ -368,6 +369,52 @@ public class MarketingUserService {
         responseDto.setContactNumber(users.getContactNumber());
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         return responseDto;
+    }
+
+    public Object updateMarketingUserStatus(Locale locale, Integer userId, String status) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        // Validate the status
+        if (!validateStatus(status)) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.INCORRECT_USER_STATUS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Update the user's status field
+        existingUser.setStatus(StatusAI.valueOf(status));
+
+        usersRepository.save(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_UPDATED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
+    private boolean validateStatus(String status) {
+        boolean containsStatus = false;
+        for (StatusAI statusAI : StatusAI.values()) {
+            if (statusAI.name().equals(status)) {
+                containsStatus = true;
+                break;
+            }
+        }
+        return containsStatus;
     }
 
 }

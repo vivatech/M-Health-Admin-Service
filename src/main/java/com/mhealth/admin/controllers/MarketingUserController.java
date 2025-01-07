@@ -102,4 +102,22 @@ public class MarketingUserController {
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @RequestMapping(value = "/update-status", method = RequestMethod.POST)
+    public ResponseEntity<?> updateMarketingUserStatus(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                       @RequestParam Integer userId,
+                                                       @RequestParam String status) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/marketing/update-status");
+            log.info("Request Parameter: userId={}, status={}", userId, status);
+
+            Object response = marketingUserService.updateMarketingUserStatus(locale, userId, status);
+
+            log.info("Response Sent For /api/v1/admin/user/marketing/update-status: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
