@@ -417,4 +417,36 @@ public class MarketingUserService {
         return containsStatus;
     }
 
+    @Transactional
+    public Object deleteMarketingUser(Locale locale, Integer userId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        // Delete related records from auth_assignment table
+        authAssignmentRepository.deleteByUserId(String.valueOf(userId));
+
+        // Delete related records from mh_users_promo_code table
+        usersPromoCodeRepository.deleteByUserId(userId);
+
+        // Delete the user from the mh_users table
+        usersRepository.delete(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_DELETED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
 }

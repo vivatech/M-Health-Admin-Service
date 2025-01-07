@@ -8,6 +8,7 @@ public interface Messages {
     String USER_NOT_FOUND = "user.not.found";
     String USER_UPDATED = "user.updated";
     String USER_FETCHED = "user.fetched";
+    String USER_DELETED = "user.deleted";
     String INCORRECT_USER_STATUS = "incorrect.users.status";
 
     // Marketing User's SMS Body

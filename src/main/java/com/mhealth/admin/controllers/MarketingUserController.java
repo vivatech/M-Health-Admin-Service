@@ -120,4 +120,21 @@ public class MarketingUserController {
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                 @RequestParam Integer userId) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/marketing/delete");
+            log.info("Request Parameter: userId={}", userId);
+
+            Object response = marketingUserService.deleteMarketingUser(locale, userId);
+
+            log.info("Response Sent For /api/v1/admin/user/marketing/delete: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
