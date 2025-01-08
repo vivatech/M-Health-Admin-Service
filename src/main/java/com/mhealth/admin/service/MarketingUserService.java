@@ -457,7 +457,7 @@ public class MarketingUserService {
     public Object getMarketingUserReport(Locale locale, Integer marketingUserId, String name, String email, LocalDate startDate, LocalDate endDate, String contactNumber, String sortBy, int page, int size) {
 
         StringBuilder queryBuilder = new StringBuilder(
-                "SELECT u.user_id AS userId, " +
+                "SELECT DISTINCT u.user_id AS userId, " +
                         "CONCAT(u.first_name, ' ', u.last_name) AS name, " +
                         "u.email AS email, " +
                         "CONCAT(u.country_code, u.contact_number) AS contactNumber, " +
