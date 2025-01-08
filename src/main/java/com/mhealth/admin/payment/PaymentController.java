@@ -1,14 +1,17 @@
 package com.mhealth.admin.payment;
 
 import com.mhealth.admin.config.Constants;
+import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.request.B2CPaymentDto;
 import com.mhealth.admin.dto.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +39,9 @@ public class PaymentController {
             @RequestBody B2CPaymentDto request,
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
 
+        if (StringUtils.isEmpty(request.getMsisdn()) || request.getAmount() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, "Request body is invalid"));
+        }
         return ResponseEntity.ok(paymentService.sendPayment(request.getMsisdn(), request.getAmount(), mHealthCountry));
     }
 
