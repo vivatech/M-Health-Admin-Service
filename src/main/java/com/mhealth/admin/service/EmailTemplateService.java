@@ -35,7 +35,6 @@ public class EmailTemplateService {
         EmailTemplate template = new EmailTemplate(
                 null,
                 request.getKey(),
-                request.getValue(),
                 request.getSubject(),
                 request.getContent(),
                 new Date(),
@@ -59,7 +58,6 @@ public class EmailTemplateService {
         }
 
         template.setKey(request.getKey());
-        template.setValue(request.getValue());
         template.setSubject(request.getSubject());
         template.setContent(request.getContent());
         template.setUpdatedAt(new Date());
@@ -71,16 +69,8 @@ public class EmailTemplateService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Response> searchEmailTemplates(String key, String value, Locale locale) {
-        List<EmailTemplate> templates = repository.searchByKeyAndValue(key, value);
-
-        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.EMAIL_TEMPLATE_FETCHED, null, locale), templates);
-        return ResponseEntity.ok(response);
-    }
-
-    public ResponseEntity<Response> getAllEmailTemplates(Locale locale) {
-        List<EmailTemplate> templates = repository.findAll();
+    public ResponseEntity<Response> searchEmailTemplates(String key, String subject, Locale locale) {
+        List<EmailTemplate> templates = repository.searchByKeyAndSubject(key, subject);
 
         Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.EMAIL_TEMPLATE_FETCHED, null, locale), templates);

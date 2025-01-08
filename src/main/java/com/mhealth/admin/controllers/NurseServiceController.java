@@ -46,15 +46,6 @@ public class NurseServiceController {
         return service.updateNurseService(id, request, locale);
     }
 
-    @Operation(summary = "Get all nurse services", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllNurseServices(
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.getAllNurseServices(locale);
-    }
-
     @Operation(summary = "Get nurse service by ID", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "Nurse service not found", content = @Content)
@@ -81,13 +72,17 @@ public class NurseServiceController {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "No records found", content = @Content)
     })
+
     @GetMapping("/search")
     public ResponseEntity<Response> searchNurseServices(
             @RequestParam(required = false) String seviceName,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page, // Default page = 0
+            @RequestParam(defaultValue = "10") int size, // Default size = 10
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.searchNurseServices(seviceName, status, locale);
+        return service.searchNurseServices(seviceName, status, locale, page, size);
     }
+
 
     @Operation(summary = "Update the status of a nurse service", responses = {
             @ApiResponse(responseCode = "200", description = "Status updated successfully", content = @Content(schema = @Schema(implementation = Response.class))),

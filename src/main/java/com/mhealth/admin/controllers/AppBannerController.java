@@ -62,8 +62,11 @@ public class AppBannerController {
     @GetMapping("/search")
     @Operation(summary = "Search app banners by name")
     public ResponseEntity<Response> searchAppBanners(
-            @RequestParam String iname,
-            @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
-        return service.searchAppBanners(iname,locale);
+            @RequestParam(required = false) String iname,
+            @RequestParam(defaultValue = "0") int page, // Default page = 0
+            @RequestParam(defaultValue = "10") int size, // Default size = 10
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        return service.searchAppBanners(iname, locale, page, size);
     }
+
 }

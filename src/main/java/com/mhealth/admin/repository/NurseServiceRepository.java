@@ -1,6 +1,8 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.model.NurseService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +19,12 @@ public interface NurseServiceRepository extends JpaRepository<NurseService, Inte
     @Query("Select u from NurseService u where u.id in ?1")
     List<NurseService> findByIds(List<Integer> ids);
 
-    @Query("Select u from NurseService u where u.seviceName LIKE %:serviceName% and u.status LIKE %:status%")
-    List<NurseService> findBySeviceNameContainingIgnoreCaseAndStatusContainingIgnoreCase
-            (@Param("serviceName") String serviceName,@Param("status")  String status);
+    @Query("SELECT u FROM NurseService u " +
+            "WHERE (:serviceName IS NULL OR :serviceName = '' OR u.seviceName LIKE %:serviceName%) " +
+            "AND (:status IS NULL OR :status = '' OR u.status LIKE %:status%)")
+    Page<NurseService> findBySeviceNameContainingIgnoreCaseAndStatusContainingIgnoreCase(
+            @Param("serviceName") String serviceName,
+            @Param("status") String status,
+            Pageable pageable);
+
 }
