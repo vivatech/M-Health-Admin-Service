@@ -10,6 +10,7 @@ import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.MarketingUserRequestDto;
 import com.mhealth.admin.dto.response.MarketingUserListResponseDto;
+import com.mhealth.admin.dto.response.MarketingUserReportResponseDto;
 import com.mhealth.admin.dto.response.MarketingUserResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.Users;
@@ -31,6 +32,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -447,6 +452,135 @@ public class MarketingUserService {
         response.setStatus(Status.SUCCESS);
 
         return response;
+    }
+
+    public Object getMarketingUserReport(Locale locale, Integer marketingUserId, String name, String email, LocalDate startDate, LocalDate endDate, String contactNumber, String sortBy, int page, int size) {
+
+        StringBuilder queryBuilder = new StringBuilder(
+                "SELECT u.user_id AS userId, " +
+                        "CONCAT(u.first_name, ' ', u.last_name) AS name, " +
+                        "u.email AS email, " +
+                        "CONCAT(u.country_code, u.contact_number) AS contactNumber, " +
+                        "(SELECT COUNT(c.case_id) FROM mh_consultation c WHERE c.patient_id = u.user_id AND c.request_type NOT IN ('Cancel', 'Failed')) AS totalConsultations, " +
+                        "u.created_at AS createdAt " +
+                        "FROM mh_users u " +
+                        "JOIN mh_users_created_with_promocode pc ON u.user_id = pc.user_id " +
+                        "WHERE pc.created_by = :marketingUserId ");
+
+        // Apply filters
+        if (name != null && !name.isEmpty()) {
+            queryBuilder.append("AND LOWER(CONCAT(u.first_name, ' ', u.last_name)) LIKE LOWER(:name) ");
+        }
+        if (email != null && !email.isEmpty()) {
+            queryBuilder.append("AND LOWER(u.email) LIKE LOWER(:email) ");
+        }
+        if (startDate != null && endDate != null) {
+            queryBuilder.append("AND u.created_at BETWEEN :startDate AND :endDate ");
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            queryBuilder.append("AND CONCAT(u.country_code, u.contact_number) LIKE :contactNumber ");
+        }
+
+        // Apply sorting
+        queryBuilder.append("ORDER BY ")
+                .append("u.user_id")
+                .append(" ")
+                .append("0".equalsIgnoreCase(sortBy) ? "ASC" : "DESC");
+
+        // Create count query for total records
+        String countQuery = "SELECT COUNT(*) FROM (" + queryBuilder + ") AS countTable";
+
+        // Create main query
+        Query query = entityManager.createNativeQuery(queryBuilder.toString());
+        query.setParameter("marketingUserId", marketingUserId);
+
+        // Set parameters dynamically
+        if (name != null && !name.isEmpty()) {
+            query.setParameter("name", "%" + name + "%");
+        }
+        if (email != null && !email.isEmpty()) {
+            query.setParameter("email", "%" + email + "%");
+        }
+        if (startDate != null && endDate != null) {
+            query.setParameter("startDate", startDate.atStartOfDay());
+            query.setParameter("endDate", endDate.atTime(23, 59, 59));
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            query.setParameter("contactNumber", "%" + contactNumber + "%");
+        }
+
+        // Pagination
+        Pageable pageable = PageRequest.of(page - 1, size);
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        // Execute query and map results
+        List<Object[]> resultList = query.getResultList();
+
+        // Map results to DTO
+        List<MarketingUserReportResponseDto> responseList = mapResultsToMarketingUserReportResponseDto(resultList);
+
+        // Get total count
+        Query totalQuery = entityManager.createNativeQuery(countQuery);
+        totalQuery.setParameter("marketingUserId", marketingUserId);
+        if (name != null && !name.isEmpty()) {
+            totalQuery.setParameter("name", "%" + name + "%");
+        }
+        if (email != null && !email.isEmpty()) {
+            totalQuery.setParameter("email", "%" + email + "%");
+        }
+        if (startDate != null && endDate != null) {
+            totalQuery.setParameter("startDate", startDate.atStartOfDay());
+            totalQuery.setParameter("endDate", endDate.atTime(23, 59, 59));
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            totalQuery.setParameter("contactNumber", "%" + contactNumber + "%");
+        }
+
+        long totalRecords = ((Number) totalQuery.getSingleResult()).longValue();
+
+        // Create pageable response
+        Page<MarketingUserReportResponseDto> pageableResponse = new PageImpl<>(responseList, pageable, totalRecords);
+
+        // Build response
+        Map<String, Object> data = new HashMap<>();
+        data.put("userList", pageableResponse.getContent());
+        data.put("totalCount", pageableResponse.getTotalElements());
+
+        Response response = new Response();
+        response.setCode(Constants.CODE_1);
+        response.setData(data);
+        response.setMessage(messageSource.getMessage(Messages.USER_LIST_FETCHED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
+
+    private List<MarketingUserReportResponseDto> mapResultsToMarketingUserReportResponseDto(List<Object[]> results) {
+        return results.stream().map(row -> {
+            Integer userId = (Integer) row[0];
+            String name = (String) row[1];
+            String email = (String) row[2];
+            String contactNumber = (String) row[3];
+            Long totalConsultation = (Long) row[4];
+            String createdAt = formatDateTime((Timestamp) row[5]);
+
+            return new MarketingUserReportResponseDto(
+                    userId, name, email, contactNumber, totalConsultation, createdAt
+            );
+        }).collect(Collectors.toList());
+    }
+
+    private String formatDateTime(Timestamp timestamp) {
+        // Convert Timestamp to LocalDateTime
+        LocalDateTime localDateTime = timestamp.toLocalDateTime();
+
+        // Define the desired format
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+
+        // Format LocalDateTime to the desired string format
+        return localDateTime.format(formatter);
     }
 
 }
