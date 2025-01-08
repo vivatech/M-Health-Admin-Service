@@ -70,7 +70,6 @@ public class HealthTipCategoryMasterController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteCategory(
             @PathVariable Integer id,
-            @Valid @ModelAttribute HealthTipCategoryRequest request,
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.deleteCategory(id, locale);
     }
