@@ -1,10 +1,9 @@
-package com.mhealth.admin.controllers;
+package com.mhealth.admin.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.dto.B2CCallbackRequestDto;
 import com.mhealth.admin.dto.C2BCallbackRequestDto;
 import com.mhealth.admin.dto.C2BReversalCallbackRequestDto;
-import com.mhealth.admin.service.MPaisaCallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -1,5 +1,6 @@
 package com.mhealth.admin.repository;
 
+import com.mhealth.admin.model.Users;
 import com.mhealth.admin.model.WalletTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Integer> {
     @Query("Select count(u.id) from WalletTransaction u where u.patientId.userId = ?1")
@@ -37,4 +39,6 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
 
     @Query("Select u from WalletTransaction u where u.orderId = ?1")
     List<WalletTransaction> findByOrderId(Integer id);
+
+    Optional<WalletTransaction> findByPatientIdAndTransactionIdAndIsDebitCredit(Users userId, String transactionId, String debit);
 }

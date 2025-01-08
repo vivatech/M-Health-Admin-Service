@@ -1,4 +1,4 @@
-package com.mhealth.admin.service;
+package com.mhealth.admin.payment;
 
 import com.mhealth.admin.dto.B2CCallbackRequestDto;
 import com.mhealth.admin.dto.C2BReversalCallbackRequestDto;
