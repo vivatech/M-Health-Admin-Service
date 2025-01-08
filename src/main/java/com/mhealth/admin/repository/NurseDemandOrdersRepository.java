@@ -29,4 +29,19 @@ public interface NurseDemandOrdersRepository extends JpaRepository<NurseDemandOr
             @Param("nurseName") String nurseName,
             @Param("consultationDate") LocalDate consultationDate,
             Pageable pageable);
+
+    @Query("SELECT ndo FROM NurseDemandOrders ndo " +
+            "JOIN ndo.patientId p " +
+            "JOIN ndo.nurseId n " +
+            "WHERE (:patientName IS NULL OR CONCAT(p.firstName, ' ', p.lastName) LIKE %:patientName%) " +
+            "AND (:nurseName IS NULL OR n.name LIKE %:nurseName%) " +
+            "AND (p.country IS NOT NULL) " +
+            "AND (ndo.tripId IS NOT NULL) " +
+            "AND (:consultationDate IS NULL OR DATE(ndo.createdAt) = :consultationDate)")
+    Page<NurseDemandOrders> fetchOrders(
+            @Param("patientName") String patientName,
+            @Param("nurseName") String nurseName,
+            @Param("consultationDate") LocalDate consultationDate,
+            Pageable pageable
+    );
 }

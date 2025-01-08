@@ -77,6 +77,7 @@ public class PaymentHistoryController {
                 paymentHistoryDto.setDoctorCharge(order.getDoctorAmount());
                 paymentHistoryDto.setPatientPaidCharge(order.getAmount());
                 paymentHistoryDto.setCaseId(order.getCaseId().getCaseId());
+                paymentHistoryDto.setAdminCharge(order.getCommission());
 
                 // Find wallet transaction for the order (debit type)
                 WalletTransaction walletTransaction = walletTransactionRepository.findByOrderIdAndPatientIdAndServiceTypeAndisDebitCredit(order.getId(), order.getPatientId().getUserId());
@@ -113,6 +114,7 @@ public class PaymentHistoryController {
             return new PaginationResponse<>(Status.SUCCESS, Constants.SUCCESS, "", paymentHistoryDtos, orderList.getTotalElements(), (long) size, (long) page);
 
         } catch (Exception e) {
+            e.printStackTrace();
             // Handle and return error response
             return new PaginationResponse<>(e);
         }

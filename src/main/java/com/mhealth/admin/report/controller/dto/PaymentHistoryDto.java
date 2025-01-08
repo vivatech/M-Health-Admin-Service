@@ -16,6 +16,7 @@ public class PaymentHistoryDto {
     private Float doctorCharge;
     private Float patientPaidCharge;
     private String clinicName;
+    private Float adminCharge;
     private String consultationTime;
 
 }
