@@ -112,6 +112,7 @@ public class Constants {
     public static final String HEALTH_TIP_DURATION_FETCHED = "app.health.tip.durations.fetched";
     public static final String HEALTH_TIP_DURATION_FETCHED_EMPTY = "app.health.tip.durations.fetched.empty";
     public static final String HEALTH_TIP_DURATION_NOT_FOUND = "app.health.tip.duration.not.found";
+    public static final String HEALTH_TIP_DURATION_HAS_DEPENDENCIES = "app.health.tip.duration.dependency.exists";
 
     public static final String HEALTH_TIP_NOT_FOUND = "app.health.tip.not.found";
     public static final String HEALTH_TIP_CREATED_SUCCESS = "app.health.tip.created.success";
