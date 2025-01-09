@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -99,4 +100,26 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
     Long getTotalConsultations(RequestType requestType,LocalDate date);
 
     Consultation findByCaseIdAndRequestType(Integer caseId, RequestType requestType);
+
+    @Query("""
+    SELECT c FROM Consultation c
+    WHERE (:doctorId IS NULL OR c.doctorId.userId = :doctorId)
+      AND (:status IS NULL OR c.requestType = :status)
+      AND (:patientName IS NULL OR CONCAT(c.patientId.firstName, ' ', c.patientId.lastName) LIKE %:patientName%)
+      AND (:fromDate IS NULL OR c.createdAt >= :fromDate)
+      AND (:toDate IS NULL OR c.createdAt <= :toDate)
+      AND (c.consultType IS NOT NULL)
+      AND (c.requestType IS NOT NULL)
+      AND (c.consultationType IS NOT NULL)
+""")
+    Page<Consultation> fetchConsultationList(
+            @Param("doctorId") String doctorId,
+            @Param("status") String status,
+            @Param("patientName") String patientName,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
+
+
 }

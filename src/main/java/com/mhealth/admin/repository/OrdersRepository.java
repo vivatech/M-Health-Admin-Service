@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.OrderStatus;
+import com.mhealth.admin.model.Consultation;
 import com.mhealth.admin.model.Orders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +16,6 @@ import java.util.Optional;
 public interface OrdersRepository extends JpaRepository<Orders, Integer> {
     @Query("SELECT o FROM Orders o WHERE o.id = ?1")
     Optional<Orders> findById(Integer orderId);
-
-    @Query("SELECT o FROM Orders o WHERE o.caseId.caseId = ?1")
-    Orders findByCaseId(Integer caseId);
 
     @Query("Select u from Orders u where u.caseId.consultationDate = ?1 and u.caseId.caseId = ?2 And " +
             "CONCAT(u.doctorId.firstName,' ', u.doctorId.lastName) like %?3% ")
@@ -60,4 +58,5 @@ public interface OrdersRepository extends JpaRepository<Orders, Integer> {
     Page<Orders> fetchOrders(String patientName, String doctorName, LocalDate consultationDate, Pageable pageable);
 
 
+    Orders findByCaseId(Consultation in);
 }
