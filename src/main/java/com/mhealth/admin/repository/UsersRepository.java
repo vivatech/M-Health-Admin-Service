@@ -48,7 +48,7 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
 
 
     @Query("select u from Users u where u.contactNumber = ?1 and u.type = ?2")
-    Optional<Users> findByContactNumberAndType(String contactNumber, UserType userType);
+    Users findByContactNumberAndType(String contactNumber, UserType userType);
 
     @Query("Select count(u) from Users u where u.type = ?1")
     Long countUsersByType(UserType userType);
@@ -61,10 +61,15 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     Long countUsersByTypeAndStatus(UserType userType, StatusAI statusAI);
 
     long countByEmail(String email);
+  
     long countByContactNumberAndType(String contactNumber, UserType type);
+  
     long countByEmailAndUserIdNot(String email, Integer userId);
-
+  
     long countByContactNumberAndTypeAndUserIdNot(String contactNumber, UserType type, Integer userId);
 
     Optional<Users> findByUserIdAndType(Integer userId, UserType type);
+  
+    Users findByUserIdAndType(Users userId, String userType);
+
 }

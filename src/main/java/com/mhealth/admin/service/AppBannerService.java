@@ -8,6 +8,9 @@ import com.mhealth.admin.model.AppBanner;
 import com.mhealth.admin.repository.AppBannerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class AppBannerService {
@@ -93,15 +97,21 @@ public class AppBannerService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Response> searchAppBanners(String iname,Locale locale) {
-        List<AppBanner> banners = repository.searchByIname(iname);
+    public ResponseEntity<Response> searchAppBanners(String iname, Locale locale, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AppBanner> bannersPage = repository.searchByIname(Optional.ofNullable(iname).orElse(""), pageable);
 
-        if (banners.isEmpty()) {
-            Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE, messageSource.getMessage(Constants.APP_BANNER_NOT_FOUND,null,locale));
-            return ResponseEntity.ok().body(response);
+        if (bannersPage.isEmpty()) {
+            Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.APP_BANNER_NOT_FOUND, null, locale));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
-        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE, messageSource.getMessage(Constants.APP_BANNER_FETCHED_SUCCESSFULLY,null,locale), banners);
+        // Prepare response with content and total elements
+        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
+                messageSource.getMessage(Constants.APP_BANNER_FETCHED_SUCCESSFULLY, null, locale),
+                bannersPage.getContent(), bannersPage.getTotalElements());
         return ResponseEntity.ok(response);
     }
+
 }
