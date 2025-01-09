@@ -26,7 +26,7 @@ public class SystemTransaction {
     private String transactionType;
 
     @ManyToOne
-    @JoinColumn(name = "ref_id", referencedColumnName = "case_id", nullable = false)
+    @JoinColumn(name = "ref_id", referencedColumnName = "case_id")
     private Consultation refId;
 
     @ManyToOne
@@ -46,9 +46,8 @@ public class SystemTransaction {
     @Column(name = "channel", nullable = false, columnDefinition = "enum('Web','Mobile','USSD') default 'Web'")
     private Channel channel;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "order_type", columnDefinition = "enum('1','0')")
-    private OrderType orderType;
+    private String orderType;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

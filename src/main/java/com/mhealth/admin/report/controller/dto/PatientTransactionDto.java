@@ -1,6 +1,11 @@
 package com.mhealth.admin.report.controller.dto;
 
+import com.mhealth.admin.dto.enums.Channel;
+import com.mhealth.admin.dto.enums.OrderType;
 import lombok.Data;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PatientTransactionDto {
@@ -12,10 +17,10 @@ public class PatientTransactionDto {
     private String clinicName;
     private String mobile;
     private String patientName;
-    private int age;
+    private LocalDate age;
     private String gender;
     private String patientAddress;
     private String status;
-    private String channel;
-    private String createdAt;
+    private Channel channel;
+    private LocalDateTime createdAt;
 }
