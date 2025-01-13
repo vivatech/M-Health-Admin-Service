@@ -45,28 +45,23 @@ public class EmailTemplateController {
     @PutMapping("/{id}")
     public ResponseEntity<Response> updateEmailTemplate(
             @PathVariable Integer id,
-            @Valid @RequestBody EmailTemplateRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestBody EmailTemplateRequest request,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.updateEmailTemplate(id, request, locale);
     }
 
     @Operation(summary = "Search email templates by key or value", responses = {
             @ApiResponse(responseCode = "200", description = "Search successful", content = @Content(schema = @Schema(implementation = Response.class)))
     })
+    
+    @Operation(summary = "Search email templates by key or value", responses = {
+            @ApiResponse(responseCode = "200", description = "Search successful", content = @Content(schema = @Schema(implementation = Response.class)))
+    })
     @PostMapping("/search")
     public ResponseEntity<Response> searchEmailTemplates(
-            @Valid @RequestBody EmailTemplateSearchRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
-        return service.searchEmailTemplates(request.getKey(), request.getValue(), locale);
-    }
-
-    @Operation(summary = "Get all email templates", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllEmailTemplates(
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
-        return service.getAllEmailTemplates(locale);
+            @RequestBody EmailTemplateSearchRequest request,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        return service.searchEmailTemplates(request.getKey(), request.getSubject(), locale);
     }
 
     @Operation(summary = "Get email template by ID", responses = {

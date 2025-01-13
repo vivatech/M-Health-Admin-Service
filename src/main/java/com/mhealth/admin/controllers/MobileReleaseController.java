@@ -56,7 +56,7 @@ public class MobileReleaseController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.getAllMobileReleases(locale);
     }
-
+  
     @Operation(summary = "Get mobile release by ID", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "Mobile release not found", content = @Content)
@@ -85,8 +85,11 @@ public class MobileReleaseController {
     })
     @GetMapping("/search")
     public ResponseEntity<Response> searchMobileRelease(
-            @RequestParam String appVersion,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
-        return service.searchMobileReleaseByAppVersion(appVersion, locale);
+            @RequestParam(required = false) String appVersion,
+            @RequestParam(defaultValue = "0") int page, // Default to page 0
+            @RequestParam(defaultValue = "10") int size, // Default to 10 records per page
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        return service.searchMobileReleaseByAppVersion(appVersion, locale, page, size);
     }
+
 }

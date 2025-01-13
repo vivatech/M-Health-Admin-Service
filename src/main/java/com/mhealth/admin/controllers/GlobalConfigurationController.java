@@ -45,8 +45,8 @@ public class GlobalConfigurationController {
     @PutMapping("/{id}")
     public ResponseEntity<Response> updateConfiguration(
             @PathVariable Integer id,
-            @Valid @RequestBody GlobalConfigurationRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestBody GlobalConfigurationRequest request,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
 
         return service.updateConfiguration(id, request, locale);
     }
@@ -56,21 +56,21 @@ public class GlobalConfigurationController {
     })
     @PutMapping("/search")
     public ResponseEntity<Response> searchConfiguration(
-            @Valid @RequestBody GlobalConfigurationRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestBody GlobalConfigurationRequest request,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
 
         return service.searchConfiguration(request.getKey(),request.getValue(),locale);
     }
 
-    @Operation(summary = "Get all configurations", responses = {
-            @ApiResponse(responseCode = Constants.SUCCESS_CODE, description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllConfigurations(
-            @RequestHeader(name = "X-localization", required = false,defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
-
-        return service.getAllConfigurations(locale);
-    }
+//    @Operation(summary = "Get all configurations", responses = {
+//            @ApiResponse(responseCode = Constants.SUCCESS_CODE, description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
+//    })
+//    @GetMapping
+//    public ResponseEntity<Response> getAllConfigurations(
+//            @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
+//
+//        return service.getAllConfigurations(locale);
+//    }
 
     @Operation(summary = "Get configuration by ID", responses = {
             @ApiResponse(responseCode = Constants.SUCCESS_CODE, description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),

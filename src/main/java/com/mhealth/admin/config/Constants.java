@@ -112,6 +112,7 @@ public class Constants {
     public static final String HEALTH_TIP_DURATION_FETCHED = "app.health.tip.durations.fetched";
     public static final String HEALTH_TIP_DURATION_FETCHED_EMPTY = "app.health.tip.durations.fetched.empty";
     public static final String HEALTH_TIP_DURATION_NOT_FOUND = "app.health.tip.duration.not.found";
+    public static final String HEALTH_TIP_DURATION_HAS_DEPENDENCIES = "app.health.tip.duration.dependency.exists";
 
     public static final String HEALTH_TIP_NOT_FOUND = "app.health.tip.not.found";
     public static final String HEALTH_TIP_CREATED_SUCCESS = "app.health.tip.created.success";
@@ -162,6 +163,5 @@ public class Constants {
     public static final String TERMS_AND_CONDITION = "app.terms.and.condition";
     public static final String PATIENT_CREATE_SUCCESSFULLY = "app.patient.create.successfully";
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
-    public static final String COUNTRY_SOMALIA = "SOMALIA";
-    public static final String COUNTRY_KENYA = "KENYA";
-}
+    public static final String DEFAULT_COUNTRY = "SO";
+    public static final String COUNTRY_KENYA = "KE";

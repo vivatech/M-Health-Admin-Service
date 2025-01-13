@@ -25,14 +25,6 @@ public class GlobalConfigurationService {
     @Autowired
     private MessageSource messageSource;
 
-    public ResponseEntity<Response> getAllConfigurations(Locale locale) {
-        List<GlobalConfiguration> configurations = repository.findAllByDisplayOrder();
-        Response response = new Response(
-                Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.GLOBAL_CONFIG_FETCH_SUCCESSFULLY,null,locale), configurations);
-        return ResponseEntity.ok(response);
-    }
-
     public ResponseEntity<Response> getConfigurationById(Integer id,Locale locale) {
         GlobalConfiguration configuration = repository.findById(id)
                 .orElseThrow(null);

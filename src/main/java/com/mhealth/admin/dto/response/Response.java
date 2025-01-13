@@ -14,6 +14,8 @@ public class Response {
     private String message = Constants.SUCCESS;
     private Status status = Status.SUCCESS;
     private Object data;
+    private long totalElements; // Add this field to handle pagination
+
 
     public Response(Exception e){
         this.code = Constants.INTERNAL_SERVER_ERROR_CODE;
@@ -29,6 +31,15 @@ public class Response {
         this.status = status;
         this.code = code;
         this.message = message;
+    }
+
+    // Constructor with status, code, message, data, and totalElements (for pagination)
+    public Response(Status status, String code, String message, Object data, long totalElements) {
+        this.status = status;
+        this.code = code;
+        this.message = message;
+        this.data = data;
+        this.totalElements = totalElements;
     }
 
     public Response(Status status,String code,String message,Object data){
