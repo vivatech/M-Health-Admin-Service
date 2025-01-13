@@ -6,6 +6,7 @@ import com.mhealth.admin.dto.dto.PermissionDto;
 import com.mhealth.admin.dto.request.PermissionRoleRequest;
 import com.mhealth.admin.dto.response.PermissionRoleDto;
 import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.exception.AdminModuleExceptionHandler;
 import com.mhealth.admin.model.Permission;
 import com.mhealth.admin.model.PermissionRole;
 import com.mhealth.admin.repository.PermissionRepository;
@@ -33,6 +34,10 @@ public class PermissionRoleService {
     private PermissionRepository permissionRepository;
 
     public ResponseEntity<Response> addPermissionRole(PermissionRoleRequest request, Locale locale) {
+
+        boolean isFound = validateProvidedPermissions(request.getPermissions());
+        if (!isFound) throw new AdminModuleExceptionHandler(messageSource.getMessage(Constants.PERMISSION_NOT_FOUND,null,locale));
+
         PermissionRole permissionRole = new PermissionRole();
         permissionRole.setRoleType(request.getRoleType());
         permissionRole.setPermissions(request.getPermissions());
@@ -40,6 +45,18 @@ public class PermissionRoleService {
         return ResponseEntity.ok(new Response(
                 Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.PERMISSION_ROLE_ADDED,null,locale), permissionRole));
+    }
+
+    private boolean validateProvidedPermissions(String permissions) {
+        boolean isValid = true;
+        String[] permissionIds = permissions.split(",");
+        for (String permissionId : permissionIds) {
+            if (!permissionRepository.existsById(Integer.parseInt(permissionId))) {
+                isValid = false;
+                break;
+            }
+        }
+        return isValid;
     }
 
     public ResponseEntity<Response> updatePermissionRole(Integer id, PermissionRoleRequest request, Locale locale) {
