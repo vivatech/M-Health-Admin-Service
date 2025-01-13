@@ -4,7 +4,7 @@ public class Constants {
 
     public static final Integer DEFAULT_PAGE_SIZE = 30;
 
-    public static final String SUCCESS_CODE="200";
+    public static final String SUCCESS_CODE = "200";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
     public static final String DATA_NOT_FOUND_CODE = "203";
     public static final String NO_RECORD_FOUND = "app.no.record.found";
@@ -15,9 +15,9 @@ public class Constants {
     public static final String INVALID_PASSWORD_CODE = "401";
     public static final String CONFLICT_CODE = "409";
 
-    public static final String SUCCESS= "app.success" ;
-    public static final String FAIL="FAIL";
-    public static final String USER_NOT_FOUND= "user.not.found";
+    public static final String SUCCESS = "app.success";
+    public static final String FAIL = "FAIL";
+    public static final String USER_NOT_FOUND = "user.not.found";
     public static final String INVALID_PASSWORD = "app.invalid.password";
     public static final String SOMETHING_WENT_WRONG = "app.something.went.wrong";
     public static final String USER_LOGIN_IS_SUCCESS = "app.user.login.success";
@@ -164,4 +164,4 @@ public class Constants {
     public static final String PATIENT_CREATE_SUCCESSFULLY = "app.patient.create.successfully";
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
     public static final String DEFAULT_COUNTRY = "SO";
-    public static final String COUNTRY_KENYA = "KE";
+}

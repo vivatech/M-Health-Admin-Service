@@ -47,15 +47,6 @@ public class MobileReleaseController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.updateMobileRelease(id, request, locale);
     }
-
-    @Operation(summary = "Get all mobile releases", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
-    @GetMapping
-    public ResponseEntity<Response> getAllMobileReleases(
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
-        return service.getAllMobileReleases(locale);
-    }
   
     @Operation(summary = "Get mobile release by ID", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),

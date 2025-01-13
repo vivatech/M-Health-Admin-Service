@@ -49,10 +49,6 @@ public class EmailTemplateController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.updateEmailTemplate(id, request, locale);
     }
-
-    @Operation(summary = "Search email templates by key or value", responses = {
-            @ApiResponse(responseCode = "200", description = "Search successful", content = @Content(schema = @Schema(implementation = Response.class)))
-    })
     
     @Operation(summary = "Search email templates by key or value", responses = {
             @ApiResponse(responseCode = "200", description = "Search successful", content = @Content(schema = @Schema(implementation = Response.class)))
