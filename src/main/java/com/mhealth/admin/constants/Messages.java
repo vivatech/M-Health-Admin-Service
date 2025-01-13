@@ -10,6 +10,7 @@ public interface Messages {
     String USER_FETCHED = "user.fetched";
     String USER_DELETED = "user.deleted";
     String INCORRECT_USER_STATUS = "incorrect.users.status";
+    String SELECT_PROFILE_PICTURE = "select.profile.picture";
 
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";

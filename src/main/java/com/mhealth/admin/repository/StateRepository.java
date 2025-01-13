@@ -10,4 +10,6 @@ public interface StateRepository extends JpaRepository<State, Integer> {
 
     @Query("SELECT s FROM State s JOIN FETCH s.country c WHERE c.id IS NOT NULL")
     List<State> findStatesWithExistingCountry();
+
+    List<State> findByCountry_Id(Integer countryId);
 }
