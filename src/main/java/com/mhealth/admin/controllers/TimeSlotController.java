@@ -1,5 +1,6 @@
 package com.mhealth.admin.controllers;
 
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.request.SlotTypeRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.SlotTypeService;
@@ -43,5 +44,4 @@ public class TimeSlotController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.getAllSlotTypes(locale);
     }
-
 }

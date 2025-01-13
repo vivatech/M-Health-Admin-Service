@@ -32,7 +32,7 @@ public class GlobalConfigurationController {
     @PostMapping
     public ResponseEntity<Response> createConfiguration(
             @Valid @RequestBody GlobalConfigurationRequest request,
-            @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false,defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
 
         return service.createConfiguration(request,locale);
     }
@@ -79,7 +79,7 @@ public class GlobalConfigurationController {
     @GetMapping("/{id}")
     public ResponseEntity<Response> getConfigurationById(
             @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false,defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
 
         return service.getConfigurationById(id,locale);
     }
@@ -91,7 +91,7 @@ public class GlobalConfigurationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteConfiguration(@PathVariable Integer id,
                                                         @RequestHeader(name = "X-localization",
-            required = false,defaultValue = "so") Locale locale) {
+            required = false,defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
 
         return service.deleteConfigurationById(id,locale);
     }
