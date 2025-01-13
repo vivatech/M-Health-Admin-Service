@@ -13,4 +13,13 @@ public interface Messages {
 
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
+
+    // Hospital User's SMS Body
+    String HOSPITAL_REGISTRATION_CONFIRMATION = "hospital.registration.confirmation";
+
+    // Hospital Link
+    String HOSPITAL_LINK = "admin.login.url";
+
+    String PRIORITY_ALREADY_EXISTS = "priority.already.exists";
+
 }

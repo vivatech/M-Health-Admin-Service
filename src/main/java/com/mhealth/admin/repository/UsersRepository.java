@@ -4,6 +4,8 @@ import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.model.City;
 import com.mhealth.admin.model.Users;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -72,4 +74,7 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
   
     Users findByUserIdAndType(Users userId, String userType);
 
+    Page<Users> findUsersWithFilters(String query, Pageable pageable, String name, String email, String status, String contactNumber);
+
+    Users findBySort(Integer priority);
 }
