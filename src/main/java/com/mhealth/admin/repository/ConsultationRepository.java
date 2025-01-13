@@ -105,19 +105,19 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
     SELECT c FROM Consultation c
     WHERE (:doctorId IS NULL OR c.doctorId.userId = :doctorId)
       AND (:status IS NULL OR c.requestType = :status)
-      AND (:patientName IS NULL OR CONCAT(c.patientId.firstName, ' ', c.patientId.lastName) LIKE %:patientName%)
-      AND (:fromDate IS NULL OR c.createdAt >= :fromDate)
-      AND (:toDate IS NULL OR c.createdAt <= :toDate)
+      AND (:patientName IS NULL OR :patientName = '' OR CONCAT(LOWER(c.patientId.firstName),' ',LOWER(c.patientId.lastName)) LIKE LOWER(CONCAT('%', :patientName, '%')))    
+      AND (:fromDate IS NULL OR c.consultationDate >= :fromDate)
+      AND (:toDate IS NULL OR c.consultationDate <= :toDate)
       AND (c.consultType IS NOT NULL)
       AND (c.requestType IS NOT NULL)
       AND (c.consultationType IS NOT NULL)
 """)
     Page<Consultation> fetchConsultationList(
             @Param("doctorId") String doctorId,
-            @Param("status") String status,
+            @Param("status") RequestType status,
             @Param("patientName") String patientName,
-            @Param("fromDate") LocalDateTime fromDate,
-            @Param("toDate") LocalDateTime toDate,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
             Pageable pageable
     );
 

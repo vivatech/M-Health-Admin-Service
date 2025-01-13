@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -55,13 +56,13 @@ public class ConsultationHistoryController {
 
         try {
             // Set pagination and sorting
-            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "consultationDate"));
             // Convert date strings to LocalDateTime
-            LocalDateTime fromDate = (request.getFromDate() != null && !request.getFromDate().isEmpty())
-                    ? LocalDateTime.parse(request.getFromDate())
+            LocalDate fromDate = (request.getFromDate() != null && !request.getFromDate().isEmpty())
+                    ? LocalDate.parse(request.getFromDate())
                     : null;
-            LocalDateTime toDate = (request.getToDate() != null && !request.getToDate().isEmpty())
-                    ? LocalDateTime.parse(request.getToDate())
+            LocalDate toDate = (request.getToDate() != null && !request.getToDate().isEmpty())
+                    ? LocalDate.parse(request.getToDate())
                     : null;
 
             // Fetch consultations with filters
