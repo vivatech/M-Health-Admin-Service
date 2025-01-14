@@ -14,4 +14,10 @@ public interface Messages {
 
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
+
+    //Patient user's SMS Body
+    String PROFILE_PICTURE_NOT_SELECTED = "profile.picture.not.selected";
+    String COUNTRY_NOT_FOUND = "country.not.found";
+    String APP_LINK = "APP_LINK";
+    String REGISTER_PATIENT_USER = "register.patient.user";
 }

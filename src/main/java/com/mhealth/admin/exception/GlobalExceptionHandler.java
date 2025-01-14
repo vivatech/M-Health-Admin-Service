@@ -81,4 +81,9 @@ public class GlobalExceptionHandler {
         ErrorDetails response = new ErrorDetails(HttpStatus.PRECONDITION_FAILED, ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(PatientUserExceptionHandler.class)
+    public ResponseEntity<?> handleCustomException(PatientUserExceptionHandler ex, WebRequest request) {
+        ErrorDetails response = new ErrorDetails(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getDescription(false));
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 }
