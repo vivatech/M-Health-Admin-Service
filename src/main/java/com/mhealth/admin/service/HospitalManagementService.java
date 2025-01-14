@@ -18,14 +18,12 @@ import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,61 +73,53 @@ public class HospitalManagementService {
 
     @Autowired
     private Utility utility;
+    public Object getHospitalList(Locale locale, String name, String email, StatusAI status, String contactNumber, Integer sortBy, String sortField, int page, int size) {
 
-    public Object getHospitalList(Locale locale, String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
-
-        // Prepare Pageable
-        Pageable pageable = PageRequest.of(page, size);
-
-        // Build filter conditions
-        List<String> filters = new ArrayList<>();
-        if (name != null && !name.isEmpty()) filters.add("clinic_name LIKE %:name%");
-        if (email != null && !email.isEmpty()) filters.add("email LIKE %:email%");
-        if (status != null && !status.isEmpty()) filters.add("status = :status");
-        if (contactNumber != null && !contactNumber.isEmpty()) filters.add("contact_number LIKE %:contactNumber%");
-
-        // Generate the WHERE clause based on filters
-        String whereClause = String.join(" AND ", filters);
-
-        // Construct query dynamically
-        String query = "SELECT u FROM Users u WHERE u.type = 'Clinic' ";
-        if (!filters.isEmpty()) {
-            query += "AND (" + whereClause + ")";
+        // Validate sortField
+        List<String> validSortFields = Arrays.asList("sort", "clinicName", "contactNumber", "hospitalAddress", "email");
+        if (!validSortFields.contains(sortField)) {
+            sortField = null; // Set to null if the value is invalid
         }
 
-        // Apply sorting
-        if (sortBy != null && !sortBy.isEmpty()) {
-            query += " ORDER BY u." + sortBy;
-        }
+        // Determine sorting direction
+        Sort.Direction direct = sortBy.equals(0) ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        // Execute the query with pagination
-        Page<Users> userPage = usersRepository.findUsersWithFilters(query, pageable, name, email, status, contactNumber);
+        // Set default sorting field if sortField is null
+        sortField = (sortField != null) ? sortField : "userId";
 
-        // Map results to DTO
-        List<HospitalManagementResponseDto> responseList = userPage.getContent().stream()
-                .map(user -> {
-                    HospitalManagementResponseDto dto = new HospitalManagementResponseDto();
-                    dto.setUserId(user.getUserId());
-                    dto.setClinicName(user.getClinicName());
-                    dto.setEmail(user.getEmail());
-                    dto.setContactNumber(user.getContactNumber());
-                    dto.setNotificationContactNumber(getNotificationContactNumber(user));
-                    dto.setMerchantNumber(getMerchantNumber(user));
-                    dto.setPriority(user.getSort());
-                    dto.setClinicAddress(user.getHospitalAddress());
-                    dto.setNotificationLanguage(user.getNotificationLanguage());
-                    dto.setStatus(Status.valueOf(user.getStatus().name()));  // Assuming Status is an Enum
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        // Create sorting and pageable objects
+        Sort sort = Sort.by(direct, sortField);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        // Create pageable response
-        Page<HospitalManagementResponseDto> pageableResponse = new PageImpl<>(responseList, pageable, userPage.getTotalElements());
+        // Fetch paginated results
+        Page<Users> userPage = usersRepository.findHospitalsWithFilters(
+                name != null ? "%" + name + "%" : null,
+                email != null ? "%" + email + "%" : null,
+                status != null ? status : null,
+                contactNumber != null ? "%" + contactNumber + "%" : null,
+                pageable
+        );
+
+        // Map to DTO
+        Page<HospitalManagementResponseDto> responsePage = userPage.map(user -> {
+            HospitalManagementResponseDto dto = new HospitalManagementResponseDto();
+            dto.setUserId(user.getUserId());
+            dto.setClinicName(user.getClinicName());
+            dto.setEmail(user.getEmail());
+            dto.setContactNumber(user.getCountryCode() + user.getContactNumber());
+            dto.setNotificationContactNumber(getNotificationContactNumber(user));
+            dto.setMerchantNumber(getMerchantNumber(user));
+            dto.setPriority(user.getSort());
+            dto.setClinicAddress(user.getHospitalAddress());
+            dto.setNotificationLanguage(user.getNotificationLanguage());
+            dto.setStatus(user.getStatus().toString());
+            return dto;
+        });
 
         // Build response
         Map<String, Object> data = new HashMap<>();
-        data.put("data", pageableResponse.getContent());
-        data.put("totalCount", pageableResponse.getTotalElements());
+        data.put("data", responsePage.getContent());
+        data.put("totalCount", responsePage.getTotalElements());
 
         Response response = new Response();
         response.setCode(Constants.CODE_1);
@@ -139,6 +129,8 @@ public class HospitalManagementService {
 
         return response;
     }
+
+
 
     private String getNotificationContactNumber(Users user) {
         Optional<HospitalDetails> details = hospitalDetailsRepository.findByUserId(user.getUserId());
@@ -151,7 +143,7 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object createHospitalManagement(Locale locale, HospitalManagementRequestDto requestDto) {
+    public Object createHospitalManagement(Locale locale, HospitalManagementRequestDto requestDto, HttpServletRequest request) {
         Response response = new Response();
 
         // Validate the input
@@ -191,40 +183,47 @@ public class HospitalManagementService {
         user.setIsInternational(YesNo.No);
         user.setStatus(StatusAI.I);
         user.setClassification(Classification.from_hospital);
+        user.setDoctorClassification(Classification.general_practitioner.toString());
+
         String encodedPassword = utility.md5Hash(requestDto.getPassword());
         user.setPassword(encodedPassword);
         user.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
         if(requestDto.getPriority() != null){
-            Users existSort = usersRepository.findBySort(requestDto.getPriority());
+            Users existSort = usersRepository.findBySort(Integer.valueOf(requestDto.getPriority()));
             if(existSort != null){
                 response.setCode(Constants.CODE_O);
                 response.setMessage(messageSource.getMessage(Messages.PRIORITY_ALREADY_EXISTS, null, locale));
                 response.setStatus(Status.FAILED);
                 return response;
             }
-            user.setSort(requestDto.getPriority());
+            user.setSort(Integer.valueOf(requestDto.getPriority()));
         }
         user = usersRepository.save(user);
 
-        HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
-        hospitalMerchantNumber.setMerchantNumber(requestDto.getMerchantNumber());
-        hospitalMerchantNumber.setUserId(user.getUserId());
-        hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
+        if(requestDto.getMerchantNumber() != null){
+            HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
+            hospitalMerchantNumber.setMerchantNumber(requestDto.getMerchantNumber());
+            hospitalMerchantNumber.setUserId(user.getUserId());
+            hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
+        }
 
-        HospitalDetails hospitalDetails = new HospitalDetails();
-        hospitalDetails.setUserId(user.getUserId());
-        hospitalDetails.setNotificationContactNumber(requestDto.getNotificationContactNumber());
-        hospitalDetailsRepository.save(hospitalDetails);
+        if(requestDto.getNotificationContactNumber() != null){
+            HospitalDetails hospitalDetails = new HospitalDetails();
+            hospitalDetails.setUserId(user.getUserId());
+            hospitalDetails.setNotificationContactNumber(requestDto.getNotificationContactNumber());
+            hospitalDetailsRepository.save(hospitalDetails);
+        }
+
 
         // Send SMS
         try {
             locale = Utility.getUserNotificationLanguageLocale(user.getNotificationLanguage(), locale);
 
-            String link = messageSource.getMessage(Messages.HOSPITAL_LINK, new Object[]{"Base URL"}, locale);
+            String link = messageSource.getMessage(Messages.HOSPITAL_LINK, new Object[]{request.getServerName()}, locale);
 
             String smsMessage = messageSource.getMessage(Messages.HOSPITAL_REGISTRATION_CONFIRMATION, new Object[]{
-                    user.getClinicName(), link, user.getContactNumber(), user.getPassword()}, locale);
+                    user.getClinicName(), link, user.getContactNumber(), requestDto.getPassword()}, locale);
             String smsNumber = "+" + countryCode + requestDto.getContactNumber();
             if(smsSent){
                 smsApiService.sendMessage(smsNumber, smsMessage, country);
@@ -246,15 +245,15 @@ public class HospitalManagementService {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
-        if (existingMarketingUser.isEmpty()) {
+        Optional<Users> existUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
+        if (existUser.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingMarketingUser.get();
+        Users existingUser = existUser.get();
 
         // Validate the input
         String validationMessage = requestDto.validate();
@@ -285,11 +284,12 @@ public class HospitalManagementService {
         existingUser.setClinicName(requestDto.getClinicName());
         existingUser.setEmail(requestDto.getEmail());
         existingUser.setContactNumber(requestDto.getContactNumber());
+        existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
         if(requestDto.getPriority() != null){
             if(!Objects.equals(existingUser.getSort(), requestDto.getPriority())){
-                Users existSort = usersRepository.findBySort(requestDto.getPriority());
+                Users existSort = usersRepository.findBySort(Integer.valueOf(requestDto.getPriority()));
                 if(existSort != null){
                     response.setCode(Constants.CODE_O);
                     response.setMessage(messageSource.getMessage(Messages.PRIORITY_ALREADY_EXISTS, null, locale));
@@ -297,16 +297,30 @@ public class HospitalManagementService {
                     return response;
                 }
             }
-            existingUser.setSort(requestDto.getPriority());
+            existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
         }
         usersRepository.save(existingUser);
 
-        Optional<HospitalDetails> hospitalDetails = hospitalDetailsRepository.findByUserId(existingUser.getUserId());
-        if (hospitalDetails.isPresent()) {
-            HospitalDetails existingHospitalDetails = hospitalDetails.get();
-            existingHospitalDetails.setNotificationContactNumber(requestDto.getNotificationContactNumber());
-            hospitalDetailsRepository.save(existingHospitalDetails);
+        if(requestDto.getNotificationContactNumber() != null){
+            Optional<HospitalDetails> hospitalDetails = hospitalDetailsRepository.findByUserId(existingUser.getUserId());
+            if (hospitalDetails.isPresent()) {
+                HospitalDetails existingHospitalDetails = hospitalDetails.get();
+                existingHospitalDetails.setNotificationContactNumber(requestDto.getNotificationContactNumber());
+                hospitalDetailsRepository.save(existingHospitalDetails);
+            } else {
+                HospitalDetails saveNew = new HospitalDetails();
+                saveNew.setUserId(existingUser.getUserId());
+                saveNew.setNotificationContactNumber(requestDto.getNotificationContactNumber());
+                hospitalDetailsRepository.save(saveNew);
+            }
+        } else {
+            Optional<HospitalDetails> hospitalDetails = hospitalDetailsRepository.findByUserId(existingUser.getUserId());
+            if (hospitalDetails.isPresent()) {
+                HospitalDetails existingHospitalDetails = hospitalDetails.get();
+                hospitalDetailsRepository.delete(existingHospitalDetails);
+            }
         }
+
 
         Optional<HospitalMerchantNumber> hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(existingUser.getUserId());
         if (hospitalMerchantNumber.isPresent()) {
@@ -397,4 +411,51 @@ public class HospitalManagementService {
 
         return response;
     }
+
+    public Object getHospitalManagement(Locale locale, Integer userId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        HospitalManagementResponseDto responseDto = convertToMarketingUserResponseDto(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setData(responseDto);
+        response.setMessage(messageSource.getMessage(Messages.USER_FETCHED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+
+    }
+
+    private HospitalManagementResponseDto convertToMarketingUserResponseDto(Users users) {
+        HospitalManagementResponseDto responseDto = new HospitalManagementResponseDto();
+        responseDto.setUserId(users.getUserId());
+        responseDto.setClinicName(users.getClinicName());
+        responseDto.setClinicAddress(users.getHospitalAddress());
+        responseDto.setEmail(users.getEmail());
+        responseDto.setContactNumber(users.getContactNumber());
+        responseDto.setNotificationLanguage(users.getNotificationLanguage());
+        responseDto.setPriority(users.getSort());
+        responseDto.setStatus(users.getStatus().toString());
+        HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
+        if(hospitalMerchantNumber != null){
+            responseDto.setMerchantNumber(hospitalMerchantNumber.getMerchantNumber());        }
+        HospitalDetails hospitalDetails = hospitalDetailsRepository.findByUserId(users.getUserId()).orElse(null);
+        if(hospitalDetails != null){
+            responseDto.setNotificationContactNumber(hospitalDetails.getNotificationContactNumber());
+        }
+        return responseDto;
+    }
+
 }

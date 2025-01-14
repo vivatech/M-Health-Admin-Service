@@ -19,6 +19,6 @@ public class HospitalManagementResponseDto {
     private Integer priority;
     private String clinicAddress;
     private String notificationLanguage;
-    private Status status;
+    private String status;
 }
 

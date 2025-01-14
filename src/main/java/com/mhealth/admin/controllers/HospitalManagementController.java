@@ -2,9 +2,11 @@ package com.mhealth.admin.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.constants.Constants;
+import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.request.HospitalManagementRequestDto;
 import com.mhealth.admin.service.HospitalManagementService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,19 +32,22 @@ public class HospitalManagementController {
 
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public ResponseEntity<?> getHospitalList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                  @RequestParam(required = false) String name,
-                                                  @RequestParam(required = false) String email,
-                                                  @RequestParam(required = false) String status,
-                                                  @RequestParam(required = false) String contactNumber,
-                                                  @RequestParam(defaultValue = "1") String sortBy,
-                                                  @RequestParam(defaultValue = "1") int page,
-                                                  @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getHospitalList(
+            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) StatusAI status,
+            @RequestParam(required = false) String contactNumber,
+            @RequestParam(required = false) Integer sortBy,
+            @RequestParam(required = false) String sortField,
+            @RequestParam(defaultValue = "0") int page, // Adjusted default value
+            @RequestParam(defaultValue = "10") int size
+    ) {
         try {
             log.info("Request Received For /api/v1/admin/user/hospital/list");
-            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortBy, page, size);
+            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, page={}, size={}", name, email, status, contactNumber, page, size);
 
-            Object response = hospitalManagementService.getHospitalList(locale, name, email, status,contactNumber, sortBy, page, size);
+            Object response = hospitalManagementService.getHospitalList(locale, name, email, status, contactNumber, sortBy, sortField, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/hospital/list: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -52,14 +57,15 @@ public class HospitalManagementController {
         }
     }
 
+
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createHospitalManagement(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestBody HospitalManagementRequestDto requestDto) {
+                                                      @RequestBody HospitalManagementRequestDto requestDto, HttpServletRequest request) {
         try {
             log.info("Request Received For /api/v1/admin/user/hospital/create");
             log.info("Request Body: {}", requestDto);
 
-            Object response = hospitalManagementService.createHospitalManagement(locale, requestDto);
+            Object response = hospitalManagementService.createHospitalManagement(locale, requestDto, request);
 
             log.info("Response Sent For /api/v1/admin/user/hospital/create: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);

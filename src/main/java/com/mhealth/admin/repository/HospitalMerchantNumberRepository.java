@@ -1,7 +1,6 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.model.HospitalMerchantNumber;
-import com.mhealth.admin.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

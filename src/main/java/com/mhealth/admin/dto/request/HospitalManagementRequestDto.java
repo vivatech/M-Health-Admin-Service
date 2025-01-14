@@ -15,7 +15,7 @@ public class HospitalManagementRequestDto {
     private String contactNumber;
     private String notificationContactNumber;
     private String merchantNumber;
-    private Integer priority;
+    private String priority;
     private String password;
     private String clinicAddress;
     private String notificationLanguage;
@@ -31,6 +31,7 @@ public class HospitalManagementRequestDto {
         validateEmail(email, validationErrors);
         validatePassword(password, validationErrors);
         validateAddress("Clinic address", clinicAddress, validationErrors);
+        validateOptionalPriority("Priority", priority, validationErrors);
 
         return validationErrors.isEmpty() ? null : validationErrors.toString().trim();
     }
@@ -55,11 +56,19 @@ public class HospitalManagementRequestDto {
         }
     }
 
+    private void validateOptionalPriority(String fieldName, String value, StringBuilder validationErrors) {
+        if (value != null) {
+            if (!value.matches("\\d+")) {
+                validationErrors.append(fieldName).append(" must contain only numbers. ");
+            }
+        }
+    }
+
     private void validateEmail(String value, StringBuilder validationErrors) {
-        if (value == null || value.trim().isEmpty()) {
-            validationErrors.append("Email is required. ");
-        } else if (!Pattern.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$", value)) {
-            validationErrors.append("Email is not in a valid format. ");
+        if (value != null || !value.trim().isEmpty()) {
+            if (!Pattern.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$", value)) {
+                validationErrors.append("Email is not in a valid format. ");
+            }
         }
     }
 
@@ -76,9 +85,10 @@ public class HospitalManagementRequestDto {
     private void validateAddress(String fieldName, String value, StringBuilder validationErrors) {
         if (value == null || value.trim().isEmpty()) {
             validationErrors.append(fieldName).append(" is required. ");
-        } else if (!Pattern.matches("/^[a-zA-Z0-9.,\":;\\'-_(){}!@#$%^&*=+|?\\s]*$/", value)) {
-            validationErrors.append(fieldName).append(" contains invalid characters. Only letters, numbers, spaces, commas, periods, and hyphens are allowed. ");
+        } else if (!value.matches("^[a-zA-Z0-9.,\":;'\\-_(){}!@#$%^&*=+|?\\s]*$")) {
+            validationErrors.append(fieldName).append(" contains invalid characters. Only letters, numbers, spaces, commas, periods, and specific special characters are allowed. ");
         }
     }
+
 
 }
