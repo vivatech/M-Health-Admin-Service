@@ -77,7 +77,7 @@ public class PatientUserService {
     @Autowired
     private SMSApiService smsApiService;
 
-    public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
+    public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortByEmail, String sortByContact, int page, int size) {
         Response response = new Response();
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
@@ -105,13 +105,8 @@ public class PatientUserService {
 
         baseQuery.append(" GROUP BY u.user_id, u.contact_number, u.status");
 
-        // Determine sorting based on sortBy
-        String sortOrder = " ORDER BY u.user_id ";
-        if ("0".equals(sortBy)) {
-            sortOrder += "ASC"; // Ascending order
-        } else {
-            sortOrder += "DESC"; // Default to descending order
-        }
+        String sortOrder = getSortOrder(sortByEmail, sortByContact);
+
         baseQuery.append(sortOrder);
 
         // Create query
@@ -190,6 +185,28 @@ public class PatientUserService {
         response.setStatus(Status.SUCCESS);
 
         return response;
+    }
+
+    private String getSortOrder(String sortByEmail, String sortByContact) {
+        String sortOrder = " ORDER BY u.user_id DESC";
+        // Determine sorting based on sortBy
+        if(!StringUtils.isEmpty(sortByEmail)){
+            sortOrder = " ORDER BY u.email ";
+            if ("0".equals(sortByEmail)) {
+                sortOrder += "ASC"; // Ascending order
+            } else {
+                sortOrder += "DESC"; // Default to descending order
+            }
+        }
+        if(!StringUtils.isEmpty(sortByContact)){
+            sortOrder = " ORDER BY u.contact_number ";
+            if ("0".equals(sortByContact)) {
+                sortOrder += "ASC"; // Ascending order
+            } else {
+                sortOrder += "DESC"; // Default to descending order
+            }
+        }
+        return sortOrder;
     }
 
     private boolean validateStatus(String status) {
