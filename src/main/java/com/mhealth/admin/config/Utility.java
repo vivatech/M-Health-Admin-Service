@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Locale;
 
 @Service
@@ -64,5 +65,10 @@ public class Utility {
             locale = new Locale(Constants.LOCALE_SOMALIA);
         }
         return locale;
+    }
+
+    public static boolean hasField(String fieldName, Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .anyMatch(field -> field.getName().equals(fieldName));
     }
 }

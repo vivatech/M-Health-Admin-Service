@@ -34,11 +34,11 @@ public class GlobalService {
     private LanguageRepository languageRepository;
 
 //    @Value()
-    private Integer countryId;
+    private List<Integer> countryIdList;
 
     public Map<Integer, String> getCities(Locale locale) {
         // Fetch states based on the country ID
-        List<State> states = stateRepository.findByCountry_Id(countryId);
+        List<State> states = stateRepository.findByCountry_IdIn(countryIdList);
 
         // Extract state IDs
         List<Integer> stateIds = states.stream()
@@ -53,14 +53,14 @@ public class GlobalService {
                 .collect(Collectors.toMap(City::getId, City::getName));
     }
 
-    public Map<String, Object> getCountries(Locale locale, List<Integer> countryIds, List<Integer> phonecodeList) {
+    public Map<String, Object> getCountries(Locale locale, List<Integer> phonecodeList) {
         List<Country> countries;
 
         // Filter countries based on the provided IDs and phone codes
-        if (countryIds != null && !countryIds.isEmpty() && phonecodeList != null && !phonecodeList.isEmpty()) {
-            countries = countryRepository.findByIdInAndPhonecodeIn(countryIds, phonecodeList);
-        } else if (countryIds != null && !countryIds.isEmpty()) {
-            countries = countryRepository.findByIdIn(countryIds);
+        if (countryIdList != null && !countryIdList.isEmpty() && phonecodeList != null && !phonecodeList.isEmpty()) {
+            countries = countryRepository.findByIdInAndPhonecodeIn(countryIdList, phonecodeList);
+        } else if (countryIdList != null && !countryIdList.isEmpty()) {
+            countries = countryRepository.findByIdIn(countryIdList);
         } else if (phonecodeList != null && !phonecodeList.isEmpty()) {
             countries = countryRepository.findByPhonecodeIn(phonecodeList);
         } else {

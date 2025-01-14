@@ -15,4 +15,7 @@ public interface SlotTypeRepository extends JpaRepository<SlotType, Integer> {
 
     @Query("Select u from SlotType u where u.type = :type")
     Optional<SlotType> findByType(@Param("type") String type);
+
+    @Query(value = "SELECT id FROM mh_slot_type WHERE status = :status LIMIT 1", nativeQuery = true)
+    Optional<Integer> findDefaultSlot(@Param("status") String status);
 }
