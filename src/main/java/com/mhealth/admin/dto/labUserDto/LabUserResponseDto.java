@@ -1,4 +1,4 @@
-package com.mhealth.admin.dto.patientDto;
+package com.mhealth.admin.dto.labUserDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,9 +9,8 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PatientUserResponseDto {
+public class LabUserResponseDto {
     private Integer userId;
-    private String profilePicture;
     private String fullName;
     private String email;
     private String countryCode;
@@ -22,8 +21,7 @@ public class PatientUserResponseDto {
     private int stateId;
     private String cityName;
     private int cityId;
-    private String gender;
-    private LocalDate dob;
-    private String residentialAddress;
-    private String notificationLanguage;
+    private String labName;
+    private String labAddress;
+    private String labRegistrationNumber;
 }

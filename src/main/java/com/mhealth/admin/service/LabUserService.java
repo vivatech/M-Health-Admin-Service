@@ -4,14 +4,14 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
+import com.mhealth.admin.dto.enums.Classification;
+import com.mhealth.admin.dto.labUserDto.LabUserListResponseDto;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
-import com.mhealth.admin.dto.patientDto.PatientUserListResponseDto;
-import com.mhealth.admin.dto.patientDto.PatientUserRequestDto;
-import com.mhealth.admin.dto.patientDto.PatientUserResponseDto;
-import com.mhealth.admin.dto.response.MarketingUserResponseDto;
+import com.mhealth.admin.dto.labUserDto.LabUserRequestDto;
+import com.mhealth.admin.dto.labUserDto.LabUserResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.exception.PatientUserExceptionHandler;
 import com.mhealth.admin.model.*;
@@ -24,7 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +36,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.mhealth.admin.config.Constants.*;
+import static com.mhealth.admin.constants.Messages.GENERAL_PRACTITIONER;
 
 @Slf4j
 @Service
-public class PatientUserService {
+public class LabUserService {
     @Autowired
     private CityRepository cityRepository;
     @Autowired
@@ -63,50 +66,65 @@ public class PatientUserService {
     private UsersRepository usersRepository;
 
     @Autowired
-    private UsersPromoCodeRepository usersPromoCodeRepository;
-
-    @Autowired
-    private AuthAssignmentRepository authAssignmentRepository;
-
-    @Autowired
     private MessageSource messageSource;
 
     @Autowired
     private SMSApiService smsApiService;
+    @Autowired
+    private Utility utility;
 
-    public static final List<String> sortByValues = List.of("user_id", "email", "contact_number");
+    public static final List<String> sortByValues = List.of("user_id", "contact_number", "clinic_name", "first_name", "professional_identification_number");
 
-    public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortField, String sortBy, int page, int size) {
+    public Object getLabUserList(
+            Locale locale,
+            String fullName,
+            String labName,
+            String labRegistrationNumber,
+            String contactNumber, String status,
+            Integer cityId,
+            String sortField,
+            String sortBy,
+            int page,
+            int size) {
         Response response = new Response();
         if(!sortByValues.contains(sortField)){
             response.setCode(Constants.CODE_O);
             response.setData(null);
-            response.setMessage("Invalid value for sortField: " + sortField + ". Allowed values are " + sortByValues);
+            response.setMessage("Invalid value for sortField: "
+                    + sortField + ". Allowed values are " + sortByValues);
             response.setStatus(Status.FAILED);
             return response;
         }
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
-                .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
-                .append("u.email, ")
-                .append("u.country_code, ")
+                .append("u.clinic_name AS labName, ")
+                .append("CONCAT(u.first_name, ' ', u.last_name) AS fullName, ")
+                .append("u.professional_identification_number AS labRegistrationNumber, ")
+                .append("u.country_code AS countryCode, ")
                 .append("u.contact_number AS contactNumber, ")
-                .append("u.status ")
+                .append("u.status, ")
+                .append("u.city_id AS cityId ")
                 .append("FROM mh_users u ")
-                .append("WHERE u.type = 'Patient'"); // Base query
+                .append("WHERE u.type = 'Lab'"); // Base query
 
         // Dynamically add filters
-        if (!StringUtils.isEmpty(name)) {
-            baseQuery.append(" AND CONCAT(u.first_name, ' ', u.last_name) LIKE :name");
+        if (!StringUtils.isEmpty(fullName)) {
+            baseQuery.append(" AND CONCAT(u.first_name, ' ', u.last_name) LIKE :fullName");
         }
-        if (!StringUtils.isEmpty(email)) {
-            baseQuery.append(" AND u.email LIKE :email");
+        if (!StringUtils.isEmpty(labName)) {
+            baseQuery.append(" AND u.clinic_name LIKE :labName");
+        }
+        if (!StringUtils.isEmpty(labRegistrationNumber)) {
+            baseQuery.append(" AND u.professional_identification_number LIKE :labRegistrationNumber");
         }
         if (!StringUtils.isEmpty(status)) {
             baseQuery.append(" AND u.status = :status");
         }
         if (!StringUtils.isEmpty(contactNumber)) {
             baseQuery.append(" AND CONCAT(u.country_code, '', u.contact_number) LIKE :contactNumber");
+        }
+        if (cityId != null && cityId > 0) {
+            baseQuery.append(" AND u.city_id = " + cityId);
         }
 
         baseQuery.append(" GROUP BY u.user_id, u.contact_number, u.status ");
@@ -117,11 +135,11 @@ public class PatientUserService {
         Query query = entityManager.createNativeQuery(baseQuery.toString());
 
         // Set parameters
-        if (!StringUtils.isEmpty(name)) {
-            query.setParameter("name", "%" + name + "%");
+        if (!StringUtils.isEmpty(fullName)) {
+            query.setParameter("fullName", "%" + fullName + "%");
         }
-        if (!StringUtils.isEmpty(email)) {
-            query.setParameter("email", "%" + email + "%");
+        if (!StringUtils.isEmpty(labName)) {
+            query.setParameter("labName", "%" + labName + "%");
         }
         if (!StringUtils.isEmpty(status)) {
             if(!validateStatus(status)){
@@ -135,6 +153,9 @@ public class PatientUserService {
         }
         if (!StringUtils.isEmpty(contactNumber)) {
             query.setParameter("contactNumber", "%" + contactNumber + "%");
+        }
+        if (!StringUtils.isEmpty(labRegistrationNumber)) {
+            query.setParameter("labRegistrationNumber", "%" + labRegistrationNumber + "%");
         }
         if(page <= 0){
             response.setCode(Constants.CODE_O);
@@ -153,18 +174,18 @@ public class PatientUserService {
         List<Object[]> results = query.getResultList();
 
         // Map results to DTO
-        List<PatientUserListResponseDto> responseList = mapResultsToPatientUserListResponseDto(results);
+        List<LabUserListResponseDto> responseList = mapResultsToLabUserListResponseDto(results);
 
         // Total count query
         String countQuery = "SELECT COUNT(*) FROM (" + baseQuery + ") AS countQuery";
         Query countQ = entityManager.createNativeQuery(countQuery);
 
         // Set parameters for count query
-        if (!StringUtils.isEmpty(name)) {
-            countQ.setParameter("name", "%" + name + "%");
+        if (!StringUtils.isEmpty(fullName)) {
+            countQ.setParameter("fullName", "%" + fullName + "%");
         }
-        if (!StringUtils.isEmpty(email)) {
-            countQ.setParameter("email", "%" + email + "%");
+        if (!StringUtils.isEmpty(labName)) {
+            countQ.setParameter("labName", "%" + labName + "%");
         }
         if (!StringUtils.isEmpty(status)) {
             countQ.setParameter("status", status);
@@ -172,11 +193,14 @@ public class PatientUserService {
         if (!StringUtils.isEmpty(contactNumber)) {
             countQ.setParameter("contactNumber", "%" + contactNumber + "%");
         }
+        if (!StringUtils.isEmpty(labRegistrationNumber)) {
+            countQ.setParameter("labRegistrationNumber", "%" + labRegistrationNumber + "%");
+        }
 
         long totalCount = ((Number) countQ.getSingleResult()).longValue();
 
         // Create pageable response
-        Page<PatientUserListResponseDto> pageableResponse = new PageImpl<>(responseList, pageable, totalCount);
+        Page<LabUserListResponseDto> pageableResponse = new PageImpl<>(responseList, pageable, totalCount);
 
         // Build response
         Map<String, Object> data = new HashMap<>();
@@ -191,28 +215,6 @@ public class PatientUserService {
         return response;
     }
 
-    private String getSortOrder(String sortByEmail, String sortByContact) {
-        String sortOrder = " ORDER BY u.user_id DESC";
-        // Determine sorting based on sortBy
-        if(!StringUtils.isEmpty(sortByEmail)){
-            sortOrder = " ORDER BY u.email ";
-            if ("0".equals(sortByEmail)) {
-                sortOrder += "ASC"; // Ascending order
-            } else {
-                sortOrder += "DESC"; // Default to descending order
-            }
-        }
-        if(!StringUtils.isEmpty(sortByContact)){
-            sortOrder = " ORDER BY u.contact_number ";
-            if ("0".equals(sortByContact)) {
-                sortOrder += "ASC"; // Ascending order
-            } else {
-                sortOrder += "DESC"; // Default to descending order
-            }
-        }
-        return sortOrder;
-    }
-
     private boolean validateStatus(String status) {
         for (StatusAI s : StatusAI.values()) {
             if (s.name().equals(status)) {
@@ -222,23 +224,31 @@ public class PatientUserService {
         return false;
     }
 
-    private List<PatientUserListResponseDto> mapResultsToPatientUserListResponseDto(List<Object[]> results) {
+    private List<LabUserListResponseDto> mapResultsToLabUserListResponseDto(List<Object[]> results) {
         return results.stream().map(row -> {
             Integer userId = (Integer) row[0];
-            String name = StringUtils.isEmpty((String) row[1]) ? "" : (String) row[1];
-            String email = StringUtils.isEmpty((String) row[2]) ? "" : (String) row[2];
-            String countryCode = StringUtils.isEmpty((String) row[3]) ? "" : (String) row[3];
-            String contactNumber = (String) row[4];
-            String status = (String) row[5];
+            String labName = StringUtils.isEmpty((String) row[1]) ? "" : (String) row[1];
+            String fullName = StringUtils.isEmpty((String) row[2]) ? "" : (String) row[2];
+            String labRegistrationNumber = StringUtils.isEmpty((String) row[3]) ? "" : (String) row[3];
+            String countryCode = StringUtils.isEmpty((String) row[4]) ? "" : (String) row[4];
+            String contactNumber = (String) row[5];
+            String status = (String) row[6];
+            Integer cityId = (Integer) row[7];
+            String cityName = "";
 
-            return new PatientUserListResponseDto(
-                    userId, name.trim(), email, countryCode + "-" + contactNumber, status
+            if(cityId != null && cityId > 0){
+                City city = cityRepository.findById(cityId).orElseThrow(() -> new PatientUserExceptionHandler("City Id not Found"));
+                cityName = city.getName();
+            }
+
+            return new LabUserListResponseDto(
+                    userId, labName.trim(), fullName, labRegistrationNumber, countryCode +""+ contactNumber, status, cityName
             );
         }).collect(Collectors.toList());
     }
 
     @Transactional
-    public Object createPatientUser(Locale locale, PatientUserRequestDto requestDto) {
+    public Object createLabUser(Locale locale, LabUserRequestDto requestDto) {
         Response response = new Response();
 
         // Validate the input
@@ -249,17 +259,10 @@ public class PatientUserService {
             response.setStatus(Status.FAILED);
             return response;
         }
-        //validation for terms and condition
-        if(requestDto.getTermsAndConditionChecked() != null && !requestDto.getTermsAndConditionChecked()){
-            response.setCode(Constants.CODE_O);
-            response.setMessage("Terms and Condition should be checked");
-            response.setStatus(Status.FAILED);
-            return response;
-        }
 
         // Check for duplicate email and contact number
         long emailCount = usersRepository.countByEmail(requestDto.getEmail());
-        long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Patient);
+        long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Lab);
 
         if (emailCount > 0) {
             response.setCode(Constants.CODE_O);
@@ -288,26 +291,14 @@ public class PatientUserService {
             pp = requestDto.getProfilePicture().getOriginalFilename();
             //TODO :Store the file into directory
         }
-
-
-
-        // Create Patient user
-        Users patientUser = getUsers(requestDto, pp, locale);
-
-        // Send SMS
-        try {
-            locale = Utility.getUserNotificationLanguageLocale(patientUser.getNotificationLanguage(), locale);
-            GlobalConfiguration value = globalConfigurationRepository.findByKey(Messages.APP_LINK).orElseThrow(
-                    ()-> new PatientUserExceptionHandler(KEY_NOT_FOUND)
-            );
-            String smsMessage = messageSource.getMessage(Messages.REGISTER_PATIENT_USER, new Object[]{patientUser.getFirstName() + " " + patientUser.getLastName(), value.getValue()}, locale);
-            String smsNumber = "+" + countryCode + requestDto.getContactNumber();
-            if(smsSent){
-                smsApiService.sendMessage(smsNumber, smsMessage, country);
-            }
-        } catch (Exception ex) {
-            log.error("exception occurred while sending the sms", ex);
+        //Document
+        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
+            //TODO : store file in directory
+            //TODO : creation of entity in mh_doctor_document
         }
+
+        // Create Lab user
+        Users labUser = getUsers(requestDto, pp, locale);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -317,7 +308,7 @@ public class PatientUserService {
         return response;
     }
 
-    private Users getUsers(PatientUserRequestDto requestDto, String pp, Locale locale) {
+    private Users getUsers(LabUserRequestDto requestDto, String pp, Locale locale) {
         //first name and last name
         String[] fullName = requestDto.getFullName().trim().split(" ");
         String lastName = "";
@@ -331,48 +322,50 @@ public class PatientUserService {
 
         Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
                 ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
-        Users patientUser = new Users();
-        patientUser.setType(UserType.Patient);
-        patientUser.setFirstName(fullName[0]);
-        patientUser.setLastName(lastName);
-        patientUser.setEmail(requestDto.getEmail());
-        patientUser.setProfilePicture(pp);
-        patientUser.setCountry(c);
-        patientUser.setState(requestDto.getProvinceId());
-        patientUser.setCity(requestDto.getCityId());
-        patientUser.setContactNumber(requestDto.getContactNumber());
-        patientUser.setCountryCode(countryCode);
-        patientUser.setGender(requestDto.getGender());
-        patientUser.setDob(requestDto.getDob());
-        patientUser.setStatus(StatusAI.A);
-        patientUser.setIsInternational(YesNo.No);
-        patientUser.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
-        patientUser.setApprovedBy(0);
-        patientUser.setIsHpczVerified(YesNo.Yes.name());
-        patientUser.setIsHospitalVerified(YesNo.Yes.name());
-        patientUser.setIsSuspended(0);
-        patientUser.setAttemptCounter((short)0);
-        patientUser.setOtpCounter(0);
-        patientUser.setHospitalId(0);
-        patientUser.setNotificationLanguage(!StringUtils.isEmpty(requestDto.getNotificationLanguage())
-                ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
-        return usersRepository.save(patientUser);
+        Users labUser = new Users();
+        labUser.setType(UserType.Lab);
+        labUser.setFirstName(fullName[0]);
+        labUser.setLastName(lastName);
+        labUser.setEmail(requestDto.getEmail());
+        labUser.setProfilePicture(pp);
+        labUser.setCountry(c);
+        labUser.setState(requestDto.getProvinceId());
+        labUser.setCity(requestDto.getCityId());
+        labUser.setContactNumber(requestDto.getContactNumber());
+        labUser.setCountryCode(countryCode);
+        labUser.setProfessionalIdentificationNumber(requestDto.getLabRegistrationNumber());
+        labUser.setHospitalAddress(requestDto.getLabAddress());
+        labUser.setStatus(StatusAI.A);
+        labUser.setIsInternational(YesNo.No);
+        labUser.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        labUser.setApprovedBy(0);
+        labUser.setIsHpczVerified(YesNo.Yes.name());
+        labUser.setIsHospitalVerified(YesNo.Yes.name());
+        labUser.setIsSuspended(0);
+        labUser.setAttemptCounter((short)0);
+        labUser.setOtpCounter(0);
+        labUser.setHospitalId(0);
+        labUser.setNotificationLanguage(Constants.DEFAULT_LANGUAGE);
+        labUser.setDoctorClassification(GENERAL_PRACTITIONER);
+        labUser.setClassification(Classification.from_hospital);
+        labUser.setIsInternational(YesNo.No);
+        return usersRepository.save(labUser);
     }
 
     @Transactional
-    public Object updatePatientUser(Locale locale, Integer userId, PatientUserRequestDto requestDto) {
+    public Object updateLabUser(Locale locale, Integer userId, LabUserRequestDto requestDto) {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingPatientUser = usersRepository.findByUserIdAndType(userId, UserType.Patient);
-        if (existingPatientUser.isEmpty()) {
+        Optional<Users> existingLabUser = usersRepository.findByUserIdAndType(userId, UserType.Lab);
+        if (existingLabUser.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingPatientUser.get();
+        Users existingUser = existingLabUser.get();
 
         // Validate the input
         String validationMessage = requestDto.validate();
@@ -396,6 +389,11 @@ public class PatientUserService {
             }
             pp = requestDto.getProfilePicture().getOriginalFilename();
             //TODO :Store the file into directory
+        }
+        //Document
+        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
+            //TODO : store the file into directory
+            //TODO : create the new entity into mh_doctor_document table
         }
 
         // Check for duplicate email and contact number
@@ -431,17 +429,16 @@ public class PatientUserService {
 
         existingUser.setFirstName(fullName[0]);
         existingUser.setLastName(lastName);
-        existingUser.setEmail(requestDto.getEmail());
+        existingUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? null : requestDto.getEmail());
         existingUser.setContactNumber(requestDto.getContactNumber());
+        existingUser.setPassword(utility.md5Hash(requestDto.getPassword()));
         existingUser.setCountry(c);
         existingUser.setState(requestDto.getProvinceId());
         existingUser.setCity(requestDto.getCityId());
-        existingUser.setGender(!StringUtils.isEmpty(requestDto.getGender()) ? requestDto.getGender() : existingUser.getGender());
-        existingUser.setResidenceAddress(requestDto.getResidentialAddress());
+        existingUser.setClinicName(requestDto.getLabName());
+        existingUser.setHospitalAddress(requestDto.getLabAddress());
         existingUser.setProfilePicture(pp);
-        existingUser.setDob(requestDto.getDob());
-
-        existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+        existingUser.setProfessionalIdentificationNumber(requestDto.getLabRegistrationNumber());
 
         usersRepository.save(existingUser);
 
@@ -453,19 +450,19 @@ public class PatientUserService {
         return response;
     }
 
-    public Object updatePatientUserStatus(Locale locale, Integer userId, String status) {
+    public Object updateLabUserStatus(Locale locale, Integer userId, String status) {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingPatientUser = usersRepository.findByUserIdAndType(userId, UserType.Patient);
-        if (existingPatientUser.isEmpty()) {
+        Optional<Users> existingLabUser = usersRepository.findByUserIdAndType(userId, UserType.Lab);
+        if (existingLabUser.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingPatientUser.get();
+        Users existingUser = existingLabUser.get();
 
         //check the status filed
         if(!validateStatus(status)){
@@ -488,22 +485,22 @@ public class PatientUserService {
         return response;
     }
 
-    public Object getPatientUser(Locale locale, Integer userId) {
+    public Object getLabUser(Locale locale, Integer userId) {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingPatientUser = usersRepository.findByUserIdAndType(userId, UserType.Patient);
-        if (existingPatientUser.isEmpty()) {
+        Optional<Users> existingLabUser = usersRepository.findByUserIdAndType(userId, UserType.Lab);
+        if (existingLabUser.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingPatientUser.get();
+        Users existingUser = existingLabUser.get();
 
-        // Construct users entity to patient user response dto
-        PatientUserResponseDto patientUserResponseDto = convertToPatientUserResponseDto(existingUser, locale);
+        // Construct users entity to Lab user response dto
+        LabUserResponseDto patientUserResponseDto = convertToLabUserResponseDto(existingUser, locale);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -514,13 +511,12 @@ public class PatientUserService {
         return response;
     }
 
-    private PatientUserResponseDto convertToPatientUserResponseDto(Users user, Locale locale) {
-        PatientUserResponseDto dto = new PatientUserResponseDto();
-        dto.setProfilePicture(user.getProfilePicture());
+    private LabUserResponseDto convertToLabUserResponseDto(Users user, Locale locale) {
+        LabUserResponseDto dto = new LabUserResponseDto();
         dto.setUserId(user.getUserId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setGender(user.getGender());
+        dto.setLabName(user.getClinicName());
         dto.setCountryCode(user.getCountryCode());
         dto.setContactNumber(user.getContactNumber());
         dto.setCountryId(user.getCountry() == null ? 0 : user.getCountry().getId());
@@ -541,10 +537,27 @@ public class PatientUserService {
                 dto.setCityName(city.getName());
             }
         }
-        dto.setDob(user.getDob());
-        dto.setResidentialAddress(user.getResidenceAddress());
-        dto.setNotificationLanguage(user.getNotificationLanguage());
+        dto.setLabAddress(user.getHospitalAddress());
+        dto.setLabRegistrationNumber(user.getProfessionalIdentificationNumber());
 
         return dto;
+    }
+
+    public Object deleteLabDocument(Locale locale, Integer userId, Integer documentId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingLabUser = usersRepository.findByUserIdAndType(userId, UserType.Lab);
+        if (existingLabUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users labUser = existingLabUser.get();
+
+        //TODO : Delete entry from Doctor document
+        return null;
     }
 }

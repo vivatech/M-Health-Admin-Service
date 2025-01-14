@@ -20,4 +20,5 @@ public interface Messages {
     String COUNTRY_NOT_FOUND = "country.not.found";
     String APP_LINK = "APP_LINK";
     String REGISTER_PATIENT_USER = "register.patient.user";
+    String GENERAL_PRACTITIONER = "general_practitioner";
 }
