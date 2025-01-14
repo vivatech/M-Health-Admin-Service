@@ -36,15 +36,15 @@ public class PatientController {
                                                   @RequestParam(required = false) String email,
                                                   @RequestParam(required = false) String status,
                                                   @RequestParam(required = false) String contactNumber,
-                                                  @RequestParam(required = false) String sortByEmailAddress,
-                                                  @RequestParam(required = false) String sortByContactNumber,
+                                                  @RequestParam(required = false, defaultValue = "user_id") String sortField,
+                                                  @RequestParam(required = false, defaultValue = "1") String sortBy,
                                                   @RequestParam(defaultValue = "1") int page,
                                                   @RequestParam(defaultValue = "10") int size) {
         try {
             log.info("Request Received For /api/v1/admin/user/patient/list");
-            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortByEmailAddress={}, sortByContactNumber={}, page={}, size={}", name, email, status, contactNumber, sortByEmailAddress, sortByContactNumber, page, size);
+            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortField={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortField, sortBy, page, size);
 
-            Object response = patientUserService.getPatientUserList(locale, name, email, status,contactNumber, sortByEmailAddress, sortByContactNumber, page, size);
+            Object response = patientUserService.getPatientUserList(locale, name, email, status,contactNumber, sortField, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/patient/list: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);

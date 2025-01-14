@@ -24,10 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,8 +74,17 @@ public class PatientUserService {
     @Autowired
     private SMSApiService smsApiService;
 
-    public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortByEmail, String sortByContact, int page, int size) {
+    public static final List<String> sortByValues = List.of("user_id", "email", "contact_number");
+
+    public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortField, String sortBy, int page, int size) {
         Response response = new Response();
+        if(!sortByValues.contains(sortField)){
+            response.setCode(Constants.CODE_O);
+            response.setData(null);
+            response.setMessage("Invalid value for sortField: " + sortField + ". Allowed values are " + sortByValues);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
                 .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
@@ -103,11 +109,9 @@ public class PatientUserService {
             baseQuery.append(" AND CONCAT(u.country_code, '', u.contact_number) LIKE :contactNumber");
         }
 
-        baseQuery.append(" GROUP BY u.user_id, u.contact_number, u.status");
+        baseQuery.append(" GROUP BY u.user_id, u.contact_number, u.status ");
 
-        String sortOrder = getSortOrder(sortByEmail, sortByContact);
-
-        baseQuery.append(sortOrder);
+        baseQuery.append(" ORDER BY u." + sortField + " " + (sortBy.equals("0") ? "ASC" : "DESC"));
 
         // Create query
         Query query = entityManager.createNativeQuery(baseQuery.toString());
@@ -132,7 +136,7 @@ public class PatientUserService {
         if (!StringUtils.isEmpty(contactNumber)) {
             query.setParameter("contactNumber", "%" + contactNumber + "%");
         }
-        if(page<=0){
+        if(page <= 0){
             response.setCode(Constants.CODE_O);
             response.setData(null);
             response.setMessage("Invalid value for page: " + page + ". Allowed values should be greater or equal to 1.");
