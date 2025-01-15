@@ -109,4 +109,20 @@ public class MobileReleaseService {
     }
 
 
+    public ResponseEntity<Response> deleteMobileReleaseById(Integer id, Locale locale) {
+
+        MobileRelease mobileRelease = repository.findById(id).orElse(null);
+
+        if (mobileRelease == null) {
+            Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.MOBILE_RELEASE_NOT_FOUND, null, locale));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        repository.delete(mobileRelease);
+
+        Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
+                messageSource.getMessage(Constants.MOBILE_RELEASE_DELETED, null, locale));
+        return ResponseEntity.ok(response);
+    }
 }

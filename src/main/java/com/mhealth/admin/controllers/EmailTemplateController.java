@@ -1,5 +1,6 @@
 package com.mhealth.admin.controllers;
 
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.request.EmailTemplateRequest;
 import com.mhealth.admin.dto.request.EmailTemplateSearchRequest;
 import com.mhealth.admin.dto.response.Response;
@@ -33,7 +34,7 @@ public class EmailTemplateController {
     @PostMapping
     public ResponseEntity<Response> createEmailTemplate(
             @Valid @RequestBody EmailTemplateRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.createEmailTemplate(request, locale);
     }
 
@@ -48,7 +49,7 @@ public class EmailTemplateController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.updateEmailTemplate(id, request, locale);
     }
-
+    
     @Operation(summary = "Search email templates by key or value", responses = {
             @ApiResponse(responseCode = "200", description = "Search successful", content = @Content(schema = @Schema(implementation = Response.class)))
     })
@@ -66,7 +67,7 @@ public class EmailTemplateController {
     @GetMapping("/{id}")
     public ResponseEntity<Response> getEmailTemplateById(
             @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.getEmailTemplateById(id, locale);
     }
 
@@ -77,7 +78,7 @@ public class EmailTemplateController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteEmailTemplateById(
             @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.deleteEmailTemplateById(id, locale);
     }
 }
