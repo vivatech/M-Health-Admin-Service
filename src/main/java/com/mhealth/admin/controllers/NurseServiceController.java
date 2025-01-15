@@ -1,5 +1,6 @@
 package com.mhealth.admin.controllers;
 
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.request.NurseServiceRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.NurseServiceService;
@@ -30,7 +31,7 @@ public class NurseServiceController {
     @PostMapping
     public ResponseEntity<Response> createNurseService(
             @Valid @RequestBody NurseServiceRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.createNurseService(request, locale);
     }
 
@@ -42,10 +43,19 @@ public class NurseServiceController {
     public ResponseEntity<Response> updateNurseService(
             @PathVariable Integer id,
             @Valid @RequestBody NurseServiceRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.updateNurseService(id, request, locale);
     }
 
+    @Operation(summary = "Get all nurse services", responses = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class)))
+    })
+    @GetMapping
+    public ResponseEntity<Response> getAllNurseServices(
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+        return service.getAllNurseServices(locale);
+    }
+  
     @Operation(summary = "Get nurse service by ID", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "Nurse service not found", content = @Content)
@@ -53,7 +63,7 @@ public class NurseServiceController {
     @GetMapping("/{id}")
     public ResponseEntity<Response> getNurseServiceById(
             @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.getNurseServiceById(id, locale);
     }
 
@@ -64,7 +74,7 @@ public class NurseServiceController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteNurseServiceById(
             @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.deleteNurseServiceById(id, locale);
     }
 
@@ -72,7 +82,6 @@ public class NurseServiceController {
             @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "No records found", content = @Content)
     })
-
     @GetMapping("/search")
     public ResponseEntity<Response> searchNurseServices(
             @RequestParam(required = false) String seviceName,
@@ -93,7 +102,7 @@ public class NurseServiceController {
     public ResponseEntity<Response> updateNurseServiceStatus(
             @PathVariable Integer id,
             @RequestParam String status,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.updateNurseServiceStatus(id, status, locale);
     }
 }

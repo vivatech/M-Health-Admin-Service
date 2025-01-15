@@ -200,7 +200,7 @@ public class SafariPayment implements PaymentInterface{
 
         } catch (Exception e) {
             log.error("Error while making B2C payment: {}", e.getMessage(), e);
-            throw new RuntimeException("Error while making B2C payment: " + e.getMessage(), e);
+            throw new AdminModuleExceptionHandler("Error while making B2C payment: " + e.getMessage());
         }
     }
 }

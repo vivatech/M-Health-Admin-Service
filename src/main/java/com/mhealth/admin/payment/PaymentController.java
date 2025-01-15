@@ -7,12 +7,12 @@ import com.mhealth.admin.dto.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
@@ -34,15 +34,17 @@ public class PaymentController {
             @ApiResponse(responseCode = "400", description = "Request body is invalid"),
             @ApiResponse(responseCode = "405", description = "Payment is already in progress")
     })
+    @Transactional
     @PostMapping("/send-b2c")
     public ResponseEntity<Response> createPayment(
             @RequestBody B2CPaymentDto request,
+            @RequestHeader(name = "country-code", required = false, defaultValue = Constants.DEFAULT_COUNTRY) String countryCode,
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
 
         if (StringUtils.isEmpty(request.getMsisdn()) || request.getAmount() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, "Request body is invalid"));
         }
-        return ResponseEntity.ok(paymentService.sendPayment(request.getMsisdn(), request.getAmount(), mHealthCountry));
+        return ResponseEntity.ok(paymentService.sendPayment(request.getMsisdn(), request.getAmount(), countryCode.toUpperCase()));
     }
 
     @PostMapping("/refund-payment")
