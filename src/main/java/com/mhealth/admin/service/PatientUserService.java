@@ -5,6 +5,7 @@ import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.enums.YesNo;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -73,6 +75,9 @@ public class PatientUserService {
 
     @Autowired
     private SMSApiService smsApiService;
+
+    @Autowired
+    private FileService fileService;
 
     public static final List<String> sortByValues = List.of("user_id", "email", "contact_number");
 
@@ -191,28 +196,6 @@ public class PatientUserService {
         return response;
     }
 
-    private String getSortOrder(String sortByEmail, String sortByContact) {
-        String sortOrder = " ORDER BY u.user_id DESC";
-        // Determine sorting based on sortBy
-        if(!StringUtils.isEmpty(sortByEmail)){
-            sortOrder = " ORDER BY u.email ";
-            if ("0".equals(sortByEmail)) {
-                sortOrder += "ASC"; // Ascending order
-            } else {
-                sortOrder += "DESC"; // Default to descending order
-            }
-        }
-        if(!StringUtils.isEmpty(sortByContact)){
-            sortOrder = " ORDER BY u.contact_number ";
-            if ("0".equals(sortByContact)) {
-                sortOrder += "ASC"; // Ascending order
-            } else {
-                sortOrder += "DESC"; // Default to descending order
-            }
-        }
-        return sortOrder;
-    }
-
     private boolean validateStatus(String status) {
         for (StatusAI s : StatusAI.values()) {
             if (s.name().equals(status)) {
@@ -238,7 +221,7 @@ public class PatientUserService {
     }
 
     @Transactional
-    public Object createPatientUser(Locale locale, PatientUserRequestDto requestDto) {
+    public Object createPatientUser(Locale locale, PatientUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Validate the input
@@ -276,23 +259,17 @@ public class PatientUserService {
         //profile picture
         String pp = null;
         if (requestDto.getProfilePicture() != null && !requestDto.getProfilePicture().getName().isEmpty()) {
-            String fileName = requestDto.getProfilePicture().getName();
-            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-
-            if (!Arrays.asList("jpg", "jpeg", "png").contains(fileExtension)) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
-                response.setMessage(messageSource.getMessage(Messages.PROFILE_PICTURE_NOT_SELECTED, null, locale));
-                response.setStatus(Status.SUCCESS);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
                 return response;
             }
-            pp = requestDto.getProfilePicture().getOriginalFilename();
-            //TODO :Store the file into directory
         }
 
-
-
         // Create Patient user
-        Users patientUser = getUsers(requestDto, pp, locale);
+        Users patientUser = getUsers(requestDto, pp, locale, null);
 
         // Send SMS
         try {
@@ -317,7 +294,7 @@ public class PatientUserService {
         return response;
     }
 
-    private Users getUsers(PatientUserRequestDto requestDto, String pp, Locale locale) {
+    private Users getUsers(PatientUserRequestDto requestDto, String pp, Locale locale, Users users) throws IOException {
         //first name and last name
         String[] fullName = requestDto.getFullName().trim().split(" ");
         String lastName = "";
@@ -331,7 +308,9 @@ public class PatientUserService {
 
         Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
                 ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
-        Users patientUser = new Users();
+
+        Users patientUser = users == null ? new Users() : users;
+
         patientUser.setType(UserType.Patient);
         patientUser.setFirstName(fullName[0]);
         patientUser.setLastName(lastName);
@@ -356,11 +335,22 @@ public class PatientUserService {
         patientUser.setHospitalId(0);
         patientUser.setNotificationLanguage(!StringUtils.isEmpty(requestDto.getNotificationLanguage())
                 ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+
+        //profile picture
+        if(requestDto.getProfilePicture() != null){
+            String filePath = Constants.USER_PROFILE_PICTURE + patientUser.getUserId();
+            String fileName = requestDto.getProfilePicture().getOriginalFilename();
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            patientUser.setProfilePicture(fileName);
+        }
         return usersRepository.save(patientUser);
     }
 
     @Transactional
-    public Object updatePatientUser(Locale locale, Integer userId, PatientUserRequestDto requestDto) {
+    public Object updatePatientUser(Locale locale, Integer userId, PatientUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -385,17 +375,13 @@ public class PatientUserService {
         //profile picture
         String pp = null;
         if (requestDto.getProfilePicture() != null && !requestDto.getProfilePicture().getName().isEmpty()) {
-            String fileName = requestDto.getProfilePicture().getName();
-            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-
-            if (!Arrays.asList("jpg", "jpeg", "png").contains(fileExtension)) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
-                response.setMessage(messageSource.getMessage(Messages.PROFILE_PICTURE_NOT_SELECTED, null, locale));
-                response.setStatus(Status.SUCCESS);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
                 return response;
             }
-            pp = requestDto.getProfilePicture().getOriginalFilename();
-            //TODO :Store the file into directory
         }
 
         // Check for duplicate email and contact number
@@ -414,36 +400,7 @@ public class PatientUserService {
             return response;
         }
 
-        //first name and last name
-        String[] fullName = requestDto.getFullName().trim().split(" ");
-        String lastName = "";
-        StringBuilder sb = new StringBuilder();
-        if(fullName.length > 1){
-            for(int i = 1 ; i < fullName.length ; i++){
-                sb.append(fullName[i]).append(" ");
-            }
-            lastName = sb.toString().trim();
-        }
-
-        // Update the user fields
-        Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
-                ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
-
-        existingUser.setFirstName(fullName[0]);
-        existingUser.setLastName(lastName);
-        existingUser.setEmail(requestDto.getEmail());
-        existingUser.setContactNumber(requestDto.getContactNumber());
-        existingUser.setCountry(c);
-        existingUser.setState(requestDto.getProvinceId());
-        existingUser.setCity(requestDto.getCityId());
-        existingUser.setGender(!StringUtils.isEmpty(requestDto.getGender()) ? requestDto.getGender() : existingUser.getGender());
-        existingUser.setResidenceAddress(requestDto.getResidentialAddress());
-        existingUser.setProfilePicture(pp);
-        existingUser.setDob(requestDto.getDob());
-
-        existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
-
-        usersRepository.save(existingUser);
+        Users patientUser = getUsers(requestDto, pp,  locale, existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -547,4 +504,5 @@ public class PatientUserService {
 
         return dto;
     }
+
 }

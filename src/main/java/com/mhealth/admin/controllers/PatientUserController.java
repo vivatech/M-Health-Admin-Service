@@ -18,7 +18,7 @@ import java.util.Locale;
 @Tag(name = "Patient Controller", description = "APIs For Handling Patient user Operations")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/user/patient")
-public class PatientController {
+public class PatientUserController {
 
     @Autowired
     private PatientUserService patientUserService;
@@ -125,7 +125,7 @@ public class PatientController {
      * Fetch user by userId
      */
     @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
-    public ResponseEntity<?> getMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+    public ResponseEntity<?> getPatientUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                               @PathVariable Integer userId) {
         try {
             log.info("Request Received For /api/v1/admin/user/patient/" + userId);

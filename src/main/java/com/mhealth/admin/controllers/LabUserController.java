@@ -142,23 +142,44 @@ public class LabUserController {
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     /**
      * Delete lab document
      */
-    @RequestMapping(value = "/delete-document", method = RequestMethod.POST)
+    @RequestMapping(value = "/delete-lab-document", method = RequestMethod.POST)
     public ResponseEntity<?> deleteLabDocument(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                               @RequestParam Integer userId,
                                               @RequestParam Integer documentId) {
         try {
-            log.info("Request Received For /api/v1/admin/user/lab/delete-document");
+            log.info("Request Received For /api/v1/admin/user/lab/delete-lab-document");
             log.info("Request Parameters : userId={}, documentId={}", userId, documentId);
 
             Object response = labUserService.deleteLabDocument(locale, userId, documentId);
 
-            log.info("Response Sent For /api/v1/admin/user/lab/delete-document, Params :" + userId + "and " + documentId + " : {}", objectMapper.writeValueAsString(response));
+            log.info("Response Sent For /api/v1/admin/user/lab/delete-lab-document, Params :" + userId + "and " + documentId + " : {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Exception found in /api/v1/admin/user/lab/delete-document : ", e);
+            log.error("Exception found in /api/v1/admin/user/lab/delete-lab-document : ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Delete lab user
+     */
+    @RequestMapping(value = "/delete-user", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                               @RequestParam Integer userId) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/lab/delete-user");
+            log.info("Request Parameters : userId={}", userId);
+
+            Object response = labUserService.deleteLabUser(locale, userId);
+
+            log.info("Response Sent For /api/v1/admin/user/lab/delete-user, Params :" + userId + " : {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception found in /api/v1/admin/user/lab/delete-user : ", e);
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

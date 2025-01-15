@@ -11,6 +11,7 @@ public interface Messages {
     String USER_DELETED = "user.deleted";
     String INCORRECT_USER_STATUS = "incorrect.users.status";
     String SELECT_PROFILE_PICTURE = "select.profile.picture";
+    String DOCTOR_ID_SIZE_LIMIT = "doctor-id.size.limit";
 
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
@@ -21,4 +22,11 @@ public interface Messages {
     String APP_LINK = "APP_LINK";
     String REGISTER_PATIENT_USER = "register.patient.user";
     String GENERAL_PRACTITIONER = "general_practitioner";
+
+    // Doctor User's SMS Body
+    String REGISTER_DOCTOR_USER = "register.doctor.user";
+
+    //Lab user's SMS Body
+    String DOCUMENT_NOT_FOUND = "document.not.found";
+    String PROFILE_PICTURE_DELETE_SUCCESSFULLY = "profile.picture.delete";
 }

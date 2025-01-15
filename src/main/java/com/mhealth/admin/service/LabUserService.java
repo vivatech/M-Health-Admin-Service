@@ -4,17 +4,18 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
-import com.mhealth.admin.dto.enums.Classification;
+import com.mhealth.admin.dto.ValidateResult;
+import com.mhealth.admin.dto.enums.*;
+import com.mhealth.admin.dto.labUserDto.LabFileDto;
 import com.mhealth.admin.dto.labUserDto.LabUserListResponseDto;
 import com.mhealth.admin.dto.Status;
-import com.mhealth.admin.dto.enums.StatusAI;
-import com.mhealth.admin.dto.enums.UserType;
-import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.labUserDto.LabUserRequestDto;
 import com.mhealth.admin.dto.labUserDto.LabUserResponseDto;
+import com.mhealth.admin.dto.response.DocumentResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.exception.PatientUserExceptionHandler;
 import com.mhealth.admin.model.*;
+import com.mhealth.admin.model.State;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
@@ -31,6 +32,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.print.Doc;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -41,6 +44,8 @@ import static com.mhealth.admin.constants.Messages.GENERAL_PRACTITIONER;
 @Slf4j
 @Service
 public class LabUserService {
+    @Autowired
+    private DoctorDocumentRepository doctorDocumentRepository;
     @Autowired
     private CityRepository cityRepository;
     @Autowired
@@ -72,6 +77,8 @@ public class LabUserService {
     private SMSApiService smsApiService;
     @Autowired
     private Utility utility;
+    @Autowired
+    private FileService fileService;
 
     public static final List<String> sortByValues = List.of("user_id", "contact_number", "clinic_name", "first_name", "professional_identification_number");
 
@@ -248,7 +255,7 @@ public class LabUserService {
     }
 
     @Transactional
-    public Object createLabUser(Locale locale, LabUserRequestDto requestDto) {
+    public Object createLabUser(Locale locale, LabUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Validate the input
@@ -278,27 +285,30 @@ public class LabUserService {
 
         //profile picture
         String pp = null;
-        if (requestDto.getProfilePicture() != null && !requestDto.getProfilePicture().getName().isEmpty()) {
-            String fileName = requestDto.getProfilePicture().getName();
-            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-
-            if (!Arrays.asList("jpg", "jpeg", "png").contains(fileExtension)) {
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
-                response.setMessage(messageSource.getMessage(Messages.PROFILE_PICTURE_NOT_SELECTED, null, locale));
-                response.setStatus(Status.SUCCESS);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
                 return response;
             }
-            pp = requestDto.getProfilePicture().getOriginalFilename();
-            //TODO :Store the file into directory
         }
         //Document
         if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
-            //TODO : store file in directory
-            //TODO : creation of entity in mh_doctor_document
+          for(LabFileDto dto : requestDto.getDocumentList()){
+              ValidateResult validationResult = fileService.validateFile(locale, dto.getDocument(), List.of("pdf"), 5_000_000);
+              if (!validationResult.isResult()) {
+                  response.setCode(Constants.CODE_O);
+                  response.setMessage(validationResult.getError());
+                  response.setStatus(Status.FAILED);
+                  return response;
+              }
+          }
         }
 
         // Create Lab user
-        Users labUser = getUsers(requestDto, pp, locale);
+        Users labUser = getUsers(requestDto, pp, locale, null);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -308,7 +318,7 @@ public class LabUserService {
         return response;
     }
 
-    private Users getUsers(LabUserRequestDto requestDto, String pp, Locale locale) {
+    private Users getUsers(LabUserRequestDto requestDto, String pp, Locale locale, Users users) throws IOException {
         //first name and last name
         String[] fullName = requestDto.getFullName().trim().split(" ");
         String lastName = "";
@@ -320,9 +330,12 @@ public class LabUserService {
             lastName = sb.toString();
         }
 
+
         Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
                 ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
-        Users labUser = new Users();
+
+        Users labUser = (users == null) ? new Users() : users;
+
         labUser.setType(UserType.Lab);
         labUser.setFirstName(fullName[0]);
         labUser.setLastName(lastName);
@@ -349,11 +362,50 @@ public class LabUserService {
         labUser.setDoctorClassification(GENERAL_PRACTITIONER);
         labUser.setClassification(Classification.from_hospital);
         labUser.setIsInternational(YesNo.No);
+
+        //profile picture
+        if(requestDto.getProfilePicture() != null){
+            String filePath = Constants.USER_PROFILE_PICTURE + labUser.getUserId();
+            String fileName = requestDto.getProfilePicture().getOriginalFilename();
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            labUser.setProfilePicture(fileName);
+        }
+
+        //Document
+        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
+            for(LabFileDto dto : requestDto.getDocumentList()){
+                String filePath = Constants.DOCTOR_DOCUMENT_PATH + labUser.getUserId();
+
+                // Extract the file extension
+                String extension = fileService.getFileExtension(Objects.requireNonNull(dto.getDocument().getOriginalFilename()));
+
+                // Generate a random file name
+                String fileName = UUID.randomUUID() + "." + extension;
+
+                // Save the file
+                fileService.saveFile(dto.getDocument(), filePath, fileName);
+
+                //Insert new entry into Doctor Document table
+                DoctorDocument doc = new DoctorDocument();
+                doc.setUserId(labUser.getUserId());
+                doc.setCreatedAt(LocalDateTime.now());
+                doc.setDocumentName(StringUtils.isEmpty(dto.getDocumentName()) ? "" : dto.getDocumentName());
+                doc.setDocumentFileName(fileName);
+                doc.setUpdatedAt(LocalDateTime.now());
+                doc.setStatus(DocumentStatus.Active);
+
+                doctorDocumentRepository.save(doc);
+            }
+        }
+
         return usersRepository.save(labUser);
     }
 
     @Transactional
-    public Object updateLabUser(Locale locale, Integer userId, LabUserRequestDto requestDto) {
+    public Object updateLabUser(Locale locale, Integer userId, LabUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -377,23 +429,26 @@ public class LabUserService {
         }
         //profile picture
         String pp = null;
-        if (requestDto.getProfilePicture() != null && !requestDto.getProfilePicture().getName().isEmpty()) {
-            String fileName = requestDto.getProfilePicture().getName();
-            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-
-            if (!Arrays.asList("jpg", "jpeg", "png").contains(fileExtension)) {
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
-                response.setMessage(messageSource.getMessage(Messages.PROFILE_PICTURE_NOT_SELECTED, null, locale));
-                response.setStatus(Status.SUCCESS);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
                 return response;
             }
-            pp = requestDto.getProfilePicture().getOriginalFilename();
-            //TODO :Store the file into directory
         }
         //Document
         if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
-            //TODO : store the file into directory
-            //TODO : create the new entity into mh_doctor_document table
+            for(LabFileDto dto : requestDto.getDocumentList()){
+                ValidateResult validationResult = fileService.validateFile(locale, dto.getDocument(), List.of("pdf"), 5_000_000);
+                if (!validationResult.isResult()) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(validationResult.getError().equals(messageSource.getMessage(Messages.SELECT_PROFILE_PICTURE, null, locale)) ? "Please select PDF file" : validationResult.getError());
+                    response.setStatus(Status.FAILED);
+                    return response;
+                }
+            }
         }
 
         // Check for duplicate email and contact number
@@ -412,35 +467,7 @@ public class LabUserService {
             return response;
         }
 
-        //first name and last name
-        String[] fullName = requestDto.getFullName().trim().split(" ");
-        String lastName = "";
-        StringBuilder sb = new StringBuilder();
-        if(fullName.length > 1){
-            for(int i = 1 ; i < fullName.length ; i++){
-                sb.append(fullName[i]).append(" ");
-            }
-            lastName = sb.toString().trim();
-        }
-
-        // Update the user fields
-        Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
-                ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
-
-        existingUser.setFirstName(fullName[0]);
-        existingUser.setLastName(lastName);
-        existingUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? null : requestDto.getEmail());
-        existingUser.setContactNumber(requestDto.getContactNumber());
-        existingUser.setPassword(utility.md5Hash(requestDto.getPassword()));
-        existingUser.setCountry(c);
-        existingUser.setState(requestDto.getProvinceId());
-        existingUser.setCity(requestDto.getCityId());
-        existingUser.setClinicName(requestDto.getLabName());
-        existingUser.setHospitalAddress(requestDto.getLabAddress());
-        existingUser.setProfilePicture(pp);
-        existingUser.setProfessionalIdentificationNumber(requestDto.getLabRegistrationNumber());
-
-        usersRepository.save(existingUser);
+        Users labUser = getUsers(requestDto, pp, locale, existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -521,6 +548,8 @@ public class LabUserService {
         dto.setContactNumber(user.getContactNumber());
         dto.setCountryId(user.getCountry() == null ? 0 : user.getCountry().getId());
         dto.setCountryName(user.getCountry() == null ? "" : user.getCountry().getName());
+        dto.setLabAddress(user.getHospitalAddress());
+        dto.setLabRegistrationNumber(user.getProfessionalIdentificationNumber());
 
         //state
         if(user.getState() != null && user.getState() != 0){
@@ -537,13 +566,23 @@ public class LabUserService {
                 dto.setCityName(city.getName());
             }
         }
-        dto.setLabAddress(user.getHospitalAddress());
-        dto.setLabRegistrationNumber(user.getProfessionalIdentificationNumber());
+
+        //Document
+        List<DoctorDocument> labDocuments = doctorDocumentRepository.findByUserIdAndStatus(user.getUserId(), DocumentStatus.Active);
+        if(!labDocuments.isEmpty()){
+            dto.setDocumentList(mapLabDocumentsToDocumentResponseDtoList(labDocuments));
+        }
 
         return dto;
     }
 
-    public Object deleteLabDocument(Locale locale, Integer userId, Integer documentId) {
+    private List<DocumentResponseDto> mapLabDocumentsToDocumentResponseDtoList(List<DoctorDocument> labDocuments) {
+        return labDocuments.stream().map(row -> new DocumentResponseDto(
+                row.getUserId(), row.getDocumentId(), row.getDocumentFileName()
+        )).collect(Collectors.toList());
+    }
+
+    public Object deleteLabDocument(Locale locale, Integer userId, Integer documentId) throws IOException {
         Response response = new Response();
 
         // Find the user
@@ -557,7 +596,45 @@ public class LabUserService {
 
         Users labUser = existingLabUser.get();
 
-        //TODO : Delete entry from Doctor document
-        return null;
+        //Delete file from directory
+        DoctorDocument doc = doctorDocumentRepository.findByUserIdAndDocumentId(labUser.getUserId(), documentId);
+        if(doc == null){
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.DOCUMENT_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+        String directory = Constants.DOCTOR_DOCUMENT_PATH + labUser.getUserId();
+        fileService.deleteFile(directory, doc.getDocumentFileName());
+
+        //delete from table
+        doctorDocumentRepository.delete(doc);
+
+        response.setCode(Constants.CODE_1);
+        response.setMessage("Document Deleted successfully");
+        response.setStatus(Status.SUCCESS);
+        return response;
+    }
+
+    public Object deleteLabUser(Locale locale, Integer userId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingLabUser = usersRepository.findByUserIdAndType(userId, UserType.Lab);
+        if (existingLabUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users labUser = existingLabUser.get();
+
+        usersRepository.delete(labUser);
+
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_DELETED, null, locale));
+        response.setStatus(Status.SUCCESS);
+        return response;
     }
 }
