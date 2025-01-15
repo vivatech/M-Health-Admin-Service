@@ -301,8 +301,7 @@ public class PatientUserService {
             lastName = sb.toString();
         }
 
-        Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
-                ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
+        Country c = countryRepository.findById(requestDto.getCountryId()).orElse(null);
 
         Users patientUser = users == null ? new Users() : users;
 
@@ -480,10 +479,11 @@ public class PatientUserService {
 
         //state
         if(user.getState() != null && user.getState() != 0){
-            State state = stateRepository.findById(user.getState())
-                    .orElseThrow(()-> new PatientUserExceptionHandler(messageSource.getMessage(Constants.NO_STATE_FOUND, null, locale)));
-            dto.setStateId(state.getId());
-            dto.setStateName(state.getName());
+            State state = stateRepository.findById(user.getState()).orElse(null);
+            if(state != null) {
+                dto.setStateId(state.getId());
+                dto.setStateName(state.getName());
+            }
         }
         //city
         if(user.getCity() != null && user.getCity() != 0){

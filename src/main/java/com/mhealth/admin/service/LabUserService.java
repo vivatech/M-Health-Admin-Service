@@ -242,12 +242,12 @@ public class LabUserService {
             String cityName = "";
 
             if(cityId != null && cityId > 0){
-                City city = cityRepository.findById(cityId).orElseThrow(() -> new PatientUserExceptionHandler("City Id not Found"));
-                cityName = city.getName();
+                City city = cityRepository.findById(cityId).orElse(null);
+                if(city != null) cityName = city.getName();
             }
 
             return new LabUserListResponseDto(
-                    userId, labName.trim(), fullName, labRegistrationNumber, countryCode +""+ contactNumber, status, cityName
+                    userId, labName.trim(), fullName, labRegistrationNumber, countryCode + contactNumber, status, cityName
             );
         }).collect(Collectors.toList());
     }
@@ -329,8 +329,7 @@ public class LabUserService {
         }
 
 
-        Country c = countryRepository.findById(requestDto.getCountryId()).orElseThrow(
-                ()-> new PatientUserExceptionHandler(messageSource.getMessage(Messages.COUNTRY_NOT_FOUND, null, locale)));
+        Country c = countryRepository.findById(requestDto.getCountryId()).orElse(null);
 
         Users labUser = (users == null) ? new Users() : users;
 
@@ -551,10 +550,11 @@ public class LabUserService {
 
         //state
         if(user.getState() != null && user.getState() != 0){
-            State state = stateRepository.findById(user.getState())
-                    .orElseThrow(()-> new PatientUserExceptionHandler(messageSource.getMessage(Constants.NO_STATE_FOUND, null, locale)));
-            dto.setStateId(state.getId());
-            dto.setStateName(state.getName());
+            State state = stateRepository.findById(user.getState()).orElse(null);
+            if(state != null) {
+                dto.setStateId(state.getId());
+                dto.setStateName(state.getName());
+            }
         }
         //city
         if(user.getCity() != null && user.getCity() != 0){
