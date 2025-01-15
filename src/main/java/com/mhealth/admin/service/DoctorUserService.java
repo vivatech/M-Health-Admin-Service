@@ -10,7 +10,6 @@ import com.mhealth.admin.dto.request.DoctorUserRequestDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.exception.AdminModuleExceptionHandler;
 import com.mhealth.admin.model.*;
-import com.mhealth.admin.model.State;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -98,33 +98,11 @@ public class DoctorUserService {
 
         Response response = new Response();
 
-        // Fetch and map data
-        Map<Integer, String> languageList = globalService.getLanguageList(locale);
-        Map<Integer, String> specializationList = specializationService.getSpecializationList(locale);
-        Map<Integer, String> cityList = globalService.getCities(locale);
-        Map<String, Object> countryList = globalService.getCountries(locale, null);
+        // Get selected languages & specialization
+        List<Integer> selectedLanguages = getSelectedLanguageFluency(doctorRequest.getLanguagesFluency(), locale);
+        List<Integer> selectedSpecializations = getSelectedSpecialization(doctorRequest.getSpecializations(), locale);
 
-
-        // Handle selected languages and specializations
-        List<String> selectedLanguages = new ArrayList<>();
-        if (doctorRequest.getLanguagesFluency() != null) {
-            for (Integer langId : doctorRequest.getLanguagesFluency()) {
-                if (languageList.containsKey(langId)) {
-                    selectedLanguages.add(languageList.get(langId));
-                }
-            }
-        }
-
-        List<String> selectedSpecializations = new ArrayList<>();
-        if (doctorRequest.getSpecializations() != null) {
-            for (Integer specId : doctorRequest.getSpecializations()) {
-                if (specializationList.containsKey(specId)) {
-                    selectedSpecializations.add(specializationList.get(specId));
-                }
-            }
-        }
-
-        // Validate file uploads
+        // Validate  profile picture
         if (doctorRequest.getProfilePicture() != null) {
             ValidateResult validationResult = fileService.validateFile(locale, doctorRequest.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
@@ -135,7 +113,7 @@ public class DoctorUserService {
             }
         }
 
-        // Validate file uploads
+        // Validate doctor id document
         if (doctorRequest.getDoctorIdDocument() != null) {
             ValidateResult validationResult = fileService.validateFile(locale, doctorRequest.getDoctorIdDocument(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
@@ -146,6 +124,7 @@ public class DoctorUserService {
             }
         }
 
+        // Validate doctor documents
         if (doctorRequest.getDocuments() != null) {
             for (Map<String, MultipartFile> documentMap : doctorRequest.getDocuments()) {
                 for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
@@ -161,9 +140,10 @@ public class DoctorUserService {
             }
         }
 
+        // Get selected country
         Country country = countryRepository.findById(doctorRequest.getCountryId()).orElse(null);
-        State state = stateRepository.findById(doctorRequest.getStateId()).orElse(null);
-        City city = cityRepository.findById(doctorRequest.getCityId()).orElse(null);
+
+        // Get default slot
         Integer slotTypeId = slotTypeRepository.findDefaultSlot(SlotStatus.active.name()).orElse(null);
 
         // Create and persist entities
@@ -193,8 +173,9 @@ public class DoctorUserService {
         user.setPassingYear(doctorRequest.getPassingYear());
         user.setUniversityName(doctorRequest.getUniversityName());
         user.setIsInternational(doctorRequest.getCountryCode().equals(countryCode) ? YesNo.No : YesNo.Yes);
+        user.setClassification(Classification.valueOf(doctorRequest.getClassification()));
 
-        // Save documents if provided
+        // Save profile picture if provided
         if (doctorRequest.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
@@ -211,6 +192,7 @@ public class DoctorUserService {
 
         }
 
+        // Save doctor id document if provided
         if (doctorRequest.getDoctorIdDocument() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
@@ -226,59 +208,23 @@ public class DoctorUserService {
             //TODO: Set document_id & document_name
         }
 
-
         // Save the user
         user = usersRepository.save(user);
 
-        if (doctorRequest.getDocuments() != null) {
-            for (Map<String, MultipartFile> documentMap : doctorRequest.getDocuments()) {
-                for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
-                    String documentName = entry.getKey(); // Key representing the document name or type
-                    MultipartFile document = entry.getValue(); // The actual file
-
-                    if (document != null && !document.isEmpty()) {
-                        String filePath = Constants.DOCTOR_DOCUMENT_PATH + user.getUserId();
-
-                        // Extract the file extension
-                        String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
-
-                        // Generate a unique file name
-                        String fileName = UUID.randomUUID() + "." + extension;
-
-                        // Save the file
-                        fileService.saveFile(document, filePath, fileName);
-
-                        // Create and populate the DoctorDocument object
-                        DoctorDocument doctorDocument = new DoctorDocument();
-                        doctorDocument.setUserId(user.getUserId());
-                        doctorDocument.setDocumentFileName(fileName);
-                        doctorDocument.setDocumentName(documentName); // Use the key as the document name
-                        doctorDocument.setCreatedAt(LocalDateTime.now());
-                        doctorDocument.setStatus(DocumentStatus.Active);
-
-                        // Save doctor document
-                        doctorDocumentRepository.save(doctorDocument);
-                    }
-                }
-            }
-        }
-
+        // Process & save doctor documents
+        processAndSaveDoctorDocuments(doctorRequest.getDocuments(), user.getUserId());
 
         // Process & save hospital merchant number
         processAndSaveHospitalMerchantNumber(doctorRequest.getClassification(), doctorRequest.getCountryCode(), user.getUserId(), doctorRequest.getMerchantNumber());
 
-
         // Process & save charges
         processAndSaveCharges(doctorRequest, user.getUserId());
 
-
         // Process & save doctor specializations
-        processAndSaveDoctorSpecialization(doctorRequest.getSpecializations(), user);
+        processAndSaveDoctorSpecialization(selectedSpecializations, user);
 
         // Assign role
         assignRole(user.getUserId(), UserType.Doctor.name());
-
-
 
         // Send SMS
         try {
@@ -297,7 +243,72 @@ public class DoctorUserService {
         response.setMessage(messageSource.getMessage(Messages.USER_CREATED, null, locale));
         response.setStatus(Status.SUCCESS);
 
-        return null;
+        return response;
+    }
+
+    // Handle selected languages
+    private List<Integer> getSelectedLanguageFluency(List<Integer> languageFluencyList, Locale locale) {
+        Map<Integer, String> languageList = globalService.getLanguageList(locale);
+        List<Integer> selectedLanguageList = new ArrayList<>();
+        if (languageFluencyList != null) {
+            for (Integer langId : languageFluencyList) {
+                if (languageList.containsKey(langId)) {
+                    selectedLanguageList.add(langId);
+                }
+            }
+        }
+        return selectedLanguageList;
+    }
+
+    // Handle selected specialization
+    private List<Integer> getSelectedSpecialization(List<Integer> specializationList, Locale locale) {
+        Map<Integer, String> specializationMap = specializationService.getSpecializationList(locale);
+        List<Integer> selectedSpecializationList = new ArrayList<>();
+        if (specializationList != null) {
+            for (Integer specId : specializationList) {
+                if (specializationMap.containsKey(specId)) {
+                    selectedSpecializationList.add(specId);
+                }
+            }
+        }
+        return selectedSpecializationList;
+    }
+
+    @Transactional
+    private void processAndSaveDoctorDocuments(List<Map<String, MultipartFile>> documentList, Integer userId) throws IOException {
+        // Save doctor documents if provided
+        if (documentList != null) {
+            for (Map<String, MultipartFile> documentMap : documentList) {
+                for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
+                    String documentName = entry.getKey(); // Key representing the document name or type
+                    MultipartFile document = entry.getValue(); // The actual file
+
+                    if (document != null && !document.isEmpty()) {
+                        String filePath = Constants.DOCTOR_DOCUMENT_PATH + userId;
+
+                        // Extract the file extension
+                        String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
+
+                        // Generate a unique file name
+                        String fileName = UUID.randomUUID() + "." + extension;
+
+                        // Save the file
+                        fileService.saveFile(document, filePath, fileName);
+
+                        // Create and populate the DoctorDocument object
+                        DoctorDocument doctorDocument = new DoctorDocument();
+                        doctorDocument.setUserId(userId);
+                        doctorDocument.setDocumentFileName(fileName);
+                        doctorDocument.setDocumentName(documentName); // Use the key as the document name
+                        doctorDocument.setCreatedAt(LocalDateTime.now());
+                        doctorDocument.setStatus(DocumentStatus.Active);
+
+                        // Save doctor document
+                        doctorDocumentRepository.save(doctorDocument);
+                    }
+                }
+            }
+        }
     }
 
     @Transactional
