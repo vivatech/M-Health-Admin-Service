@@ -16,6 +16,16 @@ public interface Messages {
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
 
+    //Patient user's SMS Body
+    String PROFILE_PICTURE_NOT_SELECTED = "profile.picture.not.selected";
+    String COUNTRY_NOT_FOUND = "country.not.found";
+    String REGISTER_PATIENT_USER = "register.patient.user";
+    String GENERAL_PRACTITIONER = "general_practitioner";
+
     // Doctor User's SMS Body
     String REGISTER_DOCTOR_USER = "register.doctor.user";
+
+    //Lab user's SMS Body
+    String DOCUMENT_NOT_FOUND = "document.not.found";
+    String PROFILE_PICTURE_DELETE_SUCCESSFULLY = "profile.picture.delete";
 }
