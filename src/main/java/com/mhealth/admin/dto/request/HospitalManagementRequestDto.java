@@ -3,6 +3,7 @@ package com.mhealth.admin.dto.request;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.regex.Pattern;
 
@@ -19,6 +20,8 @@ public class HospitalManagementRequestDto {
     private String password;
     private String clinicAddress;
     private String notificationLanguage;
+    private MultipartFile profilePicture;
+
 
     public String validate() {
         StringBuilder validationErrors = new StringBuilder();

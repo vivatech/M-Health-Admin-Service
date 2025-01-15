@@ -5,6 +5,7 @@ import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.Classification;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
@@ -70,6 +71,9 @@ public class HospitalManagementService {
 
     @Autowired
     private HospitalMerchantNumberRepository hospitalMerchantNumberRepository;
+
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     private Utility utility;
@@ -143,7 +147,7 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object createHospitalManagement(Locale locale, HospitalManagementRequestDto requestDto, HttpServletRequest request) {
+    public Object createHospitalManagement(Locale locale, HospitalManagementRequestDto requestDto, HttpServletRequest request) throws Exception {
         Response response = new Response();
 
         // Validate the input
@@ -169,6 +173,17 @@ public class HospitalManagementService {
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
             return response;
+        }
+
+        // Validate file uploads
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
+                return response;
+            }
         }
 
 
@@ -199,7 +214,25 @@ public class HospitalManagementService {
             }
             user.setSort(Integer.valueOf(requestDto.getPriority()));
         }
+
         user = usersRepository.save(user);
+
+        // Save profile picture if provided
+        if (requestDto.getProfilePicture() != null) {
+            String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
+
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
+
+            // Generate a random file name
+            String fileName = UUID.randomUUID() + "." + extension;
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            user.setProfilePicture(fileName);
+
+        }
 
         if(requestDto.getMerchantNumber() != null){
             HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
@@ -241,7 +274,7 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementRequestDto requestDto) {
+    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -280,6 +313,17 @@ public class HospitalManagementService {
             return response;
         }
 
+        // Validate file uploads
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
+
         // Update the user fields
         existingUser.setClinicName(requestDto.getClinicName());
         existingUser.setEmail(requestDto.getEmail());
@@ -299,7 +343,25 @@ public class HospitalManagementService {
             }
             existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
         }
+
         usersRepository.save(existingUser);
+
+        // Save profile picture if provided
+        if (requestDto.getProfilePicture() != null) {
+            String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
+
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
+
+            // Generate a random file name
+            String fileName = UUID.randomUUID() + "." + extension;
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            existingUser.setProfilePicture(fileName);
+        }
+
 
         if(requestDto.getNotificationContactNumber() != null){
             Optional<HospitalDetails> hospitalDetails = hospitalDetailsRepository.findByUserId(existingUser.getUserId());

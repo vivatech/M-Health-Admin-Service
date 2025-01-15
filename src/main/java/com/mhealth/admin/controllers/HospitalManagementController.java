@@ -60,7 +60,7 @@ public class HospitalManagementController {
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createHospitalManagement(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                      @RequestBody HospitalManagementRequestDto requestDto, HttpServletRequest request) {
+                                                      @ModelAttribute HospitalManagementRequestDto requestDto, HttpServletRequest request) {
         try {
             log.info("Request Received For /api/v1/admin/user/hospital/create");
             log.info("Request Body: {}", requestDto);
@@ -78,7 +78,7 @@ public class HospitalManagementController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updateHospitalManagement(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                                  @RequestParam Integer hospitalId,
-                                                 @RequestBody HospitalManagementRequestDto requestDto) {
+                                                 @ModelAttribute HospitalManagementRequestDto requestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/hospital/update");
             log.info("Request Parameter: hospitalId={}", hospitalId);
