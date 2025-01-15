@@ -452,7 +452,7 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object deleteHospitalManagement(Locale locale, Integer id) {
+    public Object deleteHospitalManagement(Locale locale, Integer id) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -466,12 +466,23 @@ public class HospitalManagementService {
 
         Users existingUser = existingMarketingUser.get();
 
+        String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
+
         hospitalMerchantNumberRepository.deleteByUserId(existingMarketingUser.get().getUserId());
 
         hospitalDetailsRepository.deleteByUserId(existingMarketingUser.get().getUserId());
 
+        String profileId = null;
+        if(existingUser.getProfilePicture() != null){
+            profileId = existingUser.getProfilePicture();
+        }
+
         usersRepository.delete(existingUser);
 
+        // delete file and folder
+        if(profileId != null){
+            fileService.deleteFileOrFolder(filePath);
+        }
         // Prepare success response
         response.setCode(Constants.CODE_1);
         response.setMessage(messageSource.getMessage(Messages.USER_DELETED, null, locale));
