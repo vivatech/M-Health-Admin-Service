@@ -13,7 +13,6 @@ import com.mhealth.admin.dto.labUserDto.LabUserRequestDto;
 import com.mhealth.admin.dto.labUserDto.LabUserResponseDto;
 import com.mhealth.admin.dto.response.DocumentResponseDto;
 import com.mhealth.admin.dto.response.Response;
-import com.mhealth.admin.exception.PatientUserExceptionHandler;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.model.State;
 import com.mhealth.admin.repository.*;
@@ -32,7 +31,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;

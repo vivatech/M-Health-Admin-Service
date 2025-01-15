@@ -51,22 +51,6 @@ public class FileService {
         // Return the relative path of the saved file
         return filePath.toString();
     }
-    public void deleteFile(String directory, String fileName) throws IOException {
-        Path dirPath = Paths.get(uploadDirectoryLocation + "/" + directory);
-        if (!Files.exists(dirPath)) {
-            throw new RuntimeException("Directory does not exist: " + dirPath);
-        }
-
-        // Resolve the file path
-        Path filePath = dirPath.resolve(fileName);
-
-        // Check if the file exists
-        if (!Files.exists(filePath)) {
-            throw new RuntimeException("File does not exist: " + filePath);
-        }
-        // Delete the file
-        Files.delete(filePath);
-    }
 
     public String getFileExtension(String filename) {
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();

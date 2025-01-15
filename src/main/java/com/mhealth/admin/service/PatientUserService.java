@@ -12,9 +12,7 @@ import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.patientDto.PatientUserListResponseDto;
 import com.mhealth.admin.dto.patientDto.PatientUserRequestDto;
 import com.mhealth.admin.dto.patientDto.PatientUserResponseDto;
-import com.mhealth.admin.dto.response.MarketingUserResponseDto;
 import com.mhealth.admin.dto.response.Response;
-import com.mhealth.admin.exception.PatientUserExceptionHandler;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
@@ -34,8 +32,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.mhealth.admin.config.Constants.*;
 
 @Slf4j
 @Service
@@ -274,10 +270,9 @@ public class PatientUserService {
         // Send SMS
         try {
             locale = Utility.getUserNotificationLanguageLocale(patientUser.getNotificationLanguage(), locale);
-            GlobalConfiguration value = globalConfigurationRepository.findByKey(Messages.APP_LINK).orElseThrow(
-                    ()-> new PatientUserExceptionHandler(KEY_NOT_FOUND)
-            );
-            String smsMessage = messageSource.getMessage(Messages.REGISTER_PATIENT_USER, new Object[]{patientUser.getFirstName() + " " + patientUser.getLastName(), value.getValue()}, locale);
+            GlobalConfiguration value = globalConfigurationRepository.findByKey(Constants.APP_LINK).orElse(null);
+            String appLink = value != null ? value.getValue() : "";
+            String smsMessage = messageSource.getMessage(Messages.REGISTER_PATIENT_USER, new Object[]{patientUser.getFirstName() + " " + patientUser.getLastName(), appLink}, locale);
             String smsNumber = "+" + countryCode + requestDto.getContactNumber();
             if(smsSent){
                 smsApiService.sendMessage(smsNumber, smsMessage, country);
