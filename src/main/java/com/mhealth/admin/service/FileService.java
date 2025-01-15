@@ -52,6 +52,18 @@ public class FileService {
         return filePath.toString();
     }
 
+
+    public void deleteFile(String directory, String fileName) throws IOException {
+        Path path = Paths.get(uploadDirectoryLocation + "/" + directory + "/" + fileName);
+        if (Files.exists(path)) {
+            Files.delete(path); // Delete the file
+        } else {
+            throw new IOException("File not found: " + directory + "/" + fileName);
+        }
+    }
+
+
+
     public String getFileExtension(String filename) {
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
