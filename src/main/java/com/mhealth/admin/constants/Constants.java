@@ -148,6 +148,8 @@ public interface Constants {
     String CODE_O = "0";
     String CODE_1 = "1";
 
+    //Lab User
+    String APP_LINK = "APP_LINK";
 
     // Directories Path
     String DOCTOR_DOCUMENT_PATH = "DoctorDocument/";

@@ -1,21 +1,21 @@
 package com.mhealth.admin.service;
 
-import com.mhealth.admin.model.City;
-import com.mhealth.admin.model.Country;
-import com.mhealth.admin.model.Language;
-import com.mhealth.admin.model.State;
-import com.mhealth.admin.repository.CityRepository;
-import com.mhealth.admin.repository.CountryRepository;
-import com.mhealth.admin.repository.LanguageRepository;
-import com.mhealth.admin.repository.StateRepository;
+import com.mhealth.admin.constants.Constants;
+import com.mhealth.admin.constants.Messages;
+import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.enums.UserType;
+import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.model.*;
+import com.mhealth.admin.repository.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,8 +33,15 @@ public class GlobalService {
     @Autowired
     private LanguageRepository languageRepository;
 
-//    @Value()
+    @Value("${app.country.id}")
     private List<Integer> countryIdList;
+    @Autowired
+    private UsersRepository usersRepository;
+
+    @Autowired
+    private MessageSource messageSource;
+    @Autowired
+    private FileService fileService;
 
     public Map<Integer, String> getCities(Locale locale) {
         // Fetch states based on the country ID
@@ -92,5 +99,42 @@ public class GlobalService {
         // Map the list to a key-value pair of ID and name
         return languages.stream()
                 .collect(Collectors.toMap(Language::getId, Language::getName));
+    }
+
+    public Object deleteProfilePicture(Locale locale, Integer userId) throws IOException {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingPatientUser = usersRepository.findById(userId);
+        if (existingPatientUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingPatientUser.get();
+
+        //check for picture validation
+        if(StringUtils.isEmpty(existingUser.getProfilePicture())){
+            response.setCode(Constants.CODE_O);
+            response.setMessage("Picture not found");
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+        String directory = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
+        fileService.deleteFile(directory, existingUser.getProfilePicture());
+
+        //update table with null
+        existingUser.setProfilePicture(null);
+
+        usersRepository.save(existingUser);
+
+        response.setStatus(Status.SUCCESS);
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.PROFILE_PICTURE_DELETE_SUCCESSFULLY, null, locale));
+
+        return response;
+
     }
 }
