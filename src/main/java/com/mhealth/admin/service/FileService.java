@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -60,6 +61,24 @@ public class FileService {
         } else {
             throw new IOException("File not found: " + directory + "/" + fileName);
         }
+    }
+
+    public void deleteFileOrFolder(String directory) throws IOException {
+        Path folderPath = Paths.get(uploadDirectoryLocation + "/" + directory);
+            // Delete the entire folder
+            if (Files.exists(folderPath)) {
+                Files.walk(folderPath)
+                        .sorted(Comparator.reverseOrder()) // Sort in reverse order to delete files before folders
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Error deleting path: " + path, e);
+                            }
+                        });
+            } else {
+                throw new IOException("Folder not found: " + directory);
+            }
     }
 
 

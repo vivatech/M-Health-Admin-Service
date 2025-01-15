@@ -12,4 +12,3 @@ public interface HospitalMerchantNumberRepository extends JpaRepository<Hospital
 
     void deleteByUserId(Integer existingMarketingUser);
 }
-

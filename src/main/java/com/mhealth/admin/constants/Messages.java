@@ -25,7 +25,16 @@ public interface Messages {
     // Doctor User's SMS Body
     String REGISTER_DOCTOR_USER = "register.doctor.user";
 
+    // Hospital User's SMS Body
+    String HOSPITAL_REGISTRATION_CONFIRMATION = "hospital.registration.confirmation";
+
+    // Hospital Link
+    String HOSPITAL_LINK = "admin.login.url";
+
+    String PRIORITY_ALREADY_EXISTS = "priority.already.exists";
+  
     //Lab user's SMS Body
     String DOCUMENT_NOT_FOUND = "document.not.found";
     String PROFILE_PICTURE_DELETE_SUCCESSFULLY = "profile.picture.delete";
+
 }
