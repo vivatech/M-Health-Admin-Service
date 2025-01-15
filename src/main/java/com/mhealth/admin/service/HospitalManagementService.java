@@ -350,11 +350,17 @@ public class HospitalManagementService {
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
 
+            // delete exist old profile
+            if(existingUser.getProfilePicture() != null){
+                fileService.deleteFile(filePath, existingUser.getProfilePicture());
+            }
+
             // Extract the file extension
             String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
 
             // Generate a random file name
             String fileName = UUID.randomUUID() + "." + extension;
+
 
             // Save the file
             fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
