@@ -14,6 +14,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RescheduleRequest {
 
+    @NotNull(message = "User ID is required")
+    @Min(value = 1, message = "User ID must be greater than 0")
+    private Integer userId;
     @NotNull(message = "Case ID is required")
     @Min(value = 1, message = "Case ID must be greater than 0")
     private Integer caseId;

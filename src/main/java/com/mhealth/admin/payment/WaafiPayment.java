@@ -69,6 +69,9 @@ public class WaafiPayment implements PaymentInterface {
     @Autowired
     private SMSApiService smsApiService;
 
+    @Autowired
+    private ProcessPayment processPayment;
+
     @Override
     public boolean supports(PaymentAggregator paymentAggregator) {
         return paymentAggregator.equals(PaymentAggregator.WAAFI);
@@ -93,11 +96,13 @@ public class WaafiPayment implements PaymentInterface {
                 customResponse.put("state", response.get("responseMsg"));
                 String message = "Payment Successful for " + projectName + " for case id : " + users.getUserId() + " with transaction id : " + response.get("params.transactionId");
                 sendPaymentNotification("+" + countryCode + msisdn, message);
+                processPayment.completePayment();
                 return new Response(Status.SUCCESS, Constants.SUCCESS_CODE, null, customResponse);
             } else {
                 String errorMessage = getErrorMessage(response);
                 // TODO: Notification will sent
                 sendPaymentNotification("+" + countryCode + msisdn, errorMessage);
+                processPayment.failedPayment();
                 return new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, errorMessage);
             }
         } else {

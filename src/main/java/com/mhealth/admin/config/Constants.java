@@ -4,7 +4,7 @@ public class Constants {
 
     public static final Integer DEFAULT_PAGE_SIZE = 30;
 
-    public static final String SUCCESS_CODE="200";
+    public static final String SUCCESS_CODE = "200";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
     public static final String DATA_NOT_FOUND_CODE = "203";
     public static final String NO_RECORD_FOUND = "app.no.record.found";
@@ -15,9 +15,9 @@ public class Constants {
     public static final String INVALID_PASSWORD_CODE = "401";
     public static final String CONFLICT_CODE = "409";
 
-    public static final String SUCCESS= "app.success" ;
-    public static final String FAIL="FAIL";
-    public static final String USER_NOT_FOUND= "user.not.found";
+    public static final String SUCCESS = "app.success";
+    public static final String FAIL = "FAIL";
+    public static final String USER_NOT_FOUND = "user.not.found";
     public static final String INVALID_PASSWORD = "app.invalid.password";
     public static final String SOMETHING_WENT_WRONG = "app.something.went.wrong";
     public static final String USER_LOGIN_IS_SUCCESS = "app.user.login.success";
@@ -61,7 +61,7 @@ public class Constants {
     public static final String APP_BANNER_FETCHED_SUCCESSFULLY = "app.banner.fetched.successfully";
     public static final String APP_BANNER_NOT_FOUND = "app.banner.not.found";
 
-    public static final String DEFAULT_LOCALE = "en";
+    public static final String DEFAULT_LOCALE = "so";
 
     public static final String SPECIALIZATION_EXISTS = "app.specialization.exists";
     public static final String SPECIALIZATION_ADDED = "app.specialization.added";
@@ -112,6 +112,7 @@ public class Constants {
     public static final String HEALTH_TIP_DURATION_FETCHED = "app.health.tip.durations.fetched";
     public static final String HEALTH_TIP_DURATION_FETCHED_EMPTY = "app.health.tip.durations.fetched.empty";
     public static final String HEALTH_TIP_DURATION_NOT_FOUND = "app.health.tip.duration.not.found";
+    public static final String HEALTH_TIP_DURATION_HAS_DEPENDENCIES = "app.health.tip.duration.dependency.exists";
 
     public static final String HEALTH_TIP_NOT_FOUND = "app.health.tip.not.found";
     public static final String HEALTH_TIP_CREATED_SUCCESS = "app.health.tip.created.success";
@@ -139,6 +140,19 @@ public class Constants {
     public static final String ORDERS_FETCHED_SUCCESS = "app.order.fetch.success";
     public static final String ORDER_NOT_FOUND = "app.order.not.found";
     public static final String ORDER_FETCHED_SUCCESS = "app.order.fetch.successfully";
+
+
+    public static final String PERMISSIONS_FETCHED = "app.permission.fetched.successfully";
+    public static final String PERMISSION_ADDED = "app.permission.added.successfully";
+    public static final String PERMISSION_UPDATED = "app.permission.updated.successfully";
+    public static final String PARENT_NOT_FOUND = "app.parent.permission.not.found";
+    public static final String PERMISSION_EXISTS = "app.permission.exists";
+    public static final String PERMISSION_NOT_FOUND = "app.permission.not.found";
+
+    public static final String PERMISSION_ROLE_ADDED = "app.permission.role.added";
+    public static final String PERMISSION_ROLE_UPDATED = "app.permission.role.update";
+    public static final String PERMISSION_ROLE_FETCHED = "app.permission.role.fetched";
+    public static final String PERMISSION_ROLE_NOT_FOUND = "app.permission.role.not.found";
     public static final String OTP_SEND_SUCCESSFULLY = "otp.send.successfully";
     public static final String CONTACT_NUMBER_NOT_EXIST = "contact.number.not.exist";
     public static final String CONTACT_NUMBER_EXIST = "contact.number.exist";
@@ -151,4 +165,7 @@ public class Constants {
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
     public static final String COUNTRY_SOMALIA = "SOMALIA";
     public static final String COUNTRY_KENYA = "KENYA";
+    public static final String RESCHEDULE_CREATED_SUCCESS = "app.reschedule.created.success";
+    public static final String DEFAULT_COUNTRY = "SO";
 }
+

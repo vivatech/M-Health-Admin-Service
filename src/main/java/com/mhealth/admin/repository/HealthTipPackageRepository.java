@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.StatusAI;
+import com.mhealth.admin.model.HealthTipDuration;
 import com.mhealth.admin.model.HealthTipPackage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,4 +40,6 @@ public interface HealthTipPackageRepository extends JpaRepository<HealthTipPacka
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
+
+    List<HealthTipPackage> findByHealthTipDuration(HealthTipDuration healthTipDuration);
 }
