@@ -3,6 +3,7 @@ package com.mhealth.admin.repository;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.model.HealthTipDuration;
 import com.mhealth.admin.model.HealthTipPackage;
+import com.mhealth.admin.model.HealthTipPackageCategories;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,11 +22,13 @@ public interface HealthTipPackageRepository extends JpaRepository<HealthTipPacka
     @Query("SELECT p FROM HealthTipPackage p where p.packageId = ?1")
     List<HealthTipPackage> findByPackageId(Integer packageId);
 
-    @Query("SELECT p FROM HealthTipPackage p WHERE " +
+    @Query("SELECT c FROM HealthTipPackageCategories c " +
+            "JOIN c.healthTipPackage p " +
+            "WHERE " +
             "(:name IS NULL OR p.packageName LIKE %:name%) AND " +
             "(:status IS NULL OR p.status = :status) AND " +
             "(:durationId IS NULL OR p.healthTipDuration.durationId = :durationId)")
-    Page<HealthTipPackage> findByNameAndStatusAndDuration(
+    Page<HealthTipPackageCategories> findByNameAndStatusAndDuration(
             @Param("name") String name,
             @Param("status") StatusAI status,
             @Param("durationId") Integer durationId,
