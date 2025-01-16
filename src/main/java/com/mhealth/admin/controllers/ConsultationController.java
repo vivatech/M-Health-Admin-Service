@@ -1,5 +1,7 @@
 package com.mhealth.admin.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.consultationDto.CreateAndEditPatientRequest;
 import com.mhealth.admin.dto.consultationDto.SearchPatientRequest;
 import com.mhealth.admin.dto.request.RescheduleRequest;
@@ -7,18 +9,20 @@ import com.mhealth.admin.dto.request.ViewConsultationRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.dto.response.ViewConsultationResponse;
-import com.mhealth.admin.model.Consultation;
 import com.mhealth.admin.service.ConsultationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
 
 @RestController
+@Slf4j
 @Tag(name = "Consultation Controller", description = "APIs for Consultations statistics and details")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/consultation")
@@ -29,11 +33,20 @@ public class ConsultationController {
     /*
         List of patient
      */
-    @PostMapping("/search-patient")
-    @Operation(method = "POST",description = "search patient api")
-    public ResponseEntity<Response> searchPatient(@Valid @RequestBody SearchPatientRequest request,
+    @RequestMapping(value = "/search-patient", method = RequestMethod.POST)
+    public ResponseEntity<?> searchPatient(@Valid @RequestBody SearchPatientRequest request,
                                           @RequestHeader(name = "X-localization", required = false,defaultValue = "so") Locale locale) {
-        return consultationService.searchPatient(request,locale);
+        try{
+            log.info("Request Received For /api/v1/admin/consultation");
+            log.info("Request Body: {}", request);
+
+            Object response = consultationService.searchPatient(request,locale);
+            log.info("Response Sent For /api/v1/admin/consultation: {}", new ObjectMapper().writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            log.error("Exception found in /api/v1/admin/consultation: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     /*
         Create And Edit Patient
