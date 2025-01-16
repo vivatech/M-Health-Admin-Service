@@ -118,16 +118,14 @@ public class DoctorUserService {
 
         // Validate doctor documents
         if (requestDto.getDocuments() != null) {
-            for (Map<String, MultipartFile> documentMap : requestDto.getDocuments()) {
-                for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
-                    MultipartFile document = entry.getValue(); // The actual file
-                    ValidateResult validationResult = fileService.validateFile(locale, document, List.of("pdf"), 2_200_000);
-                    if (!validationResult.isResult()) {
-                        response.setCode(Constants.CODE_O);
-                        response.setMessage(validationResult.getError());
-                        response.setStatus(Status.FAILED);
-                        return response;
-                    }
+            for (Map<String, Object> documentMap : requestDto.getDocuments()) {
+                MultipartFile document = (MultipartFile) documentMap.get("file"); // The actual file
+                ValidateResult validationResult = fileService.validateFile(locale, document, List.of("pdf"), 2_200_000);
+                if (!validationResult.isResult()) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(validationResult.getError());
+                    response.setStatus(Status.FAILED);
+                    return response;
                 }
             }
         }
@@ -189,6 +187,9 @@ public class DoctorUserService {
         user.setUniversityName(requestDto.getUniversityName());
         user.setIsInternational(requestDto.getCountryCode().equals(countryCode) ? YesNo.No : YesNo.Yes);
         user.setClassification(Classification.valueOf(requestDto.getClassification()));
+
+        // Save the user
+        user = usersRepository.save(user);
 
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
@@ -274,44 +275,42 @@ public class DoctorUserService {
     }
 
     @Transactional
-    private void processAndSaveDoctorDocuments(List<Map<String, MultipartFile>> documentList, Integer userId) throws IOException {
-       try {
-           // Save doctor documents if provided
-           if (documentList != null) {
-               for (Map<String, MultipartFile> documentMap : documentList) {
-                   for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
-                       String documentName = entry.getKey(); // Key representing the document name or type
-                       MultipartFile document = entry.getValue(); // The actual file
+    private void processAndSaveDoctorDocuments(List<Map<String, Object>> documentList, Integer userId) throws IOException {
+        try {
+            // Save doctor documents if provided
+            if (documentList != null) {
+                for (Map<String, Object> documentMap : documentList) {
+                    String documentName = (String) documentMap.get("documentName"); // Key representing the document name or type
+                    MultipartFile document = (MultipartFile) documentMap.get("file"); // The actual file
 
-                       if (document != null && !document.isEmpty()) {
-                           String filePath = Constants.DOCTOR_DOCUMENT_PATH + userId;
+                    if (document != null && !document.isEmpty()) {
+                        String filePath = Constants.DOCTOR_DOCUMENT_PATH + userId;
 
-                           // Extract the file extension
-                           String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
+                        // Extract the file extension
+                        String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
 
-                           // Generate a unique file name
-                           String fileName = UUID.randomUUID() + "." + extension;
+                        // Generate a unique file name
+                        String fileName = UUID.randomUUID() + "." + extension;
 
-                           // Save the file
-                           fileService.saveFile(document, filePath, fileName);
+                        // Save the file
+                        fileService.saveFile(document, filePath, fileName);
 
-                           // Create and populate the DoctorDocument object
-                           DoctorDocument doctorDocument = new DoctorDocument();
-                           doctorDocument.setUserId(userId);
-                           doctorDocument.setDocumentFileName(fileName);
-                           doctorDocument.setDocumentName(documentName); // Use the key as the document name
-                           doctorDocument.setCreatedAt(LocalDateTime.now());
-                           doctorDocument.setStatus(DocumentStatus.Active);
+                        // Create and populate the DoctorDocument object
+                        DoctorDocument doctorDocument = new DoctorDocument();
+                        doctorDocument.setUserId(userId);
+                        doctorDocument.setDocumentFileName(fileName);
+                        doctorDocument.setDocumentName(documentName); // Use the key as the document name
+                        doctorDocument.setCreatedAt(LocalDateTime.now());
+                        doctorDocument.setStatus(DocumentStatus.Active);
 
-                           // Save doctor document
-                           doctorDocumentRepository.save(doctorDocument);
-                       }
-                   }
-               }
-           }
-       } catch (Exception ex) {
-           throw new RuntimeException("failed to save doctor documents: " + ex.getMessage(), ex);
-       }
+                        // Save doctor document
+                        doctorDocumentRepository.save(doctorDocument);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to save doctor documents: " + ex.getMessage(), ex);
+        }
     }
 
     @Transactional

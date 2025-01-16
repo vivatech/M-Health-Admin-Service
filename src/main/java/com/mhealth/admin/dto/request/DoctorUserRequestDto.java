@@ -47,7 +47,7 @@ public class DoctorUserRequestDto {
     private List<Integer> languagesFluency;
     private List<Integer> specializations;
     private MultipartFile profilePicture;
-    private List<Map<String, MultipartFile>> documents;
+    private List<Map<String, Object>> documents;
 
 
     public String validate() {
@@ -62,7 +62,7 @@ public class DoctorUserRequestDto {
         }
         if (contactNumber == null || contactNumber.trim().isEmpty()) {
             validationErrors.append("Contact number is required. ");
-        } else if (!contactNumber.matches("\\d{10}")) {
+        } else if (!contactNumber.matches("\\d{9}|\\d{10}")) {
             validationErrors.append("Contact number must be exactly 10 digits. ");
         }
         if (password == null || password.trim().isEmpty()) {
