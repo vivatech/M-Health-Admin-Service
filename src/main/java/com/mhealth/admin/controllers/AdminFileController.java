@@ -54,7 +54,7 @@ public class AdminFileController {
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Error in fetching file : {}", e);
-            responseDto.setStatus(Status.NOCONTENT);
+            responseDto.setStatus(Status.NO_CONTENT);
             responseDto.setMessage("Internal Server Error");
             responseDto.setCode(Constants.INTERNAL_SERVER_ERROR);
         }
