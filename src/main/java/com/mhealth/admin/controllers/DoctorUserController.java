@@ -3,7 +3,7 @@ package com.mhealth.admin.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.request.DoctorUserRequestDto;
-import com.mhealth.admin.dto.request.MarketingUserRequestDto;
+import com.mhealth.admin.dto.request.SetDoctorAvailabilityRequestDto;
 import com.mhealth.admin.service.DoctorUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -162,4 +162,47 @@ public class DoctorUserController {
 //            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
 //        }
 //    }
+
+
+    /**
+     * Set doctor availability
+     */
+    @RequestMapping(value = "/set-availability", method = RequestMethod.POST)
+    public ResponseEntity<?> setDoctorAvailability(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                 @RequestBody SetDoctorAvailabilityRequestDto doctorUserRequestDto) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/doctor/set-availability");
+            log.info("Request Body: {}", doctorUserRequestDto);
+
+            Object response = doctorUserService.setDoctorAvailability(locale, doctorUserRequestDto);
+
+            log.info("Response Sent For /api/v1/admin/user/doctor/create: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Get doctor availability by doctor id
+     */
+    @RequestMapping(value = "/get-availability", method = RequestMethod.GET)
+    public ResponseEntity<?> setDoctorAvailability(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                   @RequestParam Integer doctorId) {
+
+        try {
+            log.info("Request Received For /api/v1/admin/user/doctor/get-availability");
+            log.info("Request param: doctorId={}", doctorId);
+
+            Object response = doctorUserService.getDoctorAvailability(locale, doctorId);
+
+            log.info("Response Sent For /api/v1/admin/user/doctor/get-availability: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception found in /api/v1/admin/user/doctor/get-availability: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

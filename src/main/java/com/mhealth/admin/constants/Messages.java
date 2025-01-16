@@ -12,6 +12,7 @@ public interface Messages {
     String INCORRECT_USER_STATUS = "incorrect.users.status";
     String SELECT_PROFILE_PICTURE = "select.profile.picture";
     String DOCTOR_ID_SIZE_LIMIT = "doctor-id.size.limit";
+    String RECORD_NOT_FOUND = "list.not.found";
 
     // Marketing User's SMS Body
     String REGISTER_MARKETING_USER = "register.marketing.user";
@@ -24,6 +25,8 @@ public interface Messages {
 
     // Doctor User's SMS Body
     String REGISTER_DOCTOR_USER = "register.doctor.user";
+    String DOCTOR_AVAILABILITY_FOUND = "doctor.availability.list.found";
+    String SLOTS_SAVED_SUCCESSFULLY = "slot.saved";
 
     // Hospital User's SMS Body
     String HOSPITAL_REGISTRATION_CONFIRMATION = "hospital.registration.confirmation";

@@ -7,6 +7,8 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.DoctorUserRequestDto;
+import com.mhealth.admin.dto.request.SetDoctorAvailabilityRequestDto;
+import com.mhealth.admin.dto.response.DoctorAvailabilityResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.repository.*;
@@ -14,18 +16,29 @@ import com.mhealth.admin.sms.SMSApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.propertyeditors.LocaleEditor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.mhealth.admin.constants.Constants.BLANK_DATA_GIVEN;
+import static com.mhealth.admin.constants.Messages.DOCTOR_AVAILABILITY_FOUND;
+import static com.mhealth.admin.constants.Messages.RECORD_NOT_FOUND;
 
 @Slf4j
 @Service
 public class DoctorUserService {
+    @Autowired
+    private SlotMasterRepository slotMasterRepository;
+    @Autowired
+    private DoctorAvailabilityRepository doctorAvailabilityRepository;
 
     @Autowired
     private GlobalService globalService;
@@ -92,6 +105,9 @@ public class DoctorUserService {
 
     @Value("${m-health.project.name}")
     private String projectName;
+    @Value("${slot.type.id}")
+    private Integer slotTypeID;
+
 
     @Transactional
     public Object createDoctorUser(Locale locale, DoctorUserRequestDto requestDto) throws Exception {
@@ -551,7 +567,6 @@ public class DoctorUserService {
         }
     }
 
-
     @Transactional
     private void assignRole(Integer userId, String roleType) {
         try {
@@ -566,4 +581,83 @@ public class DoctorUserService {
         }
     }
 
+    @Transactional
+    public Object getDoctorAvailability(Locale locale, Integer doctorId) {
+
+        if(doctorId == null) return new Response(Status.FAILED, Constants.CODE_O, BLANK_DATA_GIVEN);
+
+        Optional<Users> doctor = usersRepository.findByUserIdAndType(doctorId, UserType.Doctor);
+        if(doctor.isEmpty()){
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+        }
+        List<Object[]> resultList = doctorAvailabilityRepository.findByAvailabilityByDoctorId(doctor.get().getUserId(), slotTypeID);
+
+        Map<String, List<DoctorAvailabilityResponseDto>> dtoList = mapResultListIntoDoctorAvailabilityResponseDto(resultList);
+
+        if(dtoList.isEmpty()){
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(RECORD_NOT_FOUND, null, locale));
+        }
+
+        return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(DOCTOR_AVAILABILITY_FOUND, null, locale), dtoList);
+    }
+
+    private Map<String, List<DoctorAvailabilityResponseDto>> mapResultListIntoDoctorAvailabilityResponseDto(List<Object[]> resultList) {
+        Map<String, List<DoctorAvailabilityResponseDto>> responseMap = new HashMap<>();
+        resultList.forEach(row ->
+                responseMap.computeIfAbsent((String) row[1], k -> new ArrayList<>())
+                        .add(new DoctorAvailabilityResponseDto((Integer) row[0], (String) row[2], (Integer) row[3], (Time) row[4]))
+        );
+        return responseMap;
+    }
+
+    public Object setDoctorAvailability(Locale locale, SetDoctorAvailabilityRequestDto requestDto) {
+        if(requestDto.getDoctorId() == null)
+            return new Response(Status.FAILED, Constants.CODE_O, BLANK_DATA_GIVEN);
+
+        Optional<Users> doctor = usersRepository.findByUserIdAndType(requestDto.getDoctorId(), UserType.Doctor);
+        if(doctor.isEmpty())
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+
+        if(requestDto.getSlots() != null && !requestDto.getSlots().isEmpty()) {
+            //delete older records if present from Doctor Availability table
+            List<DoctorAvailability> doctorAvailabilities = doctorAvailabilityRepository.findByDoctorId(doctor.get());
+            if(!doctorAvailabilities.isEmpty()) {
+                doctorAvailabilities.forEach(ele -> doctorAvailabilityRepository.delete(ele));
+            }
+
+            // Iterate over the map
+            for (Map.Entry<String, List<String>> entry : requestDto.getSlots().entrySet()) {
+                String weekday = entry.getKey();
+                List<String> slots = entry.getValue();
+
+                //now create new entries in doctor availability tables
+                if (!slots.isEmpty()) {
+                    saveDataIntoDoctorAvailabilityTable(slots, weekday, doctor.get());
+                }
+            }
+        }
+
+        return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.SLOTS_SAVED_SUCCESSFULLY, null, locale), slotTypeID);
+    }
+
+    private void saveDataIntoDoctorAvailabilityTable(List<String> slots, String weekDay, Users doctor) {
+        List<SlotMaster> masterList = slotMasterRepository.findBySlotTypeIdAndSlotDayAndSlotTimeIn(slotTypeID, weekDay, slots);
+
+        if(masterList.isEmpty()) return;
+
+        List<DoctorAvailability> availabilities = masterList.stream()
+                .map(slotMaster -> {
+                    DoctorAvailability availability = new DoctorAvailability();
+                    availability.setDoctorId(doctor);
+                    availability.setSlotTypeId(slotTypeID);
+                    availability.setSlotId(slotMaster);
+                    availability.setDay(weekDay);
+                    availability.setCreatedAt(LocalDateTime.now());
+                    availability.setUpdatedAt(LocalDateTime.now());
+                    return availability;
+                })
+                .collect(Collectors.toList());
+
+        doctorAvailabilityRepository.saveAll(availabilities);
+    }
 }
