@@ -6,6 +6,8 @@ public class Constants {
 
     public static final String SUCCESS_CODE = "200";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
+    public static final String INTERNAL_SERVER_ERROR = "500";
+
     public static final String DATA_NOT_FOUND_CODE = "203";
     public static final String NO_RECORD_FOUND = "app.no.record.found";
     public static final String BLANK_DATA_GIVEN = "blank.data.given";
