@@ -6,10 +6,7 @@ import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
-import com.mhealth.admin.dto.enums.Classification;
-import com.mhealth.admin.dto.enums.StatusAI;
-import com.mhealth.admin.dto.enums.UserType;
-import com.mhealth.admin.dto.enums.YesNo;
+import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.HospitalManagementRequestDto;
 import com.mhealth.admin.dto.response.*;
 import com.mhealth.admin.model.HospitalDetails;
@@ -198,7 +195,7 @@ public class HospitalManagementService {
         user.setIsInternational(YesNo.No);
         user.setStatus(StatusAI.I);
         user.setClassification(Classification.from_hospital);
-        user.setDoctorClassification(Classification.general_practitioner.toString());
+        user.setDoctorClassification(DoctorClassification.general_practitioner.toString());
 
         String encodedPassword = utility.md5Hash(requestDto.getPassword());
         user.setPassword(encodedPassword);

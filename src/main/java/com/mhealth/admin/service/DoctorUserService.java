@@ -8,7 +8,6 @@ import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.DoctorUserRequestDto;
 import com.mhealth.admin.dto.response.Response;
-import com.mhealth.admin.exception.AdminModuleExceptionHandler;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
@@ -94,17 +93,25 @@ public class DoctorUserService {
     @Value("${m-health.project.name}")
     private String projectName;
 
-    public Object createDoctorUser(Locale locale, DoctorUserRequestDto doctorRequest) throws Exception {
-
+    public Object createDoctorUser(Locale locale, DoctorUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
+        // Validate the input
+        String validationMessage = requestDto.validate();
+        if (validationMessage != null) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(validationMessage);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
         // Get selected languages & specialization
-        List<Integer> selectedLanguages = getSelectedLanguageFluency(doctorRequest.getLanguagesFluency(), locale);
-        List<Integer> selectedSpecializations = getSelectedSpecialization(doctorRequest.getSpecializations(), locale);
+        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
+        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
 
         // Validate  profile picture
-        if (doctorRequest.getProfilePicture() != null) {
-            ValidateResult validationResult = fileService.validateFile(locale, doctorRequest.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
                 response.setMessage(validationResult.getError());
@@ -114,8 +121,8 @@ public class DoctorUserService {
         }
 
         // Validate doctor id document
-        if (doctorRequest.getDoctorIdDocument() != null) {
-            ValidateResult validationResult = fileService.validateFile(locale, doctorRequest.getDoctorIdDocument(), List.of("jpg", "jpeg", "png"), 1_000_000);
+        if (requestDto.getDoctorIdDocument() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getDoctorIdDocument(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
                 response.setCode(Constants.CODE_O);
                 response.setMessage(validationResult.getError());
@@ -125,8 +132,8 @@ public class DoctorUserService {
         }
 
         // Validate doctor documents
-        if (doctorRequest.getDocuments() != null) {
-            for (Map<String, MultipartFile> documentMap : doctorRequest.getDocuments()) {
+        if (requestDto.getDocuments() != null) {
+            for (Map<String, MultipartFile> documentMap : requestDto.getDocuments()) {
                 for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
                     MultipartFile document = entry.getValue(); // The actual file
                     ValidateResult validationResult = fileService.validateFile(locale, document, List.of("pdf"), 2_200_000);
@@ -141,7 +148,7 @@ public class DoctorUserService {
         }
 
         // Get selected country
-        Country country = countryRepository.findById(doctorRequest.getCountryId()).orElse(null);
+        Country country = countryRepository.findById(requestDto.getCountryId()).orElse(null);
 
         // Get default slot
         Integer slotTypeId = slotTypeRepository.findDefaultSlot(SlotStatus.active.name()).orElse(null);
@@ -150,60 +157,60 @@ public class DoctorUserService {
         Users user = new Users();
         user.setSlotTypeId(slotTypeId);
         user.setType(UserType.Doctor);
-        user.setFirstName("Dr. " + doctorRequest.getFirstName());
-        user.setLastName(doctorRequest.getLastName());
-        user.setEmail(doctorRequest.getEmail());
-        user.setContactNumber(doctorRequest.getContactNumber());
-        user.setPassword(utility.md5Hash(doctorRequest.getPassword()));
+        user.setFirstName("Dr. " + requestDto.getFirstName());
+        user.setLastName(requestDto.getLastName());
+        user.setEmail(requestDto.getEmail());
+        user.setContactNumber(requestDto.getContactNumber());
+        user.setPassword(utility.md5Hash(requestDto.getPassword()));
         user.setCountry(country);
-        user.setDoctorClassification(doctorRequest.getDoctorClassification());
-        user.setCountryCode(doctorRequest.getCountryCode());
-        user.setState(doctorRequest.getStateId());
-        user.setCity(doctorRequest.getCityId());
-        user.setHospitalAddress(doctorRequest.getHospitalAddress());
-        user.setHasDoctorVideo(doctorRequest.getHasDoctorVideo());
-        user.setResidenceAddress(doctorRequest.getResidenceAddress());
-        user.setExperience(doctorRequest.getExperience());
-        user.setExtraActivities(doctorRequest.getExtraActivities());
-        user.setAboutMe(doctorRequest.getAboutMe());
+        user.setDoctorClassification(requestDto.getDoctorClassification());
+        user.setCountryCode(requestDto.getCountryCode());
+        user.setState(requestDto.getProvinceId());
+        user.setCity(requestDto.getCityId());
+        user.setHospitalAddress(requestDto.getHospitalAddress());
+        user.setHasDoctorVideo(requestDto.getHasDoctorVideo());
+        user.setResidenceAddress(requestDto.getResidenceAddress());
+        user.setExperience(requestDto.getExperience());
+        user.setExtraActivities(requestDto.getExtraActivities());
+        user.setAboutMe(requestDto.getAboutMe());
         user.setLanguageFluency(String.join(",", selectedLanguages.stream().map(String::valueOf).toList()));
-        user.setNotificationLanguage(doctorRequest.getNotificationLanguage() != null ? doctorRequest.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
-        user.setHospitalId(doctorRequest.getClassification().equals(String.valueOf(Classification.from_hospital)) ? doctorRequest.getHospitalId() : 0);
-        user.setGender(doctorRequest.getGender());
-        user.setPassingYear(doctorRequest.getPassingYear());
-        user.setUniversityName(doctorRequest.getUniversityName());
-        user.setIsInternational(doctorRequest.getCountryCode().equals(countryCode) ? YesNo.No : YesNo.Yes);
-        user.setClassification(Classification.valueOf(doctorRequest.getClassification()));
+        user.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+        user.setHospitalId(requestDto.getClassification().equals(String.valueOf(Classification.from_hospital)) ? requestDto.getHospitalId() : 0);
+        user.setGender(requestDto.getGender());
+        user.setPassingYear(requestDto.getPassingYear());
+        user.setUniversityName(requestDto.getUniversityName());
+        user.setIsInternational(requestDto.getCountryCode().equals(countryCode) ? YesNo.No : YesNo.Yes);
+        user.setClassification(Classification.valueOf(requestDto.getClassification()));
 
         // Save profile picture if provided
-        if (doctorRequest.getProfilePicture() != null) {
+        if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
             // Extract the file extension
-            String extension = fileService.getFileExtension(Objects.requireNonNull(doctorRequest.getProfilePicture().getOriginalFilename()));
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
 
             // Generate a random file name
             String fileName = UUID.randomUUID() + "." + extension;
 
             // Save the file
-            fileService.saveFile(doctorRequest.getProfilePicture(), filePath, fileName);
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
 
             user.setProfilePicture(fileName);
 
         }
 
         // Save doctor id document if provided
-        if (doctorRequest.getDoctorIdDocument() != null) {
+        if (requestDto.getDoctorIdDocument() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
             // Extract the file extension
-            String extension = fileService.getFileExtension(Objects.requireNonNull(doctorRequest.getDoctorIdDocument().getOriginalFilename()));
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getDoctorIdDocument().getOriginalFilename()));
 
             // Generate a random file name
             String fileName = UUID.randomUUID() + "." + extension;
 
             // Save the file
-            fileService.saveFile(doctorRequest.getDoctorIdDocument(), filePath, fileName);
+            fileService.saveFile(requestDto.getDoctorIdDocument(), filePath, fileName);
 
             //TODO: Set document_id & document_name
         }
@@ -212,13 +219,13 @@ public class DoctorUserService {
         user = usersRepository.save(user);
 
         // Process & save doctor documents
-        processAndSaveDoctorDocuments(doctorRequest.getDocuments(), user.getUserId());
+        processAndSaveDoctorDocuments(requestDto.getDocuments(), user.getUserId());
 
         // Process & save hospital merchant number
-        processAndSaveHospitalMerchantNumber(doctorRequest.getClassification(), doctorRequest.getCountryCode(), user.getUserId(), doctorRequest.getMerchantNumber());
+        processAndSaveHospitalMerchantNumber(requestDto.getClassification(), requestDto.getCountryCode(), user.getUserId(), requestDto.getMerchantNumber());
 
         // Process & save charges
-        processAndSaveCharges(doctorRequest, user.getUserId());
+        processAndSaveCharges(requestDto, user.getUserId());
 
         // Process & save doctor specializations
         processAndSaveDoctorSpecialization(selectedSpecializations, user);
@@ -230,7 +237,7 @@ public class DoctorUserService {
         try {
             locale = Utility.getUserNotificationLanguageLocale(user.getNotificationLanguage(), locale);
             String smsMessage = messageSource.getMessage(Messages.REGISTER_DOCTOR_USER, new Object[]{user.getFirstName() + " " + user.getLastName(), projectName}, locale);
-            String smsNumber = "+" + countryCode + doctorRequest.getContactNumber();
+            String smsNumber = "+" + countryCode + requestDto.getContactNumber();
             if(smsSent){
                 smsApiService.sendMessage(smsNumber, smsMessage, this.country);
             }
@@ -276,122 +283,128 @@ public class DoctorUserService {
 
     @Transactional
     private void processAndSaveDoctorDocuments(List<Map<String, MultipartFile>> documentList, Integer userId) throws IOException {
-        // Save doctor documents if provided
-        if (documentList != null) {
-            for (Map<String, MultipartFile> documentMap : documentList) {
-                for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
-                    String documentName = entry.getKey(); // Key representing the document name or type
-                    MultipartFile document = entry.getValue(); // The actual file
+       try {
+           // Save doctor documents if provided
+           if (documentList != null) {
+               for (Map<String, MultipartFile> documentMap : documentList) {
+                   for (Map.Entry<String, MultipartFile> entry : documentMap.entrySet()) {
+                       String documentName = entry.getKey(); // Key representing the document name or type
+                       MultipartFile document = entry.getValue(); // The actual file
 
-                    if (document != null && !document.isEmpty()) {
-                        String filePath = Constants.DOCTOR_DOCUMENT_PATH + userId;
+                       if (document != null && !document.isEmpty()) {
+                           String filePath = Constants.DOCTOR_DOCUMENT_PATH + userId;
 
-                        // Extract the file extension
-                        String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
+                           // Extract the file extension
+                           String extension = fileService.getFileExtension(Objects.requireNonNull(document.getOriginalFilename()));
 
-                        // Generate a unique file name
-                        String fileName = UUID.randomUUID() + "." + extension;
+                           // Generate a unique file name
+                           String fileName = UUID.randomUUID() + "." + extension;
 
-                        // Save the file
-                        fileService.saveFile(document, filePath, fileName);
+                           // Save the file
+                           fileService.saveFile(document, filePath, fileName);
 
-                        // Create and populate the DoctorDocument object
-                        DoctorDocument doctorDocument = new DoctorDocument();
-                        doctorDocument.setUserId(userId);
-                        doctorDocument.setDocumentFileName(fileName);
-                        doctorDocument.setDocumentName(documentName); // Use the key as the document name
-                        doctorDocument.setCreatedAt(LocalDateTime.now());
-                        doctorDocument.setStatus(DocumentStatus.Active);
+                           // Create and populate the DoctorDocument object
+                           DoctorDocument doctorDocument = new DoctorDocument();
+                           doctorDocument.setUserId(userId);
+                           doctorDocument.setDocumentFileName(fileName);
+                           doctorDocument.setDocumentName(documentName); // Use the key as the document name
+                           doctorDocument.setCreatedAt(LocalDateTime.now());
+                           doctorDocument.setStatus(DocumentStatus.Active);
 
-                        // Save doctor document
-                        doctorDocumentRepository.save(doctorDocument);
-                    }
-                }
-            }
-        }
+                           // Save doctor document
+                           doctorDocumentRepository.save(doctorDocument);
+                       }
+                   }
+               }
+           }
+       } catch (Exception ex) {
+           throw new RuntimeException("failed to save doctor documents: " + ex.getMessage(), ex);
+       }
     }
 
     @Transactional
     private void processAndSaveHospitalMerchantNumber(String classification, String countryCode, Integer userId, String merchantNumber) {
-        if (classification.equals(String.valueOf(Classification.individual)) && countryCode.equals(this.countryCode)) {
-            HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
-            hospitalMerchantNumber.setUserId(userId);
-            hospitalMerchantNumber.setMerchantNumber(merchantNumber);
-            hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
-        }
+      try {
+          if (classification.equals(String.valueOf(Classification.individual)) && countryCode.equals(this.countryCode)) {
+              HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
+              hospitalMerchantNumber.setUserId(userId);
+              hospitalMerchantNumber.setMerchantNumber(merchantNumber);
+              hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
+          }
+      } catch (Exception ex) {
+          throw new RuntimeException("failed to hospital merchant number details: " + ex.getMessage(), ex);
+      }
     }
 
     @Transactional
     private void processAndSaveCharges(DoctorUserRequestDto userData, Integer doctorId) {
-        // Fetch doctor classification charge
-        GlobalConfiguration doctorClassificationCharge = globalConfigurationRepository.findByKey(userData.getDoctorClassification().toUpperCase()).orElse(null);
+        try {
+            // Fetch doctor classification charge
+            GlobalConfiguration doctorClassificationCharge = globalConfigurationRepository.findByKey(userData.getDoctorClassification().toUpperCase()).orElse(null);
 
-        if (doctorClassificationCharge == null) {
-            throw new AdminModuleExceptionHandler("Invalid doctor classification charge");
+            // Iterate through fee types and process charges
+            for (FeeTypeNew feeType : FeeTypeNew.values()) {
+                // Create a new charge entity
+                Charges charges = new Charges();
+
+                // Fetch commission type for the current fee type
+                GlobalConfiguration commissionConfig = globalConfigurationRepository.findByKey(feeType.toString().toUpperCase() + "_COMMISSION_TYPE").orElse(null);
+
+                // Set commissions & consultations fess
+                Float adminCommission = null;
+                Float consultationFees = null;
+                Float finalConsultationFees = null;
+
+                if (feeType.equals(FeeTypeNew.visit)) {
+                    adminCommission = userData.getVisitAdminCommission();
+                    consultationFees = userData.getVisitConsultationFee();
+                    finalConsultationFees = userData.getVisitFinalConsultationFee();
+                } else if (feeType.equals(FeeTypeNew.call)) {
+                    adminCommission = userData.getCallAdminCommission();
+                    consultationFees = userData.getCallConsultationFee();
+                    finalConsultationFees = userData.getCallFinalConsultationFee();
+                }
+
+                if (finalConsultationFees != null) {
+                    // Set charges fields value
+                    charges.setFeeType(FeeType.valueOf(String.valueOf(feeType)));
+                    charges.setFinalConsultationFees(finalConsultationFees);
+                    charges.setCommission(adminCommission);
+                    charges.setCommissionType(CommissionType.valueOf(commissionConfig.getValue()));
+                    charges.setConsultationFees(consultationFees);
+                    charges.setUserId(doctorId);
+                    charges.setCreatedAt(new Date());
+
+                    chargesRepository.save(charges);
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to save charges details: " + ex.getMessage(), ex);
         }
 
-        // Iterate through fee types and process charges
-        for (FeeTypeNew feeType : FeeTypeNew.values()) {
-            // Create a new charge entity
-            Charges charges = new Charges();
-
-            // Fetch commission type for the current fee type
-            GlobalConfiguration commissionConfig = globalConfigurationRepository.findByKey(feeType.toString().toUpperCase() + "_COMMISSION_TYPE").orElse(null);
-            if (commissionConfig == null) {
-                throw new AdminModuleExceptionHandler("Invalid commission configuration for fee type: " + feeType);
-            }
-
-            // Set commissions & consultations fess
-            Float adminCommission = null;
-            Float consultationFees = null;
-            Float finalConsultationFees = null;
-
-            if (feeType.equals(FeeTypeNew.visit)) {
-                adminCommission = userData.getVisitAdminCommission();
-                consultationFees = userData.getVisitConsultationFee();
-                finalConsultationFees = userData.getVisitFinalConsultationFee();
-            } else if (feeType.equals(FeeTypeNew.call)) {
-                adminCommission = userData.getCallAdminCommission();
-                consultationFees = userData.getCallConsultationFee();
-                finalConsultationFees = userData.getCallFinalConsultationFee();
-            }
-
-            if (finalConsultationFees != null) {
-                // Set charges fields value
-                charges.setFeeType(FeeType.valueOf(String.valueOf(feeType)));
-                charges.setFinalConsultationFees(finalConsultationFees);
-                charges.setCommission(adminCommission);
-                charges.setCommissionType(CommissionType.valueOf(commissionConfig.getValue()));
-                charges.setConsultationFees(consultationFees);
-                charges.setUserId(doctorId);
-                charges.setCreatedAt(new Date());
-
-                chargesRepository.save(charges);
-            }
-        }
     }
 
     @Transactional
     private void processAndSaveDoctorSpecialization(List<Integer> specializationList, Users user) {
-        if (!specializationList.isEmpty()) {
-            // Iterate through specializations process doctor specializations
-            for (Integer id: specializationList) {
-                DoctorSpecialization doctorSpecialization = new DoctorSpecialization();
+        try {
+            if (!specializationList.isEmpty()) {
+                // Iterate through specializations process doctor specializations
+                for (Integer id: specializationList) {
+                    DoctorSpecialization doctorSpecialization = new DoctorSpecialization();
 
-                Specialization specialization = specializationRepository.findById(id).orElse(null);
+                    Specialization specialization = specializationRepository.findById(id).orElse(null);
 
-                if (specialization == null) {
-                    throw new AdminModuleExceptionHandler("Invalid specialization");
+                    // Set doctor specialization fields value
+                    doctorSpecialization.setUserId(user);
+                    doctorSpecialization.setSpecializationId(specialization);
+                    doctorSpecialization.setCreatedAt(LocalDateTime.now());
+
+                    doctorSpecializationRepository.save(doctorSpecialization);
+
                 }
-
-                // Set doctor specialization fields value
-                doctorSpecialization.setUserId(user);
-                doctorSpecialization.setSpecializationId(specialization);
-                doctorSpecialization.setCreatedAt(LocalDateTime.now());
-
-                doctorSpecializationRepository.save(doctorSpecialization);
-
             }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to save specialization details: " + ex.getMessage(), ex);
         }
     }
 
@@ -406,9 +419,8 @@ public class DoctorUserService {
             authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
 
         } catch (Exception ex) {
-            log.error("exception occurred while assigning role to the user", ex);
             throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
         }
     }
 
-    }
+}
