@@ -113,7 +113,7 @@ public class ConsultationService {
 
         // Pagination
         int size = request.getSize()== null ? Constants.DEFAULT_PAGE_SIZE : request.getSize();
-        Pageable pageable = PageRequest.of(request.getPage() - 1, size);
+        Pageable pageable = PageRequest.of(request.getPage(), size);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
 

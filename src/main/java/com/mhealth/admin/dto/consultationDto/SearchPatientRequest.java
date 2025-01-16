@@ -18,8 +18,8 @@ public class SearchPatientRequest {
     private String contactNumber;
 
     @NotNull(message = "Page number is required")
-    @Min(value = 1, message = "Page number must be 1 or greater")
+    @Min(value = 0, message = "Page number must be 0 or greater")
     private Integer page;
 
-    private Integer size = 10;
+    private Integer size;
 }
