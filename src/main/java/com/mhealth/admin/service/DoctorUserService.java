@@ -130,10 +130,6 @@ public class DoctorUserService {
             }
         }
 
-        // Get selected languages & specialization
-        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
-        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
-
         // Check for duplicate email and contact number
         long emailCount = 0;
         if (requestDto.getEmail() != null && !requestDto.getEmail().trim().isEmpty()) {
@@ -152,6 +148,10 @@ public class DoctorUserService {
             response.setStatus(Status.FAILED);
             return response;
         }
+
+        // Get selected languages & specialization
+        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
+        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
 
         // Get selected country
         Country country = countryRepository.findById(requestDto.getCountryId()).orElse(null);
@@ -246,6 +246,157 @@ public class DoctorUserService {
         return response;
     }
 
+
+    public Object updateDoctorUser(Locale locale, Integer userId, DoctorUserRequestDto requestDto) throws Exception {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingDoctorUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        if (existingDoctorUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingDoctorUser.get();
+
+        // Validate the input
+        String validationMessage = requestDto.validate();
+        if (validationMessage != null) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(validationMessage);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Validate  profile picture
+        if (requestDto.getProfilePicture() != null) {
+            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
+            if (!validationResult.isResult()) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(validationResult.getError());
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
+
+        // Validate doctor documents
+        if (requestDto.getDocuments() != null) {
+            for (Map<String, Object> documentMap : requestDto.getDocuments()) {
+                MultipartFile document = (MultipartFile) documentMap.get("file"); // The actual file
+                ValidateResult validationResult = fileService.validateFile(locale, document, List.of("pdf"), 2_200_000);
+                if (!validationResult.isResult()) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(validationResult.getError());
+                    response.setStatus(Status.FAILED);
+                    return response;
+                }
+            }
+        }
+
+        // Check for duplicate email and contact number
+        long emailCount = 0;
+        if (requestDto.getEmail() != null && !requestDto.getEmail().trim().isEmpty()) {
+            emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+        }
+        long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Doctor, userId);
+
+        if (emailCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        } else if (contactNumberCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Get selected languages & specialization
+        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
+        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
+
+        // Get selected country
+        Country country = countryRepository.findById(requestDto.getCountryId()).orElse(null);
+
+        // Get default slot
+        Integer slotTypeId = slotTypeRepository.findDefaultSlot(SlotStatus.active.name()).orElse(null);
+
+        // Update the user fields
+        existingUser.setSlotTypeId(slotTypeId);
+        existingUser.setType(UserType.Doctor);
+        existingUser.setFirstName(requestDto.getFirstName());
+        existingUser.setLastName(requestDto.getLastName());
+        existingUser.setEmail(requestDto.getEmail());
+        existingUser.setContactNumber(requestDto.getContactNumber());
+        existingUser.setPassword(utility.md5Hash(requestDto.getPassword()));
+        existingUser.setCountry(country);
+        existingUser.setDoctorClassification(requestDto.getDoctorClassification());
+        existingUser.setCountryCode(requestDto.getCountryCode());
+        existingUser.setState(requestDto.getProvinceId());
+        existingUser.setCity(requestDto.getCityId());
+        existingUser.setHospitalAddress(requestDto.getHospitalAddress());
+        existingUser.setHasDoctorVideo(requestDto.getHasDoctorVideo());
+        existingUser.setResidenceAddress(requestDto.getResidenceAddress());
+        existingUser.setExperience(requestDto.getExperience());
+        existingUser.setExtraActivities(requestDto.getExtraActivities());
+        existingUser.setAboutMe(requestDto.getAboutMe());
+        existingUser.setLanguageFluency(String.join(",", selectedLanguages.stream().map(String::valueOf).toList()));
+        existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
+        existingUser.setHospitalId(requestDto.getClassification().equals(String.valueOf(Classification.from_hospital)) ? requestDto.getHospitalId() : 0);
+        existingUser.setGender(requestDto.getGender());
+        existingUser.setPassingYear(requestDto.getPassingYear());
+        existingUser.setUniversityName(requestDto.getUniversityName());
+        existingUser.setIsInternational(requestDto.getCountryCode().equals(countryCode) ? YesNo.No : YesNo.Yes);
+        existingUser.setClassification(Classification.valueOf(requestDto.getClassification()));
+
+        // Save profile picture if provided
+        if (requestDto.getProfilePicture() != null) {
+            String filePath = Constants.USER_PROFILE_PICTURE + userId;
+
+            // Delete existing profile if present
+            if(existingUser.getProfilePicture() != null){
+                fileService.deleteFile(filePath, existingUser.getProfilePicture());
+            }
+
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
+
+            // Generate a random file name
+            String fileName = UUID.randomUUID() + "." + extension;
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            existingUser.setProfilePicture(fileName);
+
+        }
+
+        // Update the existing user
+        existingUser = usersRepository.save(existingUser);
+
+        // Process & update doctor documents
+        processAndSaveDoctorDocuments(requestDto.getDocuments(), userId);
+
+        // Process & update hospital merchant number
+        processAndSaveHospitalMerchantNumber(requestDto.getClassification(), requestDto.getCountryCode(), userId, requestDto.getMerchantNumber());
+
+        // Process & update charges
+        processAndSaveCharges(requestDto, userId);
+
+        // Process & update doctor specializations
+        processAndSaveDoctorSpecialization(selectedSpecializations, existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_UPDATED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
     // Handle selected languages
     private List<Integer> getSelectedLanguageFluency(List<Integer> languageFluencyList, Locale locale) {
         Map<Integer, String> languageList = globalService.getLanguageList(locale);
@@ -319,7 +470,7 @@ public class DoctorUserService {
           if (classification.equals(String.valueOf(Classification.individual)) && countryCode.equals(this.countryCode)) {
               HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
               hospitalMerchantNumber.setUserId(userId);
-              hospitalMerchantNumber.setMerchantNumber(merchantNumber);
+              hospitalMerchantNumber.setMerchantNumber(merchantNumber); //TODO: Discuss this
               hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
           }
       } catch (Exception ex) {

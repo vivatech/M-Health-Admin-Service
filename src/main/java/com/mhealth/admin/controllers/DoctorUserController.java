@@ -68,24 +68,24 @@ public class DoctorUserController {
         }
     }
 
-//    @RequestMapping(value = "/update", method = RequestMethod.POST)
-//    public ResponseEntity<?> updateMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                                 @RequestParam Integer userId,
-//                                                 @RequestBody MarketingUserRequestDto marketingUserRequest) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/update");
-//            log.info("Request Parameter: userId={}", userId);
-//            log.info("Request Body: {}", marketingUserRequest);
-//
-//            Object response = marketingUserService.updateMarketingUser(locale, userId, marketingUserRequest);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/update: {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public ResponseEntity<?> updateMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                 @RequestParam Integer userId,
+                                                 @ModelAttribute DoctorUserRequestDto doctorUserRequestDto) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/doctor/update");
+            log.info("Request Parameter: userId={}", userId);
+            log.info("Request Body: {}", doctorUserRequestDto);
+
+            Object response = doctorUserService.updateDoctorUser(locale, userId, doctorUserRequestDto);
+
+            log.info("Response Sent For /api/v1/admin/user/doctor/update: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 //    @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
 //    public ResponseEntity<?> getMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
