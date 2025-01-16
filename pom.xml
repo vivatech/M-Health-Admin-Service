@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.mhealth.admin</groupId>
 	<artifactId>m-health-admin-service</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.4</version>
 	<name>m-health-admin-service</name>
 	<description>M-Health Admin service</description>
 	<properties>
@@ -136,13 +136,13 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
-				<application.properties.location>src/main/resources/application.properties</application.properties.location>
+				<application.properties.location>/home/core/mhealthprovider/application.properties</application.properties.location>
 			</properties>
 		</profile>
 		<profile>
 			<id>prod</id>
 			<properties>
-				<application.properties.location>/home/core/mpatient/admin/application.properties</application.properties.location>
+				<application.properties.location>/home/core/mhealthprovider/application.properties</application.properties.location>
 			</properties>
 		</profile>
 	</profiles>

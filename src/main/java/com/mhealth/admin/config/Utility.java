@@ -1,5 +1,6 @@
 package com.mhealth.admin.config;
 
+import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.model.Users;
 import com.mhealth.admin.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 
 @Service
 public class Utility {
@@ -53,5 +55,14 @@ public class Utility {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Locale getUserNotificationLanguageLocale(String notificationLanguage, Locale locale) {
+        if(notificationLanguage.equalsIgnoreCase(Constants.LOCALE_ENGLISH)){
+            locale = Locale.ENGLISH;
+        }else {
+            locale = new Locale(Constants.LOCALE_SOMALIA);
+        }
+        return locale;
     }
 }

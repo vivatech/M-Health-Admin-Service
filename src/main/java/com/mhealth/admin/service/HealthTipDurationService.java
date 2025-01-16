@@ -8,7 +8,9 @@ import com.mhealth.admin.dto.request.HealthTipDurationSearchRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.HealthTipDuration;
+import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.repository.HealthTipDurationRepository;
+import com.mhealth.admin.repository.HealthTipPackageRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -32,6 +35,8 @@ public class HealthTipDurationService {
 
     @Autowired
     private MessageSource messageSource;
+    @Autowired
+    private HealthTipPackageRepository healthTipPackageRepository;
 
     public ResponseEntity<Response> createDuration(HealthTipDurationRequest request, Locale locale) {
         HealthTipDuration duration = new HealthTipDuration();
@@ -82,10 +87,18 @@ public class HealthTipDurationService {
     }
 
     public ResponseEntity<Response> deleteDuration(Integer id, Locale locale) {
-        if (!repository.existsById(id)) {
+        HealthTipDuration healthTipDuration = repository.findById(id).orElse(null);
+        if (healthTipDuration == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                             messageSource.getMessage(Constants.HEALTH_TIP_DURATION_NOT_FOUND, null, locale)));
+        }
+
+        List<HealthTipPackage> healthTipPackages = healthTipPackageRepository.findByHealthTipDuration(healthTipDuration);
+        if (!healthTipPackages.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE,
+                            messageSource.getMessage(Constants.HEALTH_TIP_DURATION_HAS_DEPENDENCIES, null, locale)));
         }
 
         repository.deleteById(id);

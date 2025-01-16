@@ -14,10 +14,6 @@ public class EmailTemplateRequest {
     @NotNull(message = "Key is mandatory")
     private String key;
 
-    @NotBlank(message = "Value is mandatory")
-    @NotNull(message = "Value is mandatory")
-    private String value;
-
     private String subject;
 
     private String content;
