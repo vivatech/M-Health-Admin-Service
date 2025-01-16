@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mhealth.admin.constants.Constants.*;
 
@@ -77,42 +79,112 @@ public class ConsultationService {
     @Value("${m-health.country}")
     private String mHealthCountry;
 
+    public Response searchPatient(SearchPatientRequest request, Locale locale) {
+        Response response = new Response();
 
-    public ResponseEntity<Response> searchPatient(SearchPatientRequest request, Locale locale) {
-        log.info("Entering into searchPatient api : {}", request);
+        StringBuilder baseQuery = new StringBuilder("SELECT ")
+                .append("u.user_id, ")
+                .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
+                .append("u.country_code, ")
+                .append("u.contact_number, ")
+                .append("u.created_by ")
+                .append("FROM mh_users u ")
+                .append("WHERE u.type = 'Patient'"); // Base query
 
-        StringBuilder sb = getStringBuilder(request);
-
-        //generate Query
-        int size = request.getSize()== null ? Constants.DEFAULT_PAGE_SIZE : request.getSize();
-        Query query = entityManager.createQuery(sb.toString(), Users.class);
-        List<Users> users = query.getResultList();
-        int total = users.size();
-        users = users.stream().skip((long) request.getPage() * size).limit(size).toList();
-
-        if(users.isEmpty()){
-            return ResponseEntity.status(HttpStatus.OK).body(new Response(
-                    Status.FAILED,
-                    Constants.DATA_NOT_FOUND_CODE,
-                    messageSource.getMessage(Constants.NO_RECORD_FOUND, null, locale),
-                    new ArrayList<>()
-            ));
+        // Dynamically add filters
+        if (!StringUtils.isEmpty(request.getPatientName())) {
+            baseQuery.append(" AND CONCAT(u.first_name, ' ', u.last_name) LIKE :name");
         }
-        PaginateDto dto = getPaginateDto(users, total, size, request.getUserId());
+        if (!StringUtils.isEmpty(request.getContactNumber())) {
+            baseQuery.append(" AND CONCAT(u.country_code, '', u.contact_number) LIKE :contactNumber");
+        }
+        baseQuery.append(" ORDER BY u.user_id DESC");
 
-        return ResponseEntity.status(HttpStatus.OK).body(new Response(
-                Status.SUCCESS,
-                Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.SUCCESS, null, locale),
-                dto
-        ));
+        // Create query
+        Query query = entityManager.createNativeQuery(baseQuery.toString());
+
+        //set parameter
+        if (!StringUtils.isEmpty(request.getContactNumber())) {
+            query.setParameter("contactNumber", "%" + request.getContactNumber().trim() + "%");
+        }
+        if (!StringUtils.isEmpty(request.getPatientName())) {
+            query.setParameter("name", "%" + request.getPatientName().trim() + "%");
+        }
+
+        // Pagination
+        int size = request.getSize()== null ? Constants.DEFAULT_PAGE_SIZE : request.getSize();
+        Pageable pageable = PageRequest.of(request.getPage() - 1, size);
+        query.setFirstResult((int) pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        // Fetch results
+        List<Object[]> results = query.getResultList();
+
+        // Map results to DTO
+        List<SearchPatientResponse> responseList = mapResultsToSearchPatientResponse(results, request.getUserId());
+
+        // Total count query
+        String countQuery = "SELECT COUNT(*) FROM (" + baseQuery + ") AS countQuery";
+        Query countQ = entityManager.createNativeQuery(countQuery);
+        if (!StringUtils.isEmpty(request.getContactNumber())) {
+            countQ.setParameter("contactNumber", "%" + request.getContactNumber().trim() + "%");
+        }
+        if (!StringUtils.isEmpty(request.getPatientName())) {
+            countQ.setParameter("name", "%" + request.getPatientName().trim() + "%");
+        }
+
+        long totalCount = ((Number) countQ.getSingleResult()).longValue();
+
+        // Create pageable response
+        Page<SearchPatientResponse> pageableResponse = new PageImpl<>(responseList, pageable, totalCount);
+
+        // Build response
+        Map<String, Object> data = new HashMap<>();
+        data.put("userList", pageableResponse.getContent());
+        data.put("totalCount", pageableResponse.getTotalElements());
+
+        if(pageableResponse.getTotalElements() < 1){
+            response.setCode(Constants.DATA_NOT_FOUND_CODE);
+            response.setStatus(Status.FAILED);
+            response.setMessage(messageSource.getMessage(Constants.NO_RECORD_FOUND, null, locale));
+            return response;
+        }
+
+        PaginateDto dto = new PaginateDto();
+        dto.setContent(pageableResponse.getContent());
+        dto.setSize(size);
+        dto.setNoOfElements(responseList.size());
+        dto.setTotalPages((int)totalCount / size);
+        dto.setTotalElements((int) totalCount);
+
+        response.setCode(Constants.SUCCESS_CODE);
+        response.setStatus(Status.SUCCESS);
+        response.setMessage(messageSource.getMessage(Constants.SUCCESS, null, locale));
+        response.setData(dto);
+        return response;
+    }
+
+    private List<SearchPatientResponse> mapResultsToSearchPatientResponse(List<Object[]> results, Integer user) {
+        return results.stream().map(row -> {
+            Integer userId = (Integer) row[0];
+            String name = StringUtils.isEmpty((String) row[1]) ? "" : (String) row[1];
+            String countryCode = StringUtils.isEmpty((String) row[2]) ? "" : (String) row[2];
+            String contactNumber = (String) row[3];
+            Integer createdBy = (Integer) row[4];
+
+            boolean edit = createdBy != null && createdBy.equals(user);
+
+            return new SearchPatientResponse(
+                    userId, name.trim(), countryCode + contactNumber, edit
+            );
+        }).collect(Collectors.toList());
     }
 
     private PaginateDto getPaginateDto(List<Users> users, int total, int size, int id) {
-        List<SearcPatientResponse> responseList = new ArrayList<>();
+        List<SearchPatientResponse> responseList = new ArrayList<>();
 
         for(Users s : users){
-            SearcPatientResponse response = new SearcPatientResponse();
+            SearchPatientResponse response = new SearchPatientResponse();
             response.setPatientName(s.getFirstName() + " " + s.getLastName());
             response.setContactNumber((s.getCountryCode() == null ? "":s.getCountryCode()) + s.getContactNumber());
             if(s.getCreatedBy() != null && s.getCreatedBy().equals(id)) response.setEdit(true);
@@ -128,16 +200,16 @@ public class ConsultationService {
         return dto;
     }
 
-    private static StringBuilder getStringBuilder(SearchPatientRequest request) {
+    private StringBuilder getStringBuilder(SearchPatientRequest request) {
         StringBuilder sb = new StringBuilder("Select u From Users u Where u.type = 'Patient' ");
 
         //search  by name
-        if(request.getPatientName() != null && !request.getPatientName().isEmpty()){
-            sb.append(" AND (u.firstName Like '%" + request.getPatientName().trim() +"%' OR (u.lastName LIKE '%" + request.getPatientName().trim() + "%') ");
+        if(!StringUtils.isEmpty(request.getPatientName())){
+            sb.append(" AND CONCAT(u.firstName, ' ',u.lastName) Like %" + request.getPatientName().trim() +"%");
         }
         //search  by contact number
-        if(request.getContactNumber() != null && !request.getContactNumber().isEmpty()){
-            sb.append(" AND u.contactNumber Like '%" + request.getContactNumber().trim() +"%'");
+        if(!StringUtils.isEmpty(request.getContactNumber())){
+            sb.append(" AND u.contactNumber Like %" + request.getContactNumber().trim() +"%");
         }
         sb.append(" Order By u.userId DESC ");
         return sb;
