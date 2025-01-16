@@ -29,8 +29,6 @@ import java.util.Locale;
 public class ConsultationController {
     @Autowired
     private ConsultationService consultationService;
-    @Autowired
-    private ObjectMapper objectMapper;
 
     /*
         List of patient
@@ -43,7 +41,7 @@ public class ConsultationController {
             log.info("Request Body: {}", request);
 
             Object response = consultationService.searchPatient(request,locale);
-            log.info("Response Sent For /api/v1/admin/consultation: {}", objectMapper.writeValueAsString(response));
+            log.info("Response Sent For /api/v1/admin/consultation: {}", new ObjectMapper().writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (Exception e){
             log.error("Exception found in /api/v1/admin/consultation: ", e);
