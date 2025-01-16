@@ -10,13 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AgentUserResponseDto {
     private Integer userId;
-    private String clinicName;
+    private String name;
     private String email;
     private String contactNumber;
-    private String notificationContactNumber;
-    private String merchantNumber;
-    private Integer priority;
-    private String clinicAddress;
     private String notificationLanguage;
     private String status;
 }

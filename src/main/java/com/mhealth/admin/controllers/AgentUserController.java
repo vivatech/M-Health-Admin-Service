@@ -58,7 +58,7 @@ public class AgentUserController {
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createAgent(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                         @ModelAttribute AgentUserRequestDto requestDto, HttpServletRequest request) {
+                                         @RequestBody AgentUserRequestDto requestDto, HttpServletRequest request) {
         try {
             log.info("Request Received For /api/v1/admin/user/agent/create");
             log.info("Request Body: {}", requestDto);
@@ -76,7 +76,7 @@ public class AgentUserController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updateAgentUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                              @RequestParam Integer agentId,
-                                             @ModelAttribute AgentUserRequestDto requestDto) {
+                                             @RequestBody AgentUserRequestDto requestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/agent/update");
             log.info("Request Parameter: agentId={}", agentId);
@@ -98,7 +98,7 @@ public class AgentUserController {
         try {
             log.info("Request Received For /api/v1/admin/user/agent/" + agentId);
 
-            Object response = agentUserService.getAgentUser(locale, agentId);
+            Object response = agentUserService.getAgentUserById(locale, agentId);
 
             log.info("Response Sent For /api/v1/admin/user/agent/" + agentId + ": {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);

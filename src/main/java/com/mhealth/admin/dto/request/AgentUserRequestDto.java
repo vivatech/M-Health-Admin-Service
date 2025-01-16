@@ -3,7 +3,6 @@ package com.mhealth.admin.dto.request;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.regex.Pattern;
 
@@ -11,30 +10,23 @@ import java.util.regex.Pattern;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgentUserRequestDto {
-    private String clinicName;
+    private String firstName;
+    private String lastName;
     private String email;
     private String contactNumber;
-    private String notificationContactNumber;
-    private String merchantNumber;
-    private String priority;
+    private String countryCode;
     private String password;
-    private String clinicAddress;
     private String notificationLanguage;
-    private MultipartFile profilePicture;
 
 
     public String validate() {
         StringBuilder validationErrors = new StringBuilder();
 
-        validateRequiredField("Clinic name", clinicName, validationErrors);
-        validateContactNumber("Contact number", contactNumber, validationErrors);
-        validateOptionalContactNumber("Notification contact number", notificationContactNumber, validationErrors);
-        validateRequiredField("Merchant number", merchantNumber, validationErrors);
-        validateContactNumber("Merchant number", merchantNumber, validationErrors);
+        validateRequiredField("First Name", firstName, validationErrors);
+        validateRequiredField("Last Name", lastName, validationErrors);
+        validateContactNumber(contactNumber, validationErrors);
         validateEmail(email, validationErrors);
         validatePassword(password, validationErrors);
-        validateAddress("Clinic address", clinicAddress, validationErrors);
-        validateOptionalPriority("Priority", priority, validationErrors);
 
         return validationErrors.isEmpty() ? null : validationErrors.toString().trim();
     }
@@ -45,25 +37,11 @@ public class AgentUserRequestDto {
         }
     }
 
-    private void validateContactNumber(String fieldName, String value, StringBuilder validationErrors) {
+    private void validateContactNumber(String value, StringBuilder validationErrors) {
         if (value == null || value.trim().isEmpty()) {
-            validationErrors.append(fieldName).append(" is required. ");
+            validationErrors.append("Contact number").append(" is required. ");
         } else if (!Pattern.matches("\\d{9}", value)) {
-            validationErrors.append(fieldName).append(" must be exactly 9 digits. ");
-        }
-    }
-
-    private void validateOptionalContactNumber(String fieldName, String value, StringBuilder validationErrors) {
-        if (value != null && !value.trim().isEmpty() && !Pattern.matches("\\d{9}", value)) {
-            validationErrors.append(fieldName).append(" must be exactly 9 digits. ");
-        }
-    }
-
-    private void validateOptionalPriority(String fieldName, String value, StringBuilder validationErrors) {
-        if (value != null) {
-            if (!value.matches("\\d+")) {
-                validationErrors.append(fieldName).append(" must contain only numbers. ");
-            }
+            validationErrors.append("Contact number").append(" must be exactly 9 digits. ");
         }
     }
 
@@ -84,14 +62,5 @@ public class AgentUserRequestDto {
             validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
         }
     }
-
-    private void validateAddress(String fieldName, String value, StringBuilder validationErrors) {
-        if (value == null || value.trim().isEmpty()) {
-            validationErrors.append(fieldName).append(" is required. ");
-        } else if (!value.matches("^[a-zA-Z0-9.,\":;'\\-_(){}!@#$%^&*=+|?\\s]*$")) {
-            validationErrors.append(fieldName).append(" contains invalid characters. Only letters, numbers, spaces, commas, periods, and specific special characters are allowed. ");
-        }
-    }
-
 
 }
