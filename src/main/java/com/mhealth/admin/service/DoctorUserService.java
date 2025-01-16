@@ -93,6 +93,7 @@ public class DoctorUserService {
     @Value("${m-health.project.name}")
     private String projectName;
 
+    @Transactional
     public Object createDoctorUser(Locale locale, DoctorUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
@@ -246,7 +247,7 @@ public class DoctorUserService {
         return response;
     }
 
-
+    @Transactional
     public Object updateDoctorUser(Locale locale, Integer userId, DoctorUserRequestDto requestDto) throws Exception {
         Response response = new Response();
 
