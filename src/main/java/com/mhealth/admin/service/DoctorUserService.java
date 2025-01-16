@@ -105,10 +105,6 @@ public class DoctorUserService {
             return response;
         }
 
-        // Get selected languages & specialization
-        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
-        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
-
         // Validate  profile picture
         if (requestDto.getProfilePicture() != null) {
             ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
@@ -134,6 +130,29 @@ public class DoctorUserService {
                     }
                 }
             }
+        }
+
+        // Get selected languages & specialization
+        List<Integer> selectedLanguages = getSelectedLanguageFluency(requestDto.getLanguagesFluency(), locale);
+        List<Integer> selectedSpecializations = getSelectedSpecialization(requestDto.getSpecializations(), locale);
+
+        // Check for duplicate email and contact number
+        long emailCount = 0;
+        if (requestDto.getEmail() != null && !requestDto.getEmail().trim().isEmpty()) {
+            emailCount = usersRepository.countByEmail(requestDto.getEmail());
+        }
+        long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Doctor);
+
+        if (emailCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        } else if (contactNumberCount > 0) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
         }
 
         // Get selected country
