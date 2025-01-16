@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class SearcPatientResponse {
+public class SearchPatientResponse {
+    private Integer userId;
     private String patientName;
     private String contactNumber;
     private boolean isEdit;
