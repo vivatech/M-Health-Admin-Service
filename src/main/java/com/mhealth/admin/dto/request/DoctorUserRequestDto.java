@@ -3,11 +3,9 @@ package com.mhealth.admin.dto.request;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.enums.Classification;
 import com.mhealth.admin.dto.enums.DoctorClassification;
-import com.mhealth.admin.dto.enums.YesNo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.EnumUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -38,7 +36,6 @@ public class DoctorUserRequestDto {
     private String gender;
     private String universityName;
     private Integer passingYear;
-    private YesNo isInternational;
     private String merchantNumber;
     private Float visitAdminCommission;
     private Float callAdminCommission;
@@ -50,7 +47,6 @@ public class DoctorUserRequestDto {
     private List<Integer> languagesFluency;
     private List<Integer> specializations;
     private MultipartFile profilePicture;
-    private MultipartFile doctorIdDocument;
     private List<Map<String, MultipartFile>> documents;
 
 
@@ -96,57 +92,60 @@ public class DoctorUserRequestDto {
         if (passingYear == null) {
             validationErrors.append("Passing year is required. ");
         }
-        if (doctorClassification == null || doctorClassification.trim().isEmpty()) {
-            validationErrors.append("Doctor classification is required. ");
-        } else if (!EnumUtils.isValidEnum(DoctorClassification.class, doctorClassification)) {
-            validationErrors.append("Doctor classification must be either general_practitioner or specialist. ");
-        }
-
-        if (classification == null || classification.trim().isEmpty()) {
-            validationErrors.append("Classification is required. ");
-        } else if (!EnumUtils.isValidEnum(Classification.class, classification)) {
-            validationErrors.append("Classification must be either from_hospital or individual. ");
-        }
-
         if (notificationLanguage == null || notificationLanguage.trim().isEmpty()) {
             validationErrors.append("Notification language is required. ");
         } else if (!List.of(Constants.DEFAULT_LANGUAGE, Constants.ENGLISH_LANGUAGE).contains(notificationLanguage)) {
             validationErrors.append("Notification language must be either sl or en. ");
         }
-
         if (languagesFluency == null || languagesFluency.isEmpty()) {
             validationErrors.append("Languages fluency is required. ");
         }
-
         if (countryCode == null || countryCode.trim().isEmpty()) {
             validationErrors.append("Country code is required. ");
         }
-
         if (hasDoctorVideo == null || hasDoctorVideo.trim().isEmpty()) {
-            validationErrors.append("Doctor classification is required. ");
+            validationErrors.append("Doctor availability is required. ");
         } else if (!List.of(Constants.VIDEO, Constants.VISIT, Constants.BOTH).contains(hasDoctorVideo)) {
             validationErrors.append("Doctor availability must be video or visit or both only. ");
         }
 
         // Conditional validation
-        if (DoctorClassification.specialist.equals(DoctorClassification.valueOf(doctorClassification)) &&
-                (specializations == null || specializations.isEmpty())) {
-            validationErrors.append("Specializations are required for specialist classification. ");
+        if (doctorClassification == null || doctorClassification.trim().isEmpty()) {
+            validationErrors.append("Doctor classification is required. ");
+        } else {
+            try {
+                DoctorClassification doctorClassificationEnum = DoctorClassification.valueOf(doctorClassification);
+                if (DoctorClassification.specialist.equals(doctorClassificationEnum) &&
+                        (specializations == null || specializations.isEmpty())) {
+                    validationErrors.append("Specializations are required for specialist classification. ");
+                }
+            } catch (IllegalArgumentException e) {
+                validationErrors.append("Doctor classification must be either general_practitioner or specialist. ");
+            }
         }
 
-        if (Classification.from_hospital.equals(Classification.valueOf(classification)) &&
-                (hospitalId == null || hospitalId == 0)) {
-            validationErrors.append("Hospital ID is required for 'from_hospital' classification. ");
-        }
 
-        if (Classification.from_hospital.equals(Classification.valueOf(classification)) &&
-                (hospitalAddress == null || hospitalAddress.trim().isEmpty())) {
-            validationErrors.append("Clinic address is required for 'from_hospital' classification. ");
-        }
+        if (classification == null || classification.trim().isEmpty()) {
+            validationErrors.append("Classification is required. ");
+        } else {
+            try {
+                Classification classificationEnum = Classification.valueOf(classification);
 
-        if (Classification.individual.equals(Classification.valueOf(classification)) &&
-                (residenceAddress == null || residenceAddress.trim().isEmpty())) {
-            validationErrors.append("Residence address is required for 'from_hospital' classification. ");
+                if (Classification.from_hospital.equals(classificationEnum)) {
+                    if (hospitalId == null || hospitalId == 0) {
+                        validationErrors.append("Hospital ID is required for 'from_hospital' classification. ");
+                    }
+                    if (hospitalAddress == null || hospitalAddress.trim().isEmpty()) {
+                        validationErrors.append("Clinic address is required for 'from_hospital' classification. ");
+                    }
+                } else if (Classification.individual.equals(classificationEnum)) {
+                    if (residenceAddress == null || residenceAddress.trim().isEmpty()) {
+                        validationErrors.append("Residence address is required for 'individual' classification. ");
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                validationErrors.append("Classification must be either from_hospital or individual. ");
+            }
         }
 
         // Return validation errors as a single string or null if no errors

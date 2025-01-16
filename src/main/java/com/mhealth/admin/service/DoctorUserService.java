@@ -120,17 +120,6 @@ public class DoctorUserService {
             }
         }
 
-        // Validate doctor id document
-        if (requestDto.getDoctorIdDocument() != null) {
-            ValidateResult validationResult = fileService.validateFile(locale, requestDto.getDoctorIdDocument(), List.of("jpg", "jpeg", "png"), 1_000_000);
-            if (!validationResult.isResult()) {
-                response.setCode(Constants.CODE_O);
-                response.setMessage(validationResult.getError());
-                response.setStatus(Status.FAILED);
-                return response;
-            }
-        }
-
         // Validate doctor documents
         if (requestDto.getDocuments() != null) {
             for (Map<String, MultipartFile> documentMap : requestDto.getDocuments()) {
@@ -197,22 +186,6 @@ public class DoctorUserService {
 
             user.setProfilePicture(fileName);
 
-        }
-
-        // Save doctor id document if provided
-        if (requestDto.getDoctorIdDocument() != null) {
-            String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
-
-            // Extract the file extension
-            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getDoctorIdDocument().getOriginalFilename()));
-
-            // Generate a random file name
-            String fileName = UUID.randomUUID() + "." + extension;
-
-            // Save the file
-            fileService.saveFile(requestDto.getDoctorIdDocument(), filePath, fileName);
-
-            //TODO: Set document_id & document_name
         }
 
         // Save the user

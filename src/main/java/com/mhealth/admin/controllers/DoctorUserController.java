@@ -53,7 +53,7 @@ public class DoctorUserController {
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestBody DoctorUserRequestDto doctorUserRequestDto) {
+                                                 @ModelAttribute DoctorUserRequestDto doctorUserRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/doctor/create");
             log.info("Request Body: {}", doctorUserRequestDto);
