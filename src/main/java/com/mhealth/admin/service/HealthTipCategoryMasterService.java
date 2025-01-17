@@ -8,7 +8,9 @@ import com.mhealth.admin.dto.request.HealthTipCategorySearchRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.HealthTipCategoryMaster;
+import com.mhealth.admin.model.HealthTipPackageCategories;
 import com.mhealth.admin.repository.HealthTipCategoryMasterRepository;
+import com.mhealth.admin.repository.HealthTipPackageCategoriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,9 @@ public class HealthTipCategoryMasterService {
 
     @Autowired
     private MessageSource messageSource;
+
+    @Autowired
+    private HealthTipPackageCategoriesRepository healthTipPackageCategoriesRepository;
 
     public ResponseEntity<Response> addCategory(HealthTipCategoryRequest request, Locale locale) {
         String newFileName = uploadFile(request.getPhoto());
@@ -122,6 +127,15 @@ public class HealthTipCategoryMasterService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_NOT_FOUND, null, locale)));
+        }
+        HealthTipCategoryMaster category = repository.findById(id).orElse(null);
+
+        // verify if category is used in any health tip package
+        HealthTipPackageCategories healthTipPackageCategories = healthTipPackageCategoriesRepository.findByHealthTipCategoryMaster(category);
+        if (healthTipPackageCategories != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                            messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE, null, locale)));
         }
 
         repository.deleteById(id);

@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.StatusAI;
+import com.mhealth.admin.model.HealthTipCategoryMaster;
 import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.model.HealthTipPackageCategories;
 import org.springframework.data.domain.Page;
@@ -100,4 +101,5 @@ public interface HealthTipPackageCategoriesRepository extends JpaRepository<Heal
 
     HealthTipPackageCategories findByHealthTipPackage(HealthTipPackage healthTipPackage);
 
+    HealthTipPackageCategories findByHealthTipCategoryMaster(HealthTipCategoryMaster category);
 }
