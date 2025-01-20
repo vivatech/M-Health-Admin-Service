@@ -61,10 +61,11 @@ public class DoctorUserUpdateRequestDto {
         }
         if (contactNumber == null || contactNumber.trim().isEmpty()) {
             validationErrors.append("Contact number is required. ");
-        } else if (!contactNumber.matches("\\d{9}|\\d{10}")) {
-            validationErrors.append("Contact number can be 9 or 10 digits only. ");
+        } else if (countryCode.equals(Constants.LOCAL_COUNTRY_CODE) && !contactNumber.matches("\\d{9}")) {
+            validationErrors.append("Contact number must be 9 digits. ");
+        } else if (countryCode.equals(Constants.INDIA_COUNTRY_CODE) && !contactNumber.matches("\\d{10}")) {
+            validationErrors.append("Contact number must be 10 digits. ");
         }
-
         if (countryId == null) {
             validationErrors.append("Country ID is required. ");
         }

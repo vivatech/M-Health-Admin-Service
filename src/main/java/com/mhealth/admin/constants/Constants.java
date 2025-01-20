@@ -164,4 +164,5 @@ public interface Constants {
     String USER_PROFILE_PICTURE = "UserProfile/";
 
     String LOCAL_COUNTRY_CODE = "252";
+    String INDIA_COUNTRY_CODE = "91";
 }
