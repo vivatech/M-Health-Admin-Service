@@ -1,5 +1,7 @@
 package com.mhealth.admin.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
@@ -7,10 +9,13 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.DoctorUserRequestDto;
+import com.mhealth.admin.dto.response.DoctorUserListResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -81,6 +88,9 @@ public class DoctorUserService {
     @Autowired
     private SMSApiService smsApiService;
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Value("${app.sms.sent}")
     private boolean smsSent;
 
@@ -92,6 +102,196 @@ public class DoctorUserService {
 
     @Value("${m-health.project.name}")
     private String projectName;
+
+
+    public Object getDoctorsUserList(Locale locale, String name, String email, String contactNumber, String status, String isInternational, String sortField, String sortBy, int page, int size) {
+        // Define valid sort fields
+        Set<String> validSortFields = new HashSet<>(Arrays.asList("name", "clinicName", "isInternational", "contactNumber", "email"));
+
+        StringBuilder queryBuilder = new StringBuilder();
+        queryBuilder.append("SELECT ")
+                .append("u.user_id AS userId, ")
+                .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
+                .append("u.clinic_name AS clinicName, ")
+                .append("u.is_international AS isInternational, ")
+                .append("(SELECT GROUP_CONCAT(s.name) FROM mh_specialisation s WHERE s.id = u.specialization_id) AS specializations, ")
+                .append("(SELECT JSON_ARRAYAGG( ")
+                .append("    JSON_OBJECT( ")
+                .append("        'feeType', c.fee_type, ")
+                .append("        'finalConsultationFees', c.final_consultation_fees ")
+                .append("    ) ")
+                .append(") FROM mh_charges c WHERE c.user_id = u.user_id) AS charges, ")
+                .append("CONCAT(u.country_code, u.contact_number) AS contactNumber, ")
+                .append("u.email AS email, ")
+                .append("u.status AS status ")
+                .append("FROM mh_users u WHERE u.type = 'Doctor' "); // Base query with WHERE clause
+
+        // Add search filters
+        if (name != null && !name.isEmpty()) {
+            queryBuilder.append("AND CONCAT(u.first_name, ' ', u.last_name) LIKE :name ");
+        }
+        if (email != null && !email.isEmpty()) {
+            queryBuilder.append("AND u.email LIKE :email ");
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            queryBuilder.append("AND CONCAT(u.country_code, u.contact_number) LIKE :contactNumber ");
+        }
+        if (status != null && !status.isEmpty()) {
+            queryBuilder.append("AND u.status = :status ");
+        }
+        if (isInternational != null && !isInternational.isEmpty()) {
+            queryBuilder.append("AND u.is_international = :isInternational ");
+        }
+
+        // Add sorting field
+        if (sortField != null && !sortField.isEmpty() && validSortFields.contains(sortField)) {
+            queryBuilder.append("ORDER BY ")
+                    .append(sortField);
+        } else {
+            queryBuilder.append("ORDER BY userId");
+        }
+
+        // Add sorting direction based on sortBy (ASC or DESC)
+        if (sortBy != null && !sortBy.isEmpty()) {
+            if (Objects.equals(sortBy, "1")) {
+                queryBuilder.append(" DESC ");
+            } else {
+                queryBuilder.append(" ASC ");
+            }
+        } else {
+            queryBuilder.append(" DESC "); // Default to DESC if sortBy is not provided
+        }
+
+        // Add pagination
+        queryBuilder.append("LIMIT ")
+                .append((page - 1) * size)
+                .append(", ")
+                .append(size);
+
+        String finalQuery = queryBuilder.toString();
+
+        // Create the query
+        Query nativeQuery = entityManager.createNativeQuery(finalQuery);
+
+        // Set parameters for search fields
+        if (name != null && !name.isEmpty()) {
+            nativeQuery.setParameter("name", "%" + name + "%");
+        }
+        if (email != null && !email.isEmpty()) {
+            nativeQuery.setParameter("email", "%" + email + "%");
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            nativeQuery.setParameter("contactNumber", "%" + contactNumber + "%");
+        }
+        if (status != null && !status.isEmpty()) {
+            nativeQuery.setParameter("status", status);
+        }
+        if (isInternational != null && !isInternational.isEmpty()) {
+            nativeQuery.setParameter("isInternational", isInternational);
+        }
+
+        // Execute the query and fetch results
+        List<Object[]> results = nativeQuery.getResultList();
+
+        // Map results to DTO
+        List<DoctorUserListResponseDto> responseList = results.stream()
+                .map(this::mapToDoctorUserListResponseDto)
+                .toList();
+
+
+        // Count query for pagination
+        String countQuery = "SELECT COUNT(u.user_id) FROM mh_users u WHERE u.type = 'Doctor' ";
+        if (name != null && !name.isEmpty()) {
+            countQuery += "AND CONCAT(u.first_name, ' ', u.last_name) LIKE :name ";
+        }
+        if (email != null && !email.isEmpty()) {
+            countQuery += "AND u.email LIKE :email ";
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            countQuery += "AND CONCAT(u.country_code, u.contact_number) LIKE :contactNumber ";
+        }
+        if (status != null && !status.isEmpty()) {
+            countQuery += "AND u.status = :status ";
+        }
+        if (isInternational != null && !isInternational.isEmpty()) {
+            countQuery += "AND u.is_international = :isInternational ";
+        }
+
+        Query countNativeQuery = entityManager.createNativeQuery(countQuery);
+        if (name != null && !name.isEmpty()) {
+            countNativeQuery.setParameter("name", "%" + name + "%");
+        }
+        if (email != null && !email.isEmpty()) {
+            countNativeQuery.setParameter("email", "%" + email + "%");
+        }
+        if (contactNumber != null && !contactNumber.isEmpty()) {
+            countNativeQuery.setParameter("contactNumber", "%" + contactNumber + "%");
+        }
+        if (status != null && !status.isEmpty()) {
+            countNativeQuery.setParameter("status", status);
+        }
+        if (isInternational != null && !isInternational.isEmpty()) {
+            countNativeQuery.setParameter("isInternational", isInternational);
+        }
+
+        Long totalDoctors = ((Number) countNativeQuery.getSingleResult()).longValue();
+
+        // Create response with data and pagination
+        Map<String, Object> data = new HashMap<>();
+        data.put("userList", responseList);
+        data.put("totalCount", totalDoctors);
+
+        Response response = new Response();
+        response.setCode(Constants.CODE_1);
+        response.setData(data);
+        response.setMessage(messageSource.getMessage(Messages.USER_LIST_FETCHED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
+    private DoctorUserListResponseDto mapToDoctorUserListResponseDto(Object[] row) {
+        // Parse charges JSON
+        String chargesJson = (String) row[5]; // The charges column, which is a JSON string
+        List<Map<String, Object>> charges = new ArrayList<>();
+
+        if (chargesJson != null && !chargesJson.isEmpty()) {
+            // Assuming chargesJson is a valid JSON array string
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<Map<String, Object>> chargeList = objectMapper.readValue(chargesJson, List.class);
+
+                for (Map<String, Object> chargeMap : chargeList) {
+                    String feeType = (String) chargeMap.get("feeType");
+                    Double finalConsultationFees = (Double) chargeMap.get("finalConsultationFees");
+                    Map<String, Object> charge = new HashMap<>();
+                    charge.put("feeType", feeType);
+                    charge.put("finalConsultationFees", new BigDecimal(finalConsultationFees).setScale(2, RoundingMode.HALF_UP));
+                    charges.add(charge);
+                }
+            } catch (JsonProcessingException e) {
+               log.error("exception occurs while parsing charges for userId: {}",row[0], e);
+            }
+        }
+
+        // Handle null or missing values for specializations and clinicName
+        String clinicName = (row[2] != null) ? (String) row[2] : "";
+        String specializations = (row[4] != null) ? (String) row[4] : DoctorClassification.general_practitioner.name();
+
+        return new DoctorUserListResponseDto(
+                (Integer) row[0], // userId
+                (String) row[1],  // doctorName
+                clinicName,  // clinicName
+                (String) row[3],  // isInternational
+                Arrays.asList(specializations.split(",")), // specializations
+                charges, // charges
+                (String) row[6],  // contactNumber
+                (String) row[7],  // email
+                (String) row[8]   // status
+        );
+    }
+
+
 
     @Transactional
     public Object createDoctorUser(Locale locale, DoctorUserRequestDto requestDto) throws Exception {
@@ -471,7 +671,7 @@ public class DoctorUserService {
           if (classification.equals(String.valueOf(Classification.individual)) && countryCode.equals(this.countryCode)) {
               HospitalMerchantNumber hospitalMerchantNumber = new HospitalMerchantNumber();
               hospitalMerchantNumber.setUserId(userId);
-              hospitalMerchantNumber.setMerchantNumber(merchantNumber); //TODO: Discuss this
+              hospitalMerchantNumber.setMerchantNumber(merchantNumber);
               hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
           }
       } catch (Exception ex) {

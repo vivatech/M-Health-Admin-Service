@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
@@ -67,6 +68,10 @@ public class DoctorUserRequestDto {
         }
         if (password == null || password.trim().isEmpty()) {
             validationErrors.append("Password is required. ");
+        } else if (password.length() < 8 || password.length() > 15) {
+            validationErrors.append("Password must be between 8 and 15 characters. ");
+        } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", password)) {
+            validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
         }
 
         if (countryId == null) {

@@ -28,28 +28,30 @@ public class DoctorUserController {
     private ObjectMapper objectMapper;
 
 
-//    @RequestMapping(value = "/list", method = RequestMethod.GET)
-//    public ResponseEntity<?> getMarketingUserList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                                  @RequestParam(required = false) String name,
-//                                                  @RequestParam(required = false) String email,
-//                                                  @RequestParam(required = false) String status,
-//                                                  @RequestParam(required = false) String contactNumber,
-//                                                  @RequestParam(defaultValue = "1") String sortBy,
-//                                                  @RequestParam(defaultValue = "1") int page,
-//                                                  @RequestParam(defaultValue = "10") int size) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/list");
-//            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortBy, page, size);
-//
-//            Object response = marketingUserService.getMarketingUserList(locale, name, email, status,contactNumber, sortBy, page, size);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/list: {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public ResponseEntity<?> getDoctorUserList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                  @RequestParam(required = false) String name,
+                                                  @RequestParam(required = false) String email,
+                                                  @RequestParam(required = false) String contactNumber,
+                                                  @RequestParam(required = false) String status,
+                                                  @RequestParam(required = false) String isInternational,
+                                                  @RequestParam(required = false) String sortField,
+                                                  @RequestParam(defaultValue = "1") String sortBy,
+                                                  @RequestParam(defaultValue = "1") int page,
+                                                  @RequestParam(defaultValue = "10") int size) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/doctor/list");
+            log.info("Request Parameters: name={}, email={}, contactNumber={}, status={}, isInternational={}, sortField={}, sortBy={}, page={}, size={}", name, email, contactNumber, status, isInternational, sortField, sortBy, page, size);
+
+            Object response = doctorUserService.getDoctorsUserList(locale, name, email, contactNumber, status, isInternational, sortField, sortBy, page, size);
+
+            log.info("Response Sent For /api/v1/admin/user/doctor/list: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
