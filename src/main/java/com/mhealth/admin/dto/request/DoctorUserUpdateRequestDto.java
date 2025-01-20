@@ -62,7 +62,7 @@ public class DoctorUserUpdateRequestDto {
         if (contactNumber == null || contactNumber.trim().isEmpty()) {
             validationErrors.append("Contact number is required. ");
         } else if (!contactNumber.matches("\\d{9}|\\d{10}")) {
-            validationErrors.append("Contact number must be exactly 10 digits. ");
+            validationErrors.append("Contact number can be 9 or 10 digits only. ");
         }
 
         if (countryId == null) {
@@ -137,6 +137,10 @@ public class DoctorUserUpdateRequestDto {
                 } else if (Classification.individual.equals(classificationEnum)) {
                     if (residenceAddress == null || residenceAddress.trim().isEmpty()) {
                         validationErrors.append("Residence address is required for 'individual' classification. ");
+                    } else if (countryCode.equals(Constants.LOCAL_COUNTRY_CODE)) {
+                        if (merchantNumber == null || merchantNumber.trim().isEmpty()) {
+                            validationErrors.append("Merchant number is required for 'individual' classification. ");
+                        }
                     }
                 }
             } catch (IllegalArgumentException e) {

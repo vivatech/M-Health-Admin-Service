@@ -21,6 +21,7 @@ public class DoctorUserRequestDto {
     private String email;
     private String contactNumber;
     private String password;
+    private String confirmPassword;
     private Integer countryId;
     private Integer provinceId;
     private Integer cityId;
@@ -64,7 +65,7 @@ public class DoctorUserRequestDto {
         if (contactNumber == null || contactNumber.trim().isEmpty()) {
             validationErrors.append("Contact number is required. ");
         } else if (!contactNumber.matches("\\d{9}|\\d{10}")) {
-            validationErrors.append("Contact number must be exactly 10 digits. ");
+            validationErrors.append("Contact number can be 9 or 10 digits only. ");
         }
         if (password == null || password.trim().isEmpty()) {
             validationErrors.append("Password is required. ");
@@ -72,6 +73,8 @@ public class DoctorUserRequestDto {
             validationErrors.append("Password must be between 8 and 15 characters. ");
         } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", password)) {
             validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
+        } else if (!password.equals(confirmPassword)) {
+            validationErrors.append("Password and confirm password must be exactly same. ");
         }
 
         if (countryId == null) {
@@ -146,10 +149,10 @@ public class DoctorUserRequestDto {
                 } else if (Classification.individual.equals(classificationEnum)) {
                     if (residenceAddress == null || residenceAddress.trim().isEmpty()) {
                         validationErrors.append("Residence address is required for 'individual' classification. ");
-                    }
-                } else if (classification.equals(String.valueOf(Classification.individual)) && this.countryCode.equals(com.mhealth.admin.config.Constants.COUNTRY_CODE)) {
-                    if (merchantNumber == null || merchantNumber.trim().isEmpty()) {
-                        validationErrors.append("Merchant number is required for 'individual' classification. ");
+                    } else if (countryCode.equals(Constants.LOCAL_COUNTRY_CODE)) {
+                        if (merchantNumber == null || merchantNumber.trim().isEmpty()) {
+                            validationErrors.append("Merchant number is required for 'individual' classification. ");
+                        }
                     }
                 }
             } catch (IllegalArgumentException e) {
