@@ -1,5 +1,7 @@
 package com.mhealth.admin.config;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public class Constants {
 
     public static final Integer DEFAULT_PAGE_SIZE = 30;
@@ -168,6 +170,9 @@ public class Constants {
     public static final String COUNTRY_SOMALIA = "SOMALIA";
     public static final String COUNTRY_KENYA = "KENYA";
     public static final String KEY_NOT_FOUND = "Key Value not found";
+
+    @Value("${m-health.country.code}")
+    public static String COUNTRY_CODE;
 
 }
 

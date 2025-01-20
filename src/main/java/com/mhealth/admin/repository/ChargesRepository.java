@@ -22,4 +22,6 @@ public interface ChargesRepository extends JpaRepository<Charges,Integer> {
 
     @Query(value = "Select u from Charges u where u.userId = ?1 and u.feeType = ?2")
     Charges findCharges(Integer doctor, FeeType type);
+
+    Charges findByUserIdAndFeeType(Integer doctorId, FeeType feeType);
 }

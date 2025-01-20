@@ -10,17 +10,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DoctorUserRequestDto {
+public class DoctorUserUpdateRequestDto {
     private String firstName;
     private String lastName;
     private String email;
     private String contactNumber;
-    private String password;
     private Integer countryId;
     private Integer provinceId;
     private Integer cityId;
@@ -65,13 +63,6 @@ public class DoctorUserRequestDto {
             validationErrors.append("Contact number is required. ");
         } else if (!contactNumber.matches("\\d{9}|\\d{10}")) {
             validationErrors.append("Contact number must be exactly 10 digits. ");
-        }
-        if (password == null || password.trim().isEmpty()) {
-            validationErrors.append("Password is required. ");
-        } else if (password.length() < 8 || password.length() > 15) {
-            validationErrors.append("Password must be between 8 and 15 characters. ");
-        } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", password)) {
-            validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
         }
 
         if (countryId == null) {
@@ -146,10 +137,6 @@ public class DoctorUserRequestDto {
                 } else if (Classification.individual.equals(classificationEnum)) {
                     if (residenceAddress == null || residenceAddress.trim().isEmpty()) {
                         validationErrors.append("Residence address is required for 'individual' classification. ");
-                    }
-                } else if (classification.equals(String.valueOf(Classification.individual)) && this.countryCode.equals(com.mhealth.admin.config.Constants.COUNTRY_CODE)) {
-                    if (merchantNumber == null || merchantNumber.trim().isEmpty()) {
-                        validationErrors.append("Merchant number is required for 'individual' classification. ");
                     }
                 }
             } catch (IllegalArgumentException e) {

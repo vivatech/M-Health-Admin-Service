@@ -9,6 +9,8 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.DoctorUserRequestDto;
+import com.mhealth.admin.dto.request.DoctorUserResponseDto;
+import com.mhealth.admin.dto.request.DoctorUserUpdateRequestDto;
 import com.mhealth.admin.dto.response.DoctorUserListResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -364,7 +367,7 @@ public class DoctorUserService {
         Users user = new Users();
         user.setSlotTypeId(slotTypeId);
         user.setType(UserType.Doctor);
-        user.setFirstName("Dr. " + requestDto.getFirstName());
+        user.setFirstName(cleanAndAddPrefix(requestDto.getFirstName()));
         user.setLastName(requestDto.getLastName());
         user.setEmail(requestDto.getEmail());
         user.setContactNumber(requestDto.getContactNumber());
@@ -448,11 +451,11 @@ public class DoctorUserService {
     }
 
     @Transactional
-    public Object updateDoctorUser(Locale locale, Integer userId, DoctorUserRequestDto requestDto) throws Exception {
+    public Object updateDoctorUser(Locale locale, Integer userId, DoctorUserUpdateRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingDoctorUser = usersRepository.findByUserIdAndType(userId, UserType.Marketing);
+        Optional<Users> existingDoctorUser = usersRepository.findByUserIdAndType(userId, UserType.Doctor);
         if (existingDoctorUser.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
@@ -528,11 +531,10 @@ public class DoctorUserService {
         // Update the user fields
         existingUser.setSlotTypeId(slotTypeId);
         existingUser.setType(UserType.Doctor);
-        existingUser.setFirstName(requestDto.getFirstName());
+        existingUser.setFirstName(cleanAndAddPrefix(requestDto.getFirstName()));
         existingUser.setLastName(requestDto.getLastName());
         existingUser.setEmail(requestDto.getEmail());
         existingUser.setContactNumber(requestDto.getContactNumber());
-        existingUser.setPassword(utility.md5Hash(requestDto.getPassword()));
         existingUser.setCountry(country);
         existingUser.setDoctorClassification(requestDto.getDoctorClassification());
         existingUser.setCountryCode(requestDto.getCountryCode());
@@ -582,13 +584,13 @@ public class DoctorUserService {
         processAndSaveDoctorDocuments(requestDto.getDocuments(), userId);
 
         // Process & update hospital merchant number
-        processAndSaveHospitalMerchantNumber(requestDto.getClassification(), requestDto.getCountryCode(), userId, requestDto.getMerchantNumber());
+        processAndUpdateHospitalMerchantNumber(requestDto.getClassification(), requestDto.getCountryCode(), userId, requestDto.getMerchantNumber());
 
         // Process & update charges
-        processAndSaveCharges(requestDto, userId);
+        processAndUpdateCharges(requestDto, userId);
 
         // Process & update doctor specializations
-        processAndSaveDoctorSpecialization(selectedSpecializations, existingUser);
+        processAndUpdateDoctorSpecialization(selectedSpecializations, existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -675,16 +677,28 @@ public class DoctorUserService {
               hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
           }
       } catch (Exception ex) {
-          throw new RuntimeException("failed to hospital merchant number details: " + ex.getMessage(), ex);
+          throw new RuntimeException("failed to save hospital merchant number details: " + ex.getMessage(), ex);
       }
+    }
+
+    @Transactional
+    private void processAndUpdateHospitalMerchantNumber(String classification, String countryCode, Integer userId, String merchantNumber) {
+        try {
+            if (classification.equals(String.valueOf(Classification.individual)) && countryCode.equals(this.countryCode)) {
+                HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(userId).orElse(null);
+                if (hospitalMerchantNumber != null) {
+                    hospitalMerchantNumber.setMerchantNumber(merchantNumber); //TODO: Merchant Number Unique?
+                    hospitalMerchantNumberRepository.save(hospitalMerchantNumber);
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to update hospital merchant number details: " + ex.getMessage(), ex);
+        }
     }
 
     @Transactional
     private void processAndSaveCharges(DoctorUserRequestDto userData, Integer doctorId) {
         try {
-            // Fetch doctor classification charge
-            GlobalConfiguration doctorClassificationCharge = globalConfigurationRepository.findByKey(userData.getDoctorClassification().toUpperCase()).orElse(null);
-
             // Iterate through fee types and process charges
             for (FeeTypeNew feeType : FeeTypeNew.values()) {
                 // Create a new charge entity
@@ -728,6 +742,58 @@ public class DoctorUserService {
     }
 
     @Transactional
+    private void processAndUpdateCharges(DoctorUserUpdateRequestDto userData, Integer doctorId) {
+        try {
+            // Iterate through fee types and process charges
+            for (FeeTypeNew feeType : FeeTypeNew.values()) {
+                // Fetch existing charges by fee type and user ID
+                Charges charges = chargesRepository.findByUserIdAndFeeType(doctorId, FeeType.valueOf(feeType.name()));
+
+                // Set commissions and consultation fees based on the fee type
+                Float adminCommission = null;
+                Float consultationFees = null;
+                Float finalConsultationFees = null;
+
+                if (feeType.equals(FeeTypeNew.visit)) {
+                    adminCommission = userData.getVisitAdminCommission();
+                    consultationFees = userData.getVisitConsultationFee();
+                    finalConsultationFees = userData.getVisitFinalConsultationFee();
+                } else if (feeType.equals(FeeTypeNew.call)) {
+                    adminCommission = userData.getCallAdminCommission();
+                    consultationFees = userData.getCallConsultationFee();
+                    finalConsultationFees = userData.getCallFinalConsultationFee();
+                }
+
+                // Process only if consultation fees are provided
+                if (finalConsultationFees != null) {
+                    if (charges == null) {
+                        // Fetch commission type for the current fee type
+                        GlobalConfiguration commissionConfig = globalConfigurationRepository.findByKey(feeType.toString().toUpperCase() + "_COMMISSION_TYPE").orElse(null);
+
+                        // If no existing charges found, create a new one
+                        charges = new Charges();
+                        charges.setUserId(doctorId);
+                        charges.setFeeType(FeeType.valueOf(feeType.name()));
+                        charges.setCommissionType(CommissionType.valueOf(commissionConfig.getValue()));
+                        charges.setCreatedAt(new Date());
+                    }
+
+                    // Update charges fields
+                    charges.setFinalConsultationFees(finalConsultationFees);
+                    charges.setCommission(adminCommission);
+                    charges.setConsultationFees(consultationFees);
+
+                    // Save updated or new charges
+                    chargesRepository.save(charges);
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to update charges details: " + ex.getMessage(), ex);
+        }
+    }
+
+
+    @Transactional
     private void processAndSaveDoctorSpecialization(List<Integer> specializationList, Users user) {
         try {
             if (!specializationList.isEmpty()) {
@@ -751,6 +817,34 @@ public class DoctorUserService {
         }
     }
 
+    @Transactional
+    private void processAndUpdateDoctorSpecialization(List<Integer> specializationList, Users user) {
+        try {
+            // Delete all existing specializations for the doctor
+            doctorSpecializationRepository.deleteByUserId(user.getUserId());
+
+            if (!specializationList.isEmpty()) {
+                // Iterate through specializations process doctor specializations
+                for (Integer id: specializationList) {
+                    DoctorSpecialization doctorSpecialization = new DoctorSpecialization();
+
+                    Specialization specialization = specializationRepository.findById(id).orElse(null);
+
+                    // Set doctor specialization fields value
+                    doctorSpecialization.setUserId(user);
+                    doctorSpecialization.setSpecializationId(specialization);
+                    doctorSpecialization.setCreatedAt(LocalDateTime.now());
+                    doctorSpecialization.setUpdatedAt(LocalDateTime.now());
+
+                    doctorSpecializationRepository.save(doctorSpecialization);
+
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to update specialization details: " + ex.getMessage(), ex);
+        }
+    }
+
 
     @Transactional
     private void assignRole(Integer userId, String roleType) {
@@ -765,5 +859,196 @@ public class DoctorUserService {
             throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
         }
     }
+
+    public String cleanAndAddPrefix(String firstName) {
+        // Remove any occurrences of "Dr. " or "Dr"
+        if (firstName.startsWith("Dr. ")) {
+            firstName = firstName.substring(4).trim(); // Remove "Dr. " (4 characters)
+        } else if (firstName.startsWith("Dr ")) {
+            firstName = firstName.substring(3).trim(); // Remove "Dr " (3 characters)
+        } else if (firstName.startsWith("Dr")) {
+            firstName = firstName.substring(2).trim(); // Remove "Dr" (2 characters)
+        }
+
+        // Add the correct "Dr. " prefix
+        return "Dr. " + firstName.trim();
+    }
+
+    public Object updateDoctorUserStatus(Locale locale, Integer userId, String status) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingDoctorUser = usersRepository.findByUserIdAndType(userId, UserType.Doctor);
+        if (existingDoctorUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingDoctorUser.get();
+
+        // Validate the status
+        if (!validateStatus(status)) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.INCORRECT_USER_STATUS, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        // Update the user's status field
+        existingUser.setStatus(StatusAI.valueOf(status));
+
+        usersRepository.save(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.USER_UPDATED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+    }
+
+    private boolean validateStatus(String status) {
+        boolean containsStatus = false;
+        for (StatusAI statusAI : StatusAI.values()) {
+            if (statusAI.name().equals(status)) {
+                containsStatus = true;
+                break;
+            }
+        }
+        return containsStatus;
+    }
+
+    public Object getDoctorUser(Locale locale, Integer userId) {
+        Response response = new Response();
+
+        // Find the user
+        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Doctor);
+        if (existingMarketingUser.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        Users existingUser = existingMarketingUser.get();
+
+        // Construct users entity to marketing user response dto
+        DoctorUserResponseDto marketingUserResponseDto = convertToDoctorUserResponseDto(existingUser);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setData(marketingUserResponseDto);
+        response.setMessage(messageSource.getMessage(Messages.USER_FETCHED, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+
+    }
+
+    private DoctorUserResponseDto convertToDoctorUserResponseDto(Users user) {
+        DoctorUserResponseDto doctorUserResponseDto = new DoctorUserResponseDto();
+
+        // Basic information
+        doctorUserResponseDto.setUserId(user.getUserId());
+        doctorUserResponseDto.setFirstName(user.getFirstName());
+        doctorUserResponseDto.setLastName(user.getLastName());
+        doctorUserResponseDto.setEmail(user.getEmail());
+        doctorUserResponseDto.setContactNumber(user.getContactNumber());
+        doctorUserResponseDto.setGender(user.getGender());
+
+        // Address and location
+        doctorUserResponseDto.setCountryId(user.getCountry().getId());
+        doctorUserResponseDto.setProvinceId(user.getState());
+        doctorUserResponseDto.setCityId(user.getCity());
+        doctorUserResponseDto.setResidenceAddress(user.getResidenceAddress());
+        doctorUserResponseDto.setHospitalAddress(user.getHospitalAddress());
+        doctorUserResponseDto.setCountryCode(user.getCountryCode());
+
+        // Professional details
+        doctorUserResponseDto.setExperience(user.getExperience());
+        doctorUserResponseDto.setUniversityName(user.getUniversityName());
+        doctorUserResponseDto.setPassingYear(user.getPassingYear());
+        doctorUserResponseDto.setAboutMe(user.getAboutMe());
+        doctorUserResponseDto.setDoctorClassification(user.getDoctorClassification());
+        doctorUserResponseDto.setClassification(String.valueOf(user.getClassification()));
+
+        // Consultation fees and commissions
+        List<Charges> chargesList = chargesRepository.findByUserId(user.getUserId());
+
+        if (chargesList != null && !chargesList.isEmpty()) {
+            chargesList.forEach(charge -> {
+                if (charge.getFeeType() == FeeType.valueOf(FeeTypeNew.visit.name())) {
+                    doctorUserResponseDto.setVisitConsultationFee(charge.getConsultationFees());
+                    doctorUserResponseDto.setVisitAdminCommission(charge.getCommission());
+                    doctorUserResponseDto.setVisitFinalConsultationFee(charge.getFinalConsultationFees());
+                } else if (charge.getFeeType() == FeeType.valueOf(FeeTypeNew.call.name())) {
+                    doctorUserResponseDto.setCallConsultationFee(charge.getConsultationFees());
+                    doctorUserResponseDto.setCallAdminCommission(charge.getCommission());
+                    doctorUserResponseDto.setCallFinalConsultationFee(charge.getFinalConsultationFees());
+                }
+            });
+        } else {
+            doctorUserResponseDto.setVisitConsultationFee(0.0F);
+            doctorUserResponseDto.setVisitAdminCommission(0.0F);
+            doctorUserResponseDto.setVisitFinalConsultationFee(0.0F);
+            doctorUserResponseDto.setCallConsultationFee(0.0F);
+            doctorUserResponseDto.setCallAdminCommission(0.0F);
+            doctorUserResponseDto.setCallFinalConsultationFee(0.0F);
+        }
+
+        // Notifications and language preferences
+        doctorUserResponseDto.setNotificationLanguage(user.getNotificationLanguage());
+        doctorUserResponseDto.setLanguagesFluency(Collections.singletonList(user.getLanguageFluency()));
+
+        // Fetch specialization list
+        List<DoctorSpecialization> specializationList = doctorSpecializationRepository.findByUserId(user.getUserId());
+
+        // Extract specialization IDs
+        if (specializationList != null && !specializationList.isEmpty()) {
+            List<Integer> specializationIds = specializationList.stream()
+                    .map(spec -> spec.getSpecializationId().getId())
+                    .collect(Collectors.toList());
+            doctorUserResponseDto.setSpecializations(specializationIds);
+        } else {
+            doctorUserResponseDto.setSpecializations(Collections.emptyList());
+        }
+
+        // Profile and documents
+        List<DoctorDocument> documents = doctorDocumentRepository.findByUserIdAndStatus(user.getUserId(), DocumentStatus.Active);
+
+        if (documents != null && !documents.isEmpty()) {
+            String doctorDocumentFilePath = Constants.DOCTOR_DOCUMENT_PATH + user.getUserId() + "/";
+            List<Map<String, String>> documentMaps = documents.stream()
+                    .map(doc -> {
+                        Map<String, String> documentMap = new HashMap<>();
+                        documentMap.put("documentFileName", doctorDocumentFilePath + doc.getDocumentFileName());
+                        documentMap.put("documentName", doc.getDocumentName());
+                        return documentMap;
+                    })
+                    .collect(Collectors.toList());
+            doctorUserResponseDto.setDocuments(documentMaps);
+        } else {
+            doctorUserResponseDto.setDocuments(Collections.emptyList());
+        }
+
+        String profilePictureFilePath = Constants.USER_PROFILE_PICTURE + user.getUserId() + "/";
+        doctorUserResponseDto.setProfilePicture(profilePictureFilePath + user.getProfilePicture());
+
+        // Other details
+        doctorUserResponseDto.setHasDoctorVideo(user.getHasDoctorVideo());
+        doctorUserResponseDto.setExtraActivities(user.getExtraActivities());
+        doctorUserResponseDto.setHospitalId(user.getHospitalId());
+
+        // Merchant number
+        HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(user.getUserId()).orElse(null);
+        if (hospitalMerchantNumber != null) {
+            doctorUserResponseDto.setMerchantNumber(hospitalMerchantNumber.getMerchantNumber());
+        }
+
+        return doctorUserResponseDto;
+    }
+
 
 }
