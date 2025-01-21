@@ -143,7 +143,7 @@ public class HealthTipCategoryMasterService {
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE, null, locale)));
         }
 
-        List<HealthTip> healthTip = healthTipRepository.findByCategory(category);
+        List<HealthTip> healthTip = healthTipRepository.findByHealthTipCategory(category);
         if(!healthTip.isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new Response(Status.FAILED, Constants.FAILED_CODE,

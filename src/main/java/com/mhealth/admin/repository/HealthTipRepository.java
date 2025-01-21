@@ -27,7 +27,7 @@ public interface HealthTipRepository extends JpaRepository<HealthTip, Integer> {
     @Query("Select u from HealthTip u where u.status = ?1 and u.healthTipCategory.categoryId in ?2")
     List<HealthTip> findByStatusAndCategory(StatusAI statusAI, List<Integer> categoryIds);
 
-    List<HealthTip> findByCategory(HealthTipCategoryMaster healthTipCategoryMaster);
+    List<HealthTip> findByHealthTipCategory(HealthTipCategoryMaster healthTipCategoryMaster);
 
     @Query("Select u from HealthTip u where u.topic LIKE %?1% order by u.healthTipCategory.categoryId ASC, u.healthTipId DESC")
     List<HealthTip> findAllByTopic(String title);
