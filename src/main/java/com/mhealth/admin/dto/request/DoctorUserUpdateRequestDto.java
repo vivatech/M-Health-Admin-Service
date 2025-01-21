@@ -10,18 +10,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DoctorUserRequestDto {
+public class DoctorUserUpdateRequestDto {
     private String firstName;
     private String lastName;
     private String email;
     private String contactNumber;
-    private String password;
-    private String confirmPassword;
     private Integer countryId;
     private Integer provinceId;
     private Integer cityId;
@@ -69,16 +66,6 @@ public class DoctorUserRequestDto {
         } else if (countryCode.equals(Constants.INDIA_COUNTRY_CODE) && !contactNumber.matches("\\d{10}")) {
             validationErrors.append("Contact number must be 10 digits. ");
         }
-        if (password == null || password.trim().isEmpty()) {
-            validationErrors.append("Password is required. ");
-        } else if (password.length() < 8 || password.length() > 15) {
-            validationErrors.append("Password must be between 8 and 15 characters. ");
-        } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", password)) {
-            validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
-        } else if (!password.equals(confirmPassword)) {
-            validationErrors.append("Password and confirm password must be exactly same. ");
-        }
-
         if (countryId == null) {
             validationErrors.append("Country ID is required. ");
         }

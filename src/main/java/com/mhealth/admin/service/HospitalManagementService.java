@@ -341,8 +341,6 @@ public class HospitalManagementService {
             existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
         }
 
-        usersRepository.save(existingUser);
-
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
@@ -364,6 +362,8 @@ public class HospitalManagementService {
 
             existingUser.setProfilePicture(fileName);
         }
+
+        usersRepository.save(existingUser);
 
 
         if(requestDto.getNotificationContactNumber() != null){

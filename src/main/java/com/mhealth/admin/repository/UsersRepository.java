@@ -93,4 +93,23 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     );
 
     Users findBySort(Integer priority);
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.type = 'Agentuser'
+    AND u.status is not null
+    AND (:name IS NULL OR CONCAT(u.firstName, ' ', u.lastName) LIKE :name)
+    AND (:email IS NULL OR u.email LIKE :email)
+    AND (:status IS NULL OR u.status = :status)
+    AND (:contactNumber IS NULL OR u.contactNumber LIKE :contactNumber)
+""")
+    Page<Users> findAgentWithFilters(
+            @Param("name") String name,
+            @Param("email") String email,
+            @Param("status") StatusAI status,
+            @Param("contactNumber") String contactNumber,
+            Pageable pageable
+    );
+
 }

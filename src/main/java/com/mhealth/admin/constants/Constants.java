@@ -162,5 +162,9 @@ public interface Constants {
     // Directories Path
     String DOCTOR_DOCUMENT_PATH = "DoctorDocument/";
     String USER_PROFILE_PICTURE = "UserProfile/";
+
     String BLANK_DATA_GIVEN = "Blank data given!";
+
+    String LOCAL_COUNTRY_CODE = "252";
+    String INDIA_COUNTRY_CODE = "91";
 }
