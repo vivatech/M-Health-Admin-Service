@@ -6,10 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DoctorDocumentRepository extends JpaRepository<DoctorDocument,Integer> {
     DoctorDocument findByUserIdAndDocumentId(Integer userId, Integer documentId);
 
     List<DoctorDocument> findByUserIdAndStatus(Integer userId, DocumentStatus status);
+
+    Optional<DoctorDocument> findByUserIdAndDocumentFileName(Integer userId, String fileName);
 }

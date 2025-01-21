@@ -125,6 +125,24 @@ public class DoctorUserController {
         }
     }
 
+    @RequestMapping(value = "/delete-document", method = RequestMethod.POST)
+    public ResponseEntity<?> deleteDoctorDocument(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                  @RequestParam Integer userId, @RequestParam String documentFileName) {
+        try {
+            log.info("Request Received For /api/v1/admin/user/doctor/delete-document");
+            log.info("Request Parameter: userId={}, documentFileName={}", userId, documentFileName);
+
+            Object response = doctorUserService.deleteDoctorDocument(locale, userId, documentFileName);
+
+            log.info("Request Received For /api/v1/admin/user/doctor/delete-document: {}", objectMapper.writeValueAsString(response));
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Get doctor availability by doctor id
      */
