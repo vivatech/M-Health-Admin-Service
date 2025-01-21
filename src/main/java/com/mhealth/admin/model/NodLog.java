@@ -41,9 +41,8 @@ public class NodLog {
     @Column(name = "channel", nullable = false, columnDefinition = "enum('Web','Mobile','USSD') default 'Web'")
     private Channel channel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "order_type", columnDefinition = "enum('1','0')")
-    private OrderType orderType;
+    @Column(name = "order_type")
+    private String orderType;
 
     @Column(name = "transaction_type", nullable = false, length = 5, columnDefinition = "varchar(5) default 'NOD'")
     private String transactionType;

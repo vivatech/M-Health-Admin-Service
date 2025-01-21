@@ -180,7 +180,7 @@ public class Users {
     private LocalDate dob;
 
     @ManyToOne
-    @JoinColumn(name = "country_id", nullable = false)
+    @JoinColumn(name = "country_id")
     private Country country;
 
     @Column(name = "state_id")
