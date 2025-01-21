@@ -23,7 +23,6 @@ import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.propertyeditors.LocaleEditor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,15 +33,11 @@ import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.mhealth.admin.constants.Constants.BLANK_DATA_GIVEN;
 import static com.mhealth.admin.constants.Messages.DOCTOR_AVAILABILITY_FOUND;
 import static com.mhealth.admin.constants.Messages.RECORD_NOT_FOUND;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -120,9 +115,6 @@ public class DoctorUserService {
 
     @Value("${m-health.project.name}")
     private String projectName;
-    @Value("${slot.type.id}")
-    private Integer slotTypeID;
-
 
 
     public Object getDoctorsUserList(Locale locale, String name, String email, String contactNumber, String status, String isInternational, String sortField, String sortBy, int page, int size) {
@@ -883,13 +875,15 @@ public class DoctorUserService {
     @Transactional
     public Object getDoctorAvailability(Locale locale, Integer doctorId) {
 
-        if(doctorId == null) return new Response(Status.FAILED, Constants.CODE_O, BLANK_DATA_GIVEN);
+        if(doctorId == null) return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
 
         Optional<Users> doctor = usersRepository.findByUserIdAndType(doctorId, UserType.Doctor);
         if(doctor.isEmpty()){
             return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
         }
-        List<Object[]> resultList = doctorAvailabilityRepository.findByAvailabilityByDoctorId(doctor.get().getUserId(), slotTypeID);
+        SlotType slotType = slotTypeRepository.findByStatus(SlotStatus.active);
+        int slotId = slotType == null ? 4 : slotType.getId();
+        List<Object[]> resultList = doctorAvailabilityRepository.findByAvailabilityByDoctorId(doctor.get().getUserId(), slotId);
 
         Map<String, List<DoctorAvailabilityResponseDto>> dtoList = mapResultListIntoDoctorAvailabilityResponseDto(resultList);
 
@@ -911,7 +905,7 @@ public class DoctorUserService {
 
     public Object setDoctorAvailability(Locale locale, SetDoctorAvailabilityRequestDto requestDto) {
         if(requestDto.getDoctorId() == null)
-            return new Response(Status.FAILED, Constants.CODE_O, BLANK_DATA_GIVEN);
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
 
         Optional<Users> doctor = usersRepository.findByUserIdAndType(requestDto.getDoctorId(), UserType.Doctor);
         if(doctor.isEmpty())
@@ -936,11 +930,14 @@ public class DoctorUserService {
             }
         }
 
-        return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.SLOTS_SAVED_SUCCESSFULLY, null, locale), slotTypeID);
+        return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.SLOTS_SAVED_SUCCESSFULLY, null, locale));
     }
 
     private void saveDataIntoDoctorAvailabilityTable(List<String> slots, String weekDay, Users doctor) {
-        List<SlotMaster> masterList = slotMasterRepository.findBySlotTypeIdAndSlotDayAndSlotTimeIn(slotTypeID, weekDay, slots);
+        SlotType slotType = slotTypeRepository.findByStatus(SlotStatus.active);
+        int slotId = slotType == null ? 4 : slotType.getId();
+
+        List<SlotMaster> masterList = slotMasterRepository.findBySlotTypeIdAndSlotDayAndSlotTimeIn(slotId, weekDay, slots);
 
         if(masterList.isEmpty()) return;
 
@@ -948,7 +945,7 @@ public class DoctorUserService {
                 .map(slotMaster -> {
                     DoctorAvailability availability = new DoctorAvailability();
                     availability.setDoctorId(doctor);
-                    availability.setSlotTypeId(slotTypeID);
+                    availability.setSlotTypeId(slotId);
                     availability.setSlotId(slotMaster);
                     availability.setDay(weekDay);
                     availability.setCreatedAt(LocalDateTime.now());
