@@ -168,10 +168,10 @@ public class HealthTipPackageService {
     }
 
 
-    public ResponseEntity<PaginationResponse<HealthTipPackage>> searchHealthTipPackages(HealthTipPackageSearchRequest request, Locale locale) {
+    public ResponseEntity<PaginationResponse<HealthTipPackageCategories>> searchHealthTipPackages(HealthTipPackageSearchRequest request, Locale locale) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
         StatusAI status = !StringUtils.isEmpty(request.getStatus()) ? StatusAI.valueOf(request.getStatus()) : null;
-        Page<HealthTipPackage> page = repository.findByNameAndStatusAndDuration(
+        Page<HealthTipPackageCategories> page = repository.findByNameAndStatusAndDuration(
                 request.getPackageName(),
                 status,
                 request.getDurationId(),

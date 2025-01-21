@@ -28,7 +28,7 @@ public class HealthTipRequest {
 
     private MultipartFile photo;
 
-    private MultipartFile video;
+    private String video;
 
     private MultipartFile videoThumb;
 

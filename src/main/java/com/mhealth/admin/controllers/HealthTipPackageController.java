@@ -7,6 +7,7 @@ import com.mhealth.admin.dto.request.HealthTipPackageSearchRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.HealthTipPackage;
+import com.mhealth.admin.model.HealthTipPackageCategories;
 import com.mhealth.admin.service.HealthTipPackageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -82,7 +83,7 @@ public class HealthTipPackageController {
             @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content)
     })
     @PostMapping("/search")
-    public ResponseEntity<PaginationResponse<HealthTipPackage>> searchHealthTipPackages(
+    public ResponseEntity<PaginationResponse<HealthTipPackageCategories>> searchHealthTipPackages(
             @Valid @RequestBody HealthTipPackageSearchRequest request,
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.searchHealthTipPackages(request, locale);

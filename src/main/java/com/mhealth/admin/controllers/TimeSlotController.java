@@ -1,5 +1,6 @@
 package com.mhealth.admin.controllers;
 
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.request.SlotTypeRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.SlotTypeService;
@@ -23,17 +24,6 @@ public class TimeSlotController {
     @Autowired
     private SlotTypeService service;
 
-    @Operation(summary = "Create a new slot type", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully created", content = @Content(schema = @Schema(implementation = Response.class))),
-            @ApiResponse(responseCode = "400", description = "Validation error", content = @Content)
-    })
-    @PostMapping
-    public ResponseEntity<Response> createSlotType(
-            @Valid @RequestBody SlotTypeRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.createSlotType(request, locale);
-    }
-
     @Operation(summary = "Update an existing slot type", responses = {
             @ApiResponse(responseCode = "200", description = "Successfully updated", content = @Content(schema = @Schema(implementation = Response.class))),
             @ApiResponse(responseCode = "404", description = "Slot type not found", content = @Content)
@@ -53,27 +43,5 @@ public class TimeSlotController {
     public ResponseEntity<Response> getAllSlotTypes(
             @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         return service.getAllSlotTypes(locale);
-    }
-
-    @Operation(summary = "Get slot type by ID", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched", content = @Content(schema = @Schema(implementation = Response.class))),
-            @ApiResponse(responseCode = "404", description = "Slot type not found", content = @Content)
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<Response> getSlotTypeById(
-            @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.getSlotTypeById(id, locale);
-    }
-
-    @Operation(summary = "Delete slot type by ID", responses = {
-            @ApiResponse(responseCode = "200", description = "Successfully deleted", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Slot type not found", content = @Content)
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Response> deleteSlotTypeById(
-            @PathVariable Integer id,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
-        return service.deleteSlotTypeById(id, locale);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Integer> {
     @Query("Select count(u.id) from WalletTransaction u where u.patientId.userId = ?1")
@@ -41,5 +42,6 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
 
     @Query(value = "SELECT * FROM mh_wallet_transaction WHERE order_id = ?1 AND patient_id = ?2 AND is_debit_credit = 'debit' limit 1", nativeQuery = true)
     WalletTransaction findByOrderIdAndPatientIdAndServiceTypeAndisDebitCredit(Integer id, Integer patientId);
-
+  
+    Optional<WalletTransaction> findByPatientIdAndTransactionIdAndIsDebitCredit(Users userId, String transactionId, String debit);
 }

@@ -8,6 +8,9 @@ import com.mhealth.admin.model.NurseService;
 import com.mhealth.admin.repository.NurseServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -141,21 +144,26 @@ public class NurseServiceService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<Response> searchNurseServices(String seviceName, String status, Locale locale) {
-        List<NurseService> nurseServices = repository
+    public ResponseEntity<Response> searchNurseServices(String seviceName, String status, Locale locale, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NurseService> nurseServicesPage = repository
                 .findBySeviceNameContainingIgnoreCaseAndStatusContainingIgnoreCase(
-                Optional.ofNullable(seviceName).orElse(""),
-                Optional.ofNullable(status).orElse("")
-        );
+                        Optional.ofNullable(seviceName).orElse(""),
+                        Optional.ofNullable(status).orElse(""),
+                        pageable
+                );
 
-        if (nurseServices.isEmpty()) {
+        if (nurseServicesPage.isEmpty()) {
             Response response = new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                     messageSource.getMessage(Constants.NURSE_SERVICE_NOT_FOUND, null, locale));
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
+        // Prepare response with content and total elements
         Response response = new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
-                messageSource.getMessage(Constants.NURSE_SERVICE_FETCHED, null, locale), nurseServices);
+                messageSource.getMessage(Constants.NURSE_SERVICE_FETCHED, null, locale),
+                nurseServicesPage.getContent(), nurseServicesPage.getTotalElements());
         return ResponseEntity.ok(response);
     }
+
 }

@@ -14,6 +14,6 @@ public interface EmailTemplateRepository extends JpaRepository<EmailTemplate,Int
     @Query("Select u from EmailTemplate u where u.key = :key")
     Optional<EmailTemplate> findByKey(@Param("key") String key);
 
-    @Query("SELECT t FROM EmailTemplate t WHERE (:key IS NULL OR t.key LIKE %:key%) AND (:value IS NULL OR t.value LIKE %:value%) ORDER BY t.createdAt")
-    List<EmailTemplate> searchByKeyAndValue(@Param("key") String key, @Param("value") String value);
+    @Query("SELECT t FROM EmailTemplate t WHERE (:key IS NULL OR t.key LIKE %:key%) AND (:subject IS NULL OR t.subject LIKE %:subject%) ORDER BY t.createdAt")
+    List<EmailTemplate> searchByKeyAndSubject(@Param("key") String key, @Param("subject") String subject);
 }

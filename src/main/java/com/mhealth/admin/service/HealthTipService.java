@@ -48,7 +48,6 @@ public class HealthTipService {
         }
 
         String photoFileName = uploadFile(request.getPhoto());
-        String videoFileName = uploadFile(request.getVideo());
         String videoThumbFileName = uploadFile(request.getVideoThumb());
 
         HealthTip healthTip = new HealthTip();
@@ -56,7 +55,7 @@ public class HealthTipService {
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
         healthTip.setPhoto(photoFileName == null ? "" : photoFileName);
-        healthTip.setVideo(videoFileName);
+        healthTip.setVideo(request.getVideo());
         healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());
         healthTip.setCreatedAt(new Date());
@@ -84,14 +83,13 @@ public class HealthTipService {
         }
 
         String photoFileName = uploadFile(request.getPhoto());
-        String videoFileName = uploadFile(request.getVideo());
         String videoThumbFileName = uploadFile(request.getVideoThumb());
 
         healthTip.setHealthTipCategory(category);
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
         healthTip.setPhoto(StringUtils.isEmpty(photoFileName) ? "" : photoFileName);
-        healthTip.setVideo(videoFileName);
+        healthTip.setVideo(request.getVideo());
         healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());
         healthTip.setUpdatedAt(new Date());
