@@ -245,6 +245,9 @@ public class HospitalManagementService {
             hospitalDetailsRepository.save(hospitalDetails);
         }
 
+        // Assign role
+        assignRole(user.getUserId(), UserType.Clinic.name());
+
 
         // Send SMS
         try {
@@ -268,6 +271,21 @@ public class HospitalManagementService {
         response.setStatus(Status.SUCCESS);
 
         return response;
+    }
+
+    @Transactional
+    public void assignRole(Integer userId, String roleType) {
+        try {
+            // Delete existing roles
+            authAssignmentRepository.deleteByUserId(String.valueOf(userId));
+
+            // Insert new role
+            authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
+
+        } catch (Exception ex) {
+            log.error("exception occurred while assigning role to the user", ex);
+            throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
+        }
     }
 
     @Transactional
@@ -473,6 +491,9 @@ public class HospitalManagementService {
         if(existingUser.getProfilePicture() != null){
             profileId = existingUser.getProfilePicture();
         }
+
+        // Delete related records from auth_assignment table
+        authAssignmentRepository.deleteByUserId(String.valueOf(id));
 
         usersRepository.delete(existingUser);
 
