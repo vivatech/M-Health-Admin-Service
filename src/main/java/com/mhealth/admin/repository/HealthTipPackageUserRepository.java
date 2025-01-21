@@ -2,6 +2,7 @@ package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.PackageType;
 import com.mhealth.admin.dto.enums.YesNo;
+import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.model.HealthTipPackageUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -139,7 +140,6 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
             " u.user.userId = ?2")
     Page<HealthTipPackageUser> findByPackageNameUserId(String packageName, Integer userId, Pageable pageable);
 
-
     @Query("SELECT h FROM HealthTipPackageUser h WHERE " +
             "(:packageName IS NULL OR h.healthTipPackage.packageName = :packageName) AND " +
             "(:filterDate IS NULL OR DATE(h.createdAt) = :filterDate)")
@@ -147,8 +147,6 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
             @Param("packageName") String packageName,
             @Param("filterDate") LocalDate filterDate,
             Pageable pageable);
-
-
-
-
+  
+    HealthTipPackageUser findByHealthTipPackage(HealthTipPackage healthTipPackage);
 }

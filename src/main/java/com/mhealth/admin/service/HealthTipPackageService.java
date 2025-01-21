@@ -3,6 +3,7 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.enums.StatusAI;
+import com.mhealth.admin.dto.enums.YesNo;
 import com.mhealth.admin.dto.request.HealthTipPackageRequest;
 import com.mhealth.admin.dto.request.HealthTipPackageSearchRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
@@ -10,10 +11,8 @@ import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.HealthTipDuration;
 import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.model.HealthTipPackageCategories;
-import com.mhealth.admin.repository.HealthTipCategoryMasterRepository;
-import com.mhealth.admin.repository.HealthTipDurationRepository;
-import com.mhealth.admin.repository.HealthTipPackageCategoriesRepository;
-import com.mhealth.admin.repository.HealthTipPackageRepository;
+import com.mhealth.admin.model.HealthTipPackageUser;
+import com.mhealth.admin.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -44,6 +43,9 @@ public class HealthTipPackageService {
     @Autowired
     private HealthTipCategoryMasterRepository healthTipCategoryMasterRepository;
 
+    @Autowired
+    private HealthTipPackageUserRepository healthTipPackageUserRepository;
+
     public ResponseEntity<Response> createHealthTipPackage(HealthTipPackageRequest request, Locale locale) {
         HealthTipDuration duration = durationRepository.findById(request.getDurationId())
                 .orElse(null);
@@ -57,8 +59,8 @@ public class HealthTipPackageService {
             HealthTipPackageCategories healthTipPackageCategories = healthTipPackageCategoriesRepository.findByCategoriesId(request.getCategoryId()).orElse(null);
             if (healthTipPackageCategories != null)
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(Status.FAILED, Constants.CONFLICT_CODE,
-                            messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND, null, locale)));
+                        .body(new Response(Status.FAILED, Constants.CONFLICT_CODE,
+                                messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND, null, locale)));
         }
 
         HealthTipPackage healthTipPackage = new HealthTipPackage();
@@ -158,6 +160,13 @@ public class HealthTipPackageService {
                     .body(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                             messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_NOT_FOUND, null, locale)));
         }
+
+        HealthTipPackageUser healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
+        if (healthTipPackageUser != null) {
+            return ResponseEntity.ok(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER, null, locale)));
+        }
+
         //when deleting the package simultaneously delete the health tip package category also
         HealthTipPackageCategories healthTipPackageCategories = healthTipPackageCategoriesRepository.findByHealthTipPackage(healthTipPackage);
         if (healthTipPackageCategories != null) healthTipPackageCategoriesRepository.delete(healthTipPackageCategories);
