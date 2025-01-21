@@ -1,7 +1,6 @@
 package com.mhealth.admin.model;
 
 import com.mhealth.admin.dto.enums.IsTransfered;
-import com.mhealth.admin.dto.enums.PaymentStatus;
 import com.mhealth.admin.dto.enums.StatusFullName;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,7 +22,7 @@ public class NurseDemandOrders {
     private Integer id;
 
     @Column(name = "trip_id")
-    private Integer tripId;
+    private String tripId;
 
     @ManyToOne
     @JoinColumn(name = "patient_id", referencedColumnName = "user_id", nullable = false)
@@ -69,9 +68,8 @@ public class NurseDemandOrders {
     @Column(name = "payment_number", nullable = false)
     private String paymentNumber;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

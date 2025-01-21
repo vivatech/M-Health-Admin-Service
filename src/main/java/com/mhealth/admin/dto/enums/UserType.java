@@ -16,5 +16,5 @@ public enum UserType {
     Ambulance,
     KPIUser,
     NursePartner,
-
+    InternationalDoctor
 }

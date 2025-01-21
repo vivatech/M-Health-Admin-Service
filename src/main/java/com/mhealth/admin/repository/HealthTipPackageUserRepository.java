@@ -8,9 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -138,5 +140,13 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
             " u.user.userId = ?2")
     Page<HealthTipPackageUser> findByPackageNameUserId(String packageName, Integer userId, Pageable pageable);
 
+    @Query("SELECT h FROM HealthTipPackageUser h WHERE " +
+            "(:packageName IS NULL OR h.healthTipPackage.packageName = :packageName) AND " +
+            "(:filterDate IS NULL OR DATE(h.createdAt) = :filterDate)")
+    Page<HealthTipPackageUser> findByPackageNameAndCreatedAtDate(
+            @Param("packageName") String packageName,
+            @Param("filterDate") LocalDate filterDate,
+            Pageable pageable);
+  
     HealthTipPackageUser findByHealthTipPackage(HealthTipPackage healthTipPackage);
 }

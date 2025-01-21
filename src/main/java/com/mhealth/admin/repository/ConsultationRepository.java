@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -99,4 +100,28 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
 
     @Query("Select COUNT(u) from Consultation u where u.requestType = ?1 and DATE(u.consultationDate) = DATE(?2)")
     Long getTotalConsultations(RequestType requestType,LocalDate date);
+
+    Consultation findByCaseIdAndRequestType(Integer caseId, RequestType requestType);
+
+    @Query("""
+    SELECT c FROM Consultation c
+    WHERE (:doctorId IS NULL OR c.doctorId.userId = :doctorId)
+      AND (:status IS NULL OR c.requestType = :status)
+      AND (:patientName IS NULL OR :patientName = '' OR CONCAT(LOWER(c.patientId.firstName),' ',LOWER(c.patientId.lastName)) LIKE LOWER(CONCAT('%', :patientName, '%')))    
+      AND (:fromDate IS NULL OR c.consultationDate >= :fromDate)
+      AND (:toDate IS NULL OR c.consultationDate <= :toDate)
+      AND (c.consultType IS NOT NULL)
+      AND (c.requestType IS NOT NULL)
+      AND (c.consultationType IS NOT NULL)
+""")
+    Page<Consultation> fetchConsultationList(
+            @Param("doctorId") String doctorId,
+            @Param("status") RequestType status,
+            @Param("patientName") String patientName,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
+            Pageable pageable
+    );
+
+
 }
