@@ -5,6 +5,7 @@ public class Constants {
     public static final Integer DEFAULT_PAGE_SIZE = 30;
 
     public static final String SUCCESS_CODE = "200";
+    public static final String FAILED_CODE = "400";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
     public static final String INTERNAL_SERVER_ERROR = "500";
 
@@ -13,6 +14,7 @@ public class Constants {
     public static final String BLANK_DATA_GIVEN = "blank.data.given";
     public static final String USER_NOT_FOUND_CODE = "10004";
     public static final String NO_RECORD_FOUND_CODE = "404";
+
     public static final String BLANK_DATA_GIVEN_CODE = "403";
     public static final String INVALID_PASSWORD_CODE = "401";
     public static final String CONFLICT_CODE = "409";
