@@ -27,6 +27,9 @@ public class DoctorPayment {
     @Column(name = "hospital_id")
     private Integer hospitalId;
 
+    @Column(name = "case_id")
+    private Integer caseId;
+
     @Column(name = "amount")
     private Integer amount;
 

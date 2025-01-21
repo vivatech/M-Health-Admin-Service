@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface DoctorPaymentRepository extends JpaRepository<DoctorPayment,Integer> {
     @Query("Select SUM(u.amount) from DoctorPayment u")
     Double getTotalCompletedPayments();
+
+    DoctorPayment findByCaseId(Integer caseId);
 }
