@@ -5,10 +5,7 @@ import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
-import com.mhealth.admin.dto.enums.Classification;
-import com.mhealth.admin.dto.enums.StatusAI;
-import com.mhealth.admin.dto.enums.UserType;
-import com.mhealth.admin.dto.enums.YesNo;
+import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.AgentUserRequestDto;
 import com.mhealth.admin.dto.response.AgentUserResponseDto;
 import com.mhealth.admin.dto.response.Response;
@@ -143,7 +140,7 @@ public class AgentUserService {
         user.setIsInternational(YesNo.No);
         user.setStatus(StatusAI.I);
         user.setClassification(Classification.from_hospital);
-        user.setDoctorClassification(Classification.general_practitioner.toString());
+        user.setDoctorClassification(DoctorClassification.general_practitioner.toString());
         user.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
         String encodedPassword = utility.md5Hash(requestDto.getPassword());

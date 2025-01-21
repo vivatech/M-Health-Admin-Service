@@ -55,7 +55,7 @@ public class DoctorUserController {
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public ResponseEntity<?> createMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+    public ResponseEntity<?> createDoctorUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                                  @ModelAttribute DoctorUserRequestDto doctorUserRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/doctor/create");
@@ -72,7 +72,7 @@ public class DoctorUserController {
     }
 
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public ResponseEntity<?> updateMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+    public ResponseEntity<?> updateDoctorUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                                  @RequestParam Integer userId,
                                                  @ModelAttribute DoctorUserUpdateRequestDto doctorUserUpdateRequestDto) {
         try {
@@ -90,96 +90,23 @@ public class DoctorUserController {
         }
     }
 
-//    @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
-//    public ResponseEntity<?> getMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                              @PathVariable Integer userId) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/" + userId);
-//
-//            Object response = marketingUserService.getMarketingUser(locale, userId);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/" + userId + ": {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-//    @RequestMapping(value = "/update-status", method = RequestMethod.POST)
-//    public ResponseEntity<?> updateMarketingUserStatus(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                                       @RequestParam Integer userId,
-//                                                       @RequestParam String status) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/update-status");
-//            log.info("Request Parameter: userId={}, status={}", userId, status);
-//
-//            Object response = marketingUserService.updateMarketingUserStatus(locale, userId, status);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/update-status: {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-//    @RequestMapping(value = "/delete", method = RequestMethod.POST)
-//    public ResponseEntity<?> deleteMarketingUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                                 @RequestParam Integer userId) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/delete");
-//            log.info("Request Parameter: userId={}", userId);
-//
-//            Object response = marketingUserService.deleteMarketingUser(locale, userId);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/delete: {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-//    @RequestMapping(value = "/report", method = RequestMethod.GET)
-//    public ResponseEntity<?> getMarketingUserReport(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-//                                                    @RequestParam Integer marketingUserId,
-//                                                    @RequestParam(required = false) String name,
-//                                                    @RequestParam(required = false) String email,
-//                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-//                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-//                                                    @RequestParam(required = false) String contactNumber,
-//                                                    @RequestParam(defaultValue = "1") String sortBy,
-//                                                    @RequestParam(defaultValue = "1") int page,
-//                                                    @RequestParam(defaultValue = "10") int size) {
-//        try {
-//            log.info("Request Received For /api/v1/admin/user/doctor/report");
-//            log.info("Request Parameters: marketingUserId={}, name={}, email={}, startDate={}, endDate={}, contactNumber={}, sortBy={}, page={}, size={}", marketingUserId, name, email, startDate, endDate, contactNumber, sortBy, page, size);
-//
-//            Object response = marketingUserService.getMarketingUserReport(locale, marketingUserId, name, email, startDate, endDate, contactNumber, sortBy, page, size);
-//
-//            log.info("Response Sent For /api/v1/admin/user/doctor/report: {}", objectMapper.writeValueAsString(response));
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (Exception e) {
-//            log.error("Exception: ", e);
-//            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
-
-
-    /**
-     * Set doctor availability
-     */
-    @RequestMapping(value = "/set-availability", method = RequestMethod.POST)
-    public ResponseEntity<?> setDoctorAvailability(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestBody SetDoctorAvailabilityRequestDto doctorUserRequestDto) {
+    @RequestMapping(value = "/update-status", method = RequestMethod.POST)
+    public ResponseEntity<?> updateDoctorUserStatus(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                    @RequestParam Integer userId,
+                                                    @RequestParam String status) {
         try {
-            log.info("Request Received For /api/v1/admin/user/doctor/set-availability");
-            log.info("Request Body: {}", doctorUserRequestDto);
+            log.info("Request Received For /api/v1/admin/user/doctor/update-status");
+            log.info("Request Parameter: userId={}, status={}", userId, status);
 
-            Object response = doctorUserService.setDoctorAvailability(locale, doctorUserRequestDto);
+            Object response = doctorUserService.updateDoctorUserStatus(locale, userId, status);
 
-            log.info("Response Sent For /api/v1/admin/user/doctor/create: {}", objectMapper.writeValueAsString(response));
+            log.info("Response Sent For /api/v1/admin/user/doctor/update-status: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
     public ResponseEntity<?> getDoctorUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
@@ -214,19 +141,24 @@ public class DoctorUserController {
             log.info("Response Sent For /api/v1/admin/user/doctor/get-availability: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Exception found in /api/v1/admin/user/doctor/get-availability: ", e);
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-    @RequestMapping(value = "/update-status", method = RequestMethod.POST)
-    public ResponseEntity<?> updateDoctorUserStatus(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                    @RequestParam Integer userId,
-                                                    @RequestParam String status) {
+    /**
+     * Set doctor availability
+     */
+    @RequestMapping(value = "/set-availability", method = RequestMethod.POST)
+    public ResponseEntity<?> setDoctorAvailability(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                   @RequestBody SetDoctorAvailabilityRequestDto doctorUserRequestDto) {
         try {
-            log.info("Request Received For /api/v1/admin/user/doctor/update-status");
-            log.info("Request Parameter: userId={}, status={}", userId, status);
+            log.info("Request Received For /api/v1/admin/user/doctor/set-availability");
+            log.info("Request Body: {}", doctorUserRequestDto);
 
-            Object response = doctorUserService.updateDoctorUserStatus(locale, userId, status);
+            Object response = doctorUserService.setDoctorAvailability(locale, doctorUserRequestDto);
 
-            log.info("Response Sent For /api/v1/admin/user/doctor/update-status: {}", objectMapper.writeValueAsString(response));
+            log.info("Response Sent For /api/v1/admin/user/doctor/set-availability: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception: ", e);
