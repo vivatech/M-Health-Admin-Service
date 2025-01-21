@@ -2,6 +2,7 @@ package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.PackageType;
 import com.mhealth.admin.dto.enums.YesNo;
+import com.mhealth.admin.model.HealthTipPackage;
 import com.mhealth.admin.model.HealthTipPackageUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -136,4 +137,6 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
             " WHERE u.healthTipPackage.packageName LIKE %?1% AND " +
             " u.user.userId = ?2")
     Page<HealthTipPackageUser> findByPackageNameUserId(String packageName, Integer userId, Pageable pageable);
+
+    HealthTipPackageUser findByHealthTipPackage(HealthTipPackage healthTipPackage);
 }
