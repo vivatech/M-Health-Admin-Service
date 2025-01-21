@@ -35,14 +35,15 @@ public class MarketingUserController {
                                                   @RequestParam(required = false) String email,
                                                   @RequestParam(required = false) String status,
                                                   @RequestParam(required = false) String contactNumber,
+                                                  @RequestParam(required = false) String sortField,
                                                   @RequestParam(defaultValue = "1") String sortBy,
                                                   @RequestParam(defaultValue = "1") int page,
                                                   @RequestParam(defaultValue = "10") int size) {
         try {
             log.info("Request Received For /api/v1/admin/user/marketing/list");
-            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortBy, page, size);
+            log.info("Request Parameters: name={}, email={}, status={}, contactNumber={}, sortField={}, sortBy={}, page={}, size={}", name, email, status, contactNumber, sortField, sortBy, page, size);
 
-            Object response = marketingUserService.getMarketingUserList(locale, name, email, status,contactNumber, sortBy, page, size);
+            Object response = marketingUserService.getMarketingUserList(locale, name, email, status, contactNumber, sortField, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/marketing/list: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
