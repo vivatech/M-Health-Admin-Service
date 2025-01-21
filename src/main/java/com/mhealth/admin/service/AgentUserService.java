@@ -43,6 +43,9 @@ public class AgentUserService {
     @Autowired
     private Utility utility;
 
+    @Autowired
+    private AuthAssignmentRepository authAssignmentRepository;
+
     public Object getAgentList(Locale locale, String name, String email, StatusAI status, String contactNumber, Integer sortBy, String sortField, int page, int size) {
         // Validate sortField
         List<String> validSortFields = Arrays.asList("name", "contactNumber", "email");
@@ -146,7 +149,10 @@ public class AgentUserService {
         String encodedPassword = utility.md5Hash(requestDto.getPassword());
         user.setPassword(encodedPassword);
 
-        usersRepository.save(user);
+        user = usersRepository.save(user);
+
+        // Assign role
+        assignRole(user.getUserId(), UserType.Agentuser.name());
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -274,6 +280,9 @@ public class AgentUserService {
 
         Users existingUser = existingAgentUser.get();
 
+        // Delete related records from auth_assignment table
+        authAssignmentRepository.deleteByUserId(String.valueOf(id));
+
         usersRepository.delete(existingUser);
 
         // Prepare success response
@@ -321,4 +330,18 @@ public class AgentUserService {
         return responseDto;
     }
 
+    @Transactional
+    public void assignRole(Integer userId, String roleType) {
+        try {
+            // Delete existing roles
+            authAssignmentRepository.deleteByUserId(String.valueOf(userId));
+
+            // Insert new role
+            authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
+
+        } catch (Exception ex) {
+            log.error("exception occurred while assigning role to the user", ex);
+            throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
+        }
+    }
 }
