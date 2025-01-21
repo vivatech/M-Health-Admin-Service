@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class DoctorPayment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "doctor_slot_id")
+    @Column(name = "id")
     private Integer id;
 
     @Column(name = "doctor_id")
@@ -36,6 +36,7 @@ public class DoctorPayment {
     @Column(name = "transaction_id")
     private String transactionId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
 

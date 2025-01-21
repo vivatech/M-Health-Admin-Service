@@ -1,6 +1,7 @@
 package com.mhealth.admin.payment;
 
 import com.mhealth.admin.config.Constants;
+import com.mhealth.admin.config.Utility;
 import com.mhealth.admin.dto.enums.PaymentStatus;
 import com.mhealth.admin.dto.request.DoctorPaymentRequest;
 import com.mhealth.admin.dto.Status;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -117,7 +119,9 @@ public class PaymentController {
 
             // Filter by consultationDate
             if (request.getConsultationDate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("createdAt"), request.getConsultationDate()));
+                Date startDate = Utility.startDate(request.getConsultationDate());
+                Date endDate = Utility.endDate(request.getConsultationDate());
+                predicates.add(criteriaBuilder.between(root.get("createdAt"), startDate, endDate));
             }
 
             // Filter by caseId
