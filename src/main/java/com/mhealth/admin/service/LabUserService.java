@@ -43,6 +43,8 @@ import static com.mhealth.admin.constants.Messages.GENERAL_PRACTITIONER;
 @Service
 public class LabUserService {
     @Autowired
+    private AuthAssignmentRepository authAssignmentRepository;
+    @Autowired
     private DoctorDocumentRepository doctorDocumentRepository;
     @Autowired
     private CityRepository cityRepository;
@@ -93,12 +95,7 @@ public class LabUserService {
             int size) {
         Response response = new Response();
         if(!sortByValues.contains(sortField)){
-            response.setCode(Constants.CODE_O);
-            response.setData(null);
-            response.setMessage("Invalid value for sortField: "
-                    + sortField + ". Allowed values are " + sortByValues);
-            response.setStatus(Status.FAILED);
-            return response;
+            sortField = "user_id";
         }
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
@@ -308,12 +305,30 @@ public class LabUserService {
         // Create Lab user
         Users labUser = getUsers(requestDto, pp, locale, null);
 
+        // Assign role
+        assignRole(labUser.getUserId(), UserType.Lab.name());
+
         // Prepare success response
         response.setCode(Constants.CODE_1);
         response.setMessage(messageSource.getMessage(Messages.USER_CREATED, null, locale));
         response.setStatus(Status.SUCCESS);
 
         return response;
+    }
+
+    @Transactional
+    public void assignRole(Integer userId, String roleType) {
+        try {
+            // Delete existing roles
+            authAssignmentRepository.deleteByUserId(String.valueOf(userId));
+
+            // Insert new role
+            authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
+
+        } catch (Exception ex) {
+            log.error("exception occurred while assigning role to the user", ex);
+            throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
+        }
     }
 
     private Users getUsers(LabUserRequestDto requestDto, String pp, Locale locale, Users users) throws IOException {

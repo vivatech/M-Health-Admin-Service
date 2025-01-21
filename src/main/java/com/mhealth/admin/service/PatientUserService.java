@@ -80,11 +80,7 @@ public class PatientUserService {
     public Object getPatientUserList(Locale locale, String name, String email, String status, String contactNumber, String sortField, String sortBy, int page, int size) {
         Response response = new Response();
         if(!sortByValues.contains(sortField)){
-            response.setCode(Constants.CODE_O);
-            response.setData(null);
-            response.setMessage("Invalid value for sortField: " + sortField + ". Allowed values are " + sortByValues);
-            response.setStatus(Status.FAILED);
-            return response;
+            sortField = "user_id";
         }
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
@@ -267,6 +263,9 @@ public class PatientUserService {
         // Create Patient user
         Users patientUser = getUsers(requestDto, pp, locale, null);
 
+        // Assign role
+        assignRole(patientUser.getUserId(), UserType.Patient.name());
+
         // Send SMS
         try {
             locale = Utility.getUserNotificationLanguageLocale(patientUser.getNotificationLanguage(), locale);
@@ -287,6 +286,21 @@ public class PatientUserService {
         response.setStatus(Status.SUCCESS);
 
         return response;
+    }
+
+    @Transactional
+    public void assignRole(Integer userId, String roleType) {
+        try {
+            // Delete existing roles
+            authAssignmentRepository.deleteByUserId(String.valueOf(userId));
+
+            // Insert new role
+            authAssignmentRepository.insertRole(roleType, String.valueOf(userId), (int) (System.currentTimeMillis() / 1000));
+
+        } catch (Exception ex) {
+            log.error("exception occurred while assigning role to the user", ex);
+            throw new RuntimeException("failed to assign role to user: " + ex.getMessage(), ex);
+        }
     }
 
     private Users getUsers(PatientUserRequestDto requestDto, String pp, Locale locale, Users users) throws IOException {
