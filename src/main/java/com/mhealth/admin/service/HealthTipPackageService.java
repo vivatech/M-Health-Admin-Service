@@ -59,8 +59,8 @@ public class HealthTipPackageService {
             HealthTipPackageCategories healthTipPackageCategories = healthTipPackageCategoriesRepository.findByCategoriesId(request.getCategoryId()).orElse(null);
             if (healthTipPackageCategories != null)
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(Status.FAILED, Constants.CONFLICT_CODE,
-                            messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND, null, locale)));
+                        .body(new Response(Status.FAILED, Constants.CONFLICT_CODE,
+                                messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND, null, locale)));
         }
 
         HealthTipPackage healthTipPackage = new HealthTipPackage();
@@ -163,12 +163,8 @@ public class HealthTipPackageService {
 
         HealthTipPackageUser healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
         if (healthTipPackageUser != null) {
-            if(healthTipPackageUser.getIsCancel().equals(YesNo.No) && healthTipPackageUser.getIsExpire().equals(YesNo.No)){
-
-                return ResponseEntity.ok(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
-                        messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER, null, locale)));
-
-            }
+            return ResponseEntity.ok(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER, null, locale)));
         }
 
         //when deleting the package simultaneously delete the health tip package category also
