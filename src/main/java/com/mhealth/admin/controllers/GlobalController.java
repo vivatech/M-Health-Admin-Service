@@ -29,11 +29,13 @@ public class GlobalController {
 
 
     @RequestMapping(value = "/get-cities", method = RequestMethod.GET)
-    public ResponseEntity<?> getCities(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+    public ResponseEntity<?> getCities(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                       @RequestParam List<Integer> stateIdList) {
         try {
             log.info("Request Received For /api/v1/admin/global/get-cities");
+            log.info("Request Parameters: stateIdList={}", stateIdList);
 
-            Object response = globalService.getCities(locale);
+            Object response = globalService.getCities(locale, stateIdList);
 
             log.info("Response Sent For /api/v1/admin/global/get-cities: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -45,12 +47,12 @@ public class GlobalController {
 
     @RequestMapping(value = "/get-countries", method = RequestMethod.GET)
     public ResponseEntity<?> getCountries(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                  @RequestParam(required = false) List<Integer> phoneCodeList) {
+                                          @RequestParam List<Integer> countryCodeList) {
         try {
             log.info("Request Received For /api/v1/admin/global/get-countries");
-            log.info("Request Parameters: phoneCodeList={}", phoneCodeList);
+            log.info("Request Parameters: countryCodeList={}", countryCodeList);
 
-            Object response = globalService.getCountries(locale, phoneCodeList);
+            Object response = globalService.getCountries(locale, countryCodeList);
 
             log.info("Response Sent For /api/v1/admin/global/get-countries: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -68,6 +70,23 @@ public class GlobalController {
             Object response = globalService.getLanguageList(locale);
 
             log.info("Response Sent For /api/v1/admin/global/get-languages: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @RequestMapping(value = "/get-provinces", method = RequestMethod.GET)
+    public ResponseEntity<?> getProvinceList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                             @RequestParam List<Integer> countryIdList) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-provinces");
+            log.info("Request Parameters: countryIdList={}", countryIdList);
+
+            Object response = globalService.getProvinceList(locale, countryIdList);
+
+            log.info("Response Sent For /api/v1/admin/global/get-provinces: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception: ", e);
