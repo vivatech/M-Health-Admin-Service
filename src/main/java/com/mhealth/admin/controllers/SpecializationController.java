@@ -106,8 +106,8 @@ public class SpecializationController {
         return service.findSpecializationById(id, locale);
     }
 
-    @RequestMapping(value = "/get-specialization", method = RequestMethod.GET)
-    public ResponseEntity<?> getCitiesByCountryId(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+    @RequestMapping(value = "/get", method = RequestMethod.GET)
+    public ResponseEntity<?> getSpecializationList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         try {
             log.info("Request Received For /api/v1/admin/location/get-specialization");
 

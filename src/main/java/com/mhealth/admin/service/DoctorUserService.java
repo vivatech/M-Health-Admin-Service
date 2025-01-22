@@ -1044,6 +1044,43 @@ public class DoctorUserService {
 
     }
 
+    public Object deleteDoctorDocument(Locale locale, Integer userId, String documentFileName) throws IOException {
+        Response response = new Response();
+
+        // Get actual document name
+        String fileName = extractFileName(documentFileName);
+
+        // Find the document
+        Optional<DoctorDocument> existingDoctorDocument = doctorDocumentRepository.findByUserIdAndDocumentFileName(userId, fileName);
+        if (existingDoctorDocument.isEmpty()) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage(messageSource.getMessage(Messages.DOCUMENT_NOT_FOUND, null, locale));
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        String directoryPath = Constants.DOCTOR_DOCUMENT_PATH + userId;
+
+        // Delete the file form server
+        fileService.deleteFile(directoryPath, fileName);
+
+        // Delete entry from doctor document table
+        DoctorDocument existingDocument = existingDoctorDocument.get();
+        doctorDocumentRepository.delete(existingDocument);
+
+        // Prepare success response
+        response.setCode(Constants.CODE_1);
+        response.setMessage(messageSource.getMessage(Messages.DOCUMENT_DELETED_SUCCESSFULLY, null, locale));
+        response.setStatus(Status.SUCCESS);
+
+        return response;
+
+    }
+
+    public String extractFileName(String input) {
+        return input.substring(input.lastIndexOf("/") + 1); // Extract substring after the last '/'
+    }
+
     private DoctorUserResponseDto convertToDoctorUserResponseDto(Users user) {
         DoctorUserResponseDto doctorUserResponseDto = new DoctorUserResponseDto();
 
