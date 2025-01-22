@@ -40,4 +40,9 @@ public interface Messages {
     String DOCUMENT_NOT_FOUND = "document.not.found";
     String PROFILE_PICTURE_DELETE_SUCCESSFULLY = "profile.picture.delete";
 
+    //Lab Price Management
+    String LAB_PRICE_LIST_FETCH = "lab.price.list.fetch";
+    String LAB_CATEGORY_NOT_FOUND = "app.lab.master.category.not.found";
+    String LAB_SUB_CATEGORY_NOT_FOUND = "app.lab.sub.category.not.found";
+    String LAB_PRICE_EXISTS = "lab.price.exists";
 }

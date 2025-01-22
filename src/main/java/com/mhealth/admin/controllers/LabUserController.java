@@ -63,7 +63,7 @@ public class LabUserController {
      */
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<?> createLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @ModelAttribute LabUserRequestDto labUserRequestDto) {
+                                           @ModelAttribute LabUserRequestDto labUserRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/create");
             log.info("Request Body: {}", labUserRequestDto);
@@ -84,8 +84,8 @@ public class LabUserController {
      */
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updateLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestParam Integer userId,
-                                                 @ModelAttribute LabUserRequestDto labUserRequestDto) {
+                                           @RequestParam Integer userId,
+                                           @ModelAttribute LabUserRequestDto labUserRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/update");
             log.info("Request Parameter: userId={}", userId);
@@ -108,8 +108,8 @@ public class LabUserController {
      */
     @RequestMapping(value = "/update-status", method = RequestMethod.POST)
     public ResponseEntity<?> updateLabUserStatus(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                       @RequestParam Integer userId,
-                                                       @RequestParam String status) {
+                                                 @RequestParam Integer userId,
+                                                 @RequestParam String status) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/update-status");
             log.info("Request Parameter: userId={}, status={}", userId, status);
@@ -129,7 +129,7 @@ public class LabUserController {
      */
     @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
     public ResponseEntity<?> getLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                              @PathVariable Integer userId) {
+                                        @PathVariable Integer userId) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/" + userId);
 
@@ -169,7 +169,7 @@ public class LabUserController {
      */
     @RequestMapping(value = "/delete-user", method = RequestMethod.POST)
     public ResponseEntity<?> deleteLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                               @RequestParam Integer userId) {
+                                           @RequestParam Integer userId) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/delete-user");
             log.info("Request Parameters : userId={}", userId);
