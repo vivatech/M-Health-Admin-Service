@@ -38,6 +38,8 @@ public interface Messages {
   
     //Lab user's SMS Body
     String DOCUMENT_NOT_FOUND = "document.not.found";
+
+    String DOCUMENT_DELETED_SUCCESSFULLY = "document.delete";
     String PROFILE_PICTURE_DELETE_SUCCESSFULLY = "profile.picture.delete";
 
     //Lab Price Management
