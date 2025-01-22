@@ -33,7 +33,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mhealth.admin.constants.Constants.Currency_USD;
-import static com.mhealth.admin.constants.Constants.MISSING_REQUIRED_FILED;
 
 @Service
 public class LabPriceManagementService {
@@ -47,17 +46,13 @@ public class LabPriceManagementService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public static final List<String> sortByValues = List.of("labPriceComment", "catName", "subCatName", "labPrice");
+    public static final List<String> sortByValues = List.of("catName", "subCatName", "labPrice");
     @Autowired
     private LabCategoryMasterRepository labCategoryMasterRepository;
     @Autowired
     private LabSubCategoryMasterRepository labSubCategoryMasterRepository;
 
     public Response getLabPriceList(Locale locale, Integer labId, String categoryName, String subCategoryName, String sortField, String sortBy, int page, int size) {
-        if(labId == null || labId == 0){
-            return new Response(Status.FAILED, Constants.CODE_O, MISSING_REQUIRED_FILED + "labId");
-        }
-
         Users lab = usersRepository.findByUserIdAndType(labId, UserType.Lab).orElse(null);
         if(lab == null){
             return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
@@ -140,8 +135,6 @@ public class LabPriceManagementService {
     public Response updateLabPrice(Locale locale, Integer labId, LabPriceRequestDto labPriceRequestDto) {
 
         // Validate the input
-        if(labId == null || labId <= 0) return new Response(Status.FAILED, Constants.CODE_O, "labId is required!");
-
         if(labPriceRequestDto.getLabPriceId() == null || labPriceRequestDto.getLabPriceId() <= 0) return new Response(Status.FAILED, Constants.CODE_O, "labPriceId is required!");
 
         String validationMessage = labPriceRequestDto.validate();
@@ -174,8 +167,6 @@ public class LabPriceManagementService {
 
     public Response createLabPrice(Locale locale, Integer labId, LabPriceRequestDto labPriceRequestDto) {
         // Validate the input
-        if(labId == null || labId <= 0) return new Response(Status.FAILED, Constants.CODE_O, "labId is required!");
-
         String validationMessage = labPriceRequestDto.validate();
         if (validationMessage != null) {
             return new Response(Status.FAILED, Constants.CODE_O, validationMessage);

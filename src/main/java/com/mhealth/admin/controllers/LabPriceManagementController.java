@@ -34,7 +34,7 @@ public class LabPriceManagementController {
      */
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> getListOfLabPricesByLabId(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                  @RequestParam(required = false) Integer labId,
+                                                  @RequestParam Integer labId,
                                                   @RequestParam(required = false) String categoryName,
                                                   @RequestParam(required = false) String subCategoryName,
                                                   @RequestParam(required = false, defaultValue = "labPriceComment") String sortField,
@@ -65,13 +65,13 @@ public class LabPriceManagementController {
                                            @RequestParam Integer labId,
                                            @RequestBody LabPriceRequestDto labPriceRequestDto) {
         try {
-            log.info("Request Received For /api/v1/admin/user/lab/lab-price/create ");
+            log.info("Request Received For /api/v1/admin/user/lab/lab-price/create?labId=? ");
             log.info("Request Parameter: labId={}", labId);
             log.info("Request Body: {}", labPriceRequestDto);
 
             Object response = labPriceManagementService.createLabPrice(locale, labId, labPriceRequestDto);
 
-            log.info("Response Sent For /api/v1/admin/user/lab/lab-price/create : {}", objectMapper.writeValueAsString(response));
+            log.info("Response Sent For /api/v1/admin/user/lab/lab-price/create?labId=? : {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception : ", e);
