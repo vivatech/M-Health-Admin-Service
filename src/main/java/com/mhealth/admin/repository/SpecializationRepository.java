@@ -33,4 +33,6 @@ public interface SpecializationRepository extends JpaRepository<Specialization, 
             @Param(("name")) String name,
             @Param("status") StatusAI statusAI,
             Pageable pageable);
+
+    List<Specialization> findByStatus(StatusAI status);
 }

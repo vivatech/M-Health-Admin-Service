@@ -70,7 +70,10 @@ public class MarketingUserService {
     @Autowired
     private SMSApiService smsApiService;
 
-    public Object getMarketingUserList(Locale locale, String name, String email, String status, String contactNumber, String sortBy, int page, int size) {
+    public Object getMarketingUserList(Locale locale, String name, String email, String status, String contactNumber, String sortField, String sortBy, int page, int size) {
+        // Define valid sort fields
+        Set<String> validSortFields = new HashSet<>(Arrays.asList("name", "contactNumber", "email"));
+
         StringBuilder baseQuery = new StringBuilder("SELECT ")
                 .append("u.user_id AS userId, ")
                 .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
@@ -100,16 +103,26 @@ public class MarketingUserService {
             baseQuery.append(" AND CONCAT(u.country_code, '', u.contact_number) LIKE :contactNumber");
         }
 
-        baseQuery.append(" GROUP BY u.user_id, p.promo_code, u.contact_number, u.status");
+        baseQuery.append(" GROUP BY u.user_id, p.promo_code, u.contact_number, u.status ");
 
-        // Determine sorting based on sortBy
-        String sortOrder = " ORDER BY u.user_id ";
-        if ("0".equals(sortBy)) {
-            sortOrder += "ASC"; // Ascending order
+        // Add sorting field
+        if (sortField != null && !sortField.isEmpty() && validSortFields.contains(sortField)) {
+            baseQuery.append("ORDER BY ")
+                     .append(sortField);
         } else {
-            sortOrder += "DESC"; // Default to descending order
+            baseQuery.append("ORDER BY userId");
         }
-        baseQuery.append(sortOrder);
+
+        // Add sorting direction based on sortBy (ASC or DESC)
+        if (sortBy != null && !sortBy.isEmpty()) {
+            if (Objects.equals(sortBy, "1")) {
+                baseQuery.append(" DESC ");
+            } else {
+                baseQuery.append(" ASC ");
+            }
+        } else {
+            baseQuery.append(" DESC "); // Default to DESC if sortBy is not provided
+        }
 
         // Create query
         Query query = entityManager.createNativeQuery(baseQuery.toString());

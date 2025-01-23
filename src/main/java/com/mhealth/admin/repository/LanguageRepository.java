@@ -12,4 +12,6 @@ public interface LanguageRepository extends JpaRepository<Language, Integer> {
 
     @Query("Select u from Language u where u.id in ?1")
     List<Language> findByIds(List<Integer> langIds);
+
+    List<Language> findByStatus(String status);
 }
