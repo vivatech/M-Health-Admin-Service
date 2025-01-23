@@ -141,10 +141,28 @@ public interface Constants {
     public static final String Status_IN_ACTIVE = "I";
     String SOMETHING_WENT_WRONG = "Something Went Wrong";
 
+    String VISIT = "visit";
+    String VIDEO = "video";
+    String BOTH = "both";
+
     String DEFAULT_LANGUAGE = "sl";
+    String ENGLISH_LANGUAGE = "en";
     String LOCALE_SOMALIA = "so";
     String LOCALE_ENGLISH = "en";
 
+    String MALE = "Male";
+    String FEMALE = "Female";
+
     String CODE_O = "0";
     String CODE_1 = "1";
+
+    //Lab User
+    String APP_LINK = "APP_LINK";
+
+    // Directories Path
+    String DOCTOR_DOCUMENT_PATH = "DoctorDocument/";
+    String USER_PROFILE_PICTURE = "UserProfile/";
+
+    String LOCAL_COUNTRY_CODE = "252";
+    String INDIA_COUNTRY_CODE = "91";
 }

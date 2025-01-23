@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SlotTypeRepository extends JpaRepository<SlotType, Integer> {
-    @Query("Select u from SlotType u where u.status = :active")
-    List<SlotType> findByStatus(@Param("active") SlotStatus active);
+    @Query("Select u from SlotType u where u.status = :active ORDER BY u.id DESC LIMIT 1")
+    SlotType findByStatus(@Param("active") SlotStatus active);
 
     @Query("Select u from SlotType u where u.type = :type")
     Optional<SlotType> findByType(@Param("type") String type);
+
+    @Query(value = "SELECT id FROM mh_slot_type WHERE status = :status LIMIT 1", nativeQuery = true)
+    Optional<Integer> findDefaultSlot(@Param("status") String status);
 }

@@ -19,7 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class SpecializationService {
@@ -134,5 +137,14 @@ public class SpecializationService {
 
         return ResponseEntity.ok(new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.SPECIALIZATION_FETCHED, null, locale), specialization));
+    }
+
+    public Map<Integer, String> getSpecializationList(Locale locale) {
+        // Fetch specializations with active status
+        List<Specialization> specializations = repository.findByStatus(StatusAI.A);
+
+        // Map the list to a key-value pair of ID and name
+        return specializations.stream()
+                .collect(Collectors.toMap(Specialization::getId, Specialization::getName));
     }
 }
