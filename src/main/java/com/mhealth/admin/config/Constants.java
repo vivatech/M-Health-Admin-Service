@@ -174,12 +174,12 @@ public class Constants {
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
   
     public static final String DEFAULT_COUNTRY = "SO";
+    public static final String USER_TYPE_NOT_FOUND = "app.user.type.not.found";
     public static final String COUNTRY_SOMALIA = "SOMALIA";
     public static final String COUNTRY_KENYA = "KENYA";
     public static final String KEY_NOT_FOUND = "Key Value not found";
 
     @Value("${m-health.country.code}")
     public static String COUNTRY_CODE;
-
 }
 

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -14,7 +16,7 @@ public class LoginResponseDto {
     private String doctorId;
     private String token;
     private boolean isInternational;
-    private PermissionRoleDto permissions;
+    private List<String> permissions;
 
     public LoginResponseDto(String doctorId,String token,boolean isInternational){
         this.doctorId = doctorId;
