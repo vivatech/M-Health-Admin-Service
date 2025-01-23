@@ -33,8 +33,6 @@ public class GlobalService {
     @Autowired
     private LanguageRepository languageRepository;
 
-    @Value("${app.country.id}")
-    private List<Integer> countryIdList;
     @Autowired
     private UsersRepository usersRepository;
 
