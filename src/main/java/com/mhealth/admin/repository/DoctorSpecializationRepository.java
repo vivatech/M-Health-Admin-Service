@@ -21,4 +21,6 @@ public interface DoctorSpecializationRepository extends JpaRepository<DoctorSpec
     @Transactional
     void deleteByUserId(@Param("userId") Integer userId);
 
+    @Query(value = "SELECT CASE WHEN :lang = 'en' THEN u.specializationId.name ELSE u.specializationId.nameSl FROM DoctorSpecialization u WHERE u.userId.userId = ?1 ")
+    List<String> findBySpecializationNames(Integer doctorId, String lang);
 }
