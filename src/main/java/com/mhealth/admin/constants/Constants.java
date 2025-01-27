@@ -73,6 +73,7 @@ public interface Constants {
     public static final String Paid_Lab_Report_Orders = "paid_against_lab_report";
     public static final String Payment_Done = "Payment Complete";
     public static final String Currency_USD = "USD";
+    String Dollar_Currency = "Dollar";
     public static final String Duration_Daily = "Daily";
     public static final String Price_FREE = "Free";
     public static final String Active_Categories_List = "Categories list";
