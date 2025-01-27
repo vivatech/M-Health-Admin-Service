@@ -94,6 +94,21 @@ public class GlobalController {
         }
     }
 
+    @RequestMapping(value = "/get-hospitals", method = RequestMethod.GET)
+    public ResponseEntity<?> getHospitalList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-hospitals");
+
+            Object response = globalService.getHospitalList(locale);
+
+            log.info("Response Sent For /api/v1/admin/global/get-hospitals: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Delete user profile picture user
      */
