@@ -6,6 +6,7 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.dto.CancelAppointmentRequest;
 import com.mhealth.admin.dto.dto.DoctorProfileResponse;
 import com.mhealth.admin.dto.dto.LanguageListResponse;
+import com.mhealth.admin.dto.dto.SpecializationResponse;
 import com.mhealth.admin.dto.enums.OrderStatus;
 import com.mhealth.admin.dto.enums.RequestType;
 import com.mhealth.admin.dto.enums.UserType;
@@ -57,6 +58,8 @@ public class BookAnAppointmentService {
 
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private SpecializationRepository specializationRepository;
 
     public Object viewDoctorProfile(Integer doctorId, Locale locale) {
         Users doctor = usersRepository.findByUserIdAndType(doctorId, UserType.Doctor).orElse(null);
@@ -234,5 +237,20 @@ public class BookAnAppointmentService {
     }
     String generateDateTime() {
         return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + (int) (Math.random() * 1000);
+    }
+
+    public Object getSpecialization(Locale locale) {
+        List<Specialization> list = specializationRepository.findAll();
+        if(list.isEmpty()){
+            return new Response(Status.FAILED, FORBIDDEN_STATUS_CODE, messageSource.getMessage(Messages.RECORD_NOT_FOUND, null, locale));
+        }
+        List<SpecializationResponse> specializationListName = list.stream().map(ele -> {
+            if (locale.getLanguage().equalsIgnoreCase("en")) {
+                return new SpecializationResponse(ele.getId(), ele.getName());
+            } else {
+                return new SpecializationResponse(ele.getId(), ele.getNameSl());
+            }
+        }).toList();
+        return new Response(Status.SUCCESS, SUCCESS, messageSource.getMessage(Messages.RECORD_FOUND, null, locale), specializationListName);
     }
 }
