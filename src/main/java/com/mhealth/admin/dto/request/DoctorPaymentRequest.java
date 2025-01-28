@@ -13,7 +13,10 @@ public class DoctorPaymentRequest {
     private Integer caseId;
     private String patientName;
     private String doctorName;
+    private String email;
+    private String contactNumber;
     private Date consultationDate;
+    private String status;
     private Integer page;
     private Integer size;
 }
