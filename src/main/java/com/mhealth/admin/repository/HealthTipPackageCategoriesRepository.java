@@ -100,6 +100,5 @@ public interface HealthTipPackageCategoriesRepository extends JpaRepository<Heal
     List<HealthTipPackageCategories> findByPackageIds(Integer packageIds);
 
     HealthTipPackageCategories findByHealthTipPackage(HealthTipPackage healthTipPackage);
-
-    HealthTipPackageCategories findByHealthTipCategoryMaster(HealthTipCategoryMaster category);
+    List<HealthTipPackageCategories> findByHealthTipCategoryMaster(HealthTipCategoryMaster category);
 }

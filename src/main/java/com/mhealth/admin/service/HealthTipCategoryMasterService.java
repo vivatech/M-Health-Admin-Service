@@ -136,7 +136,7 @@ public class HealthTipCategoryMasterService {
         HealthTipCategoryMaster category = repository.findById(id).orElse(null);
 
         // verify if category is used in any health tip package
-        HealthTipPackageCategories healthTipPackageCategories = healthTipPackageCategoriesRepository.findByHealthTipCategoryMaster(category);
+        List<HealthTipPackageCategories> healthTipPackageCategories = healthTipPackageCategoriesRepository.findByHealthTipCategoryMaster(category);
         if (healthTipPackageCategories != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new Response(Status.FAILED, Constants.FAILED_CODE,
