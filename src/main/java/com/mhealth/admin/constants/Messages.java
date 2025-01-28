@@ -53,4 +53,19 @@ public interface Messages {
     String SORT_BY = "sort.by";
     String SORT_LIST_RETRIEVED = "SORT.LIST.RETRIEVED";
     String RECORD_FOUND = "List.Found";
+    String FILE_NAME_EXISTS = "file.name.exists";
+    String FILE_CREATED = "file.created";
+    String FILE_DELETED = "file.deleted";
+    String GALLERY_LIST_FETCHED = "gallery.list.fetched";
+
+    String FILE_EMPTY = "file.empty";
+    String IMAGE_SIZE = "image.size";
+    String IMAGE_EXTENSION = "image.extension";
+
+
+
+
+
+
+
 }

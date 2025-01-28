@@ -167,4 +167,9 @@ public interface Constants {
     String LOCAL_COUNTRY_CODE = "252";
     String INDIA_COUNTRY_CODE = "91";
     String GENERAL_PRACTITIONER = "general_practitioner";
+
+    String VIDEO_GALLERY = "video/";
+    String IMAGE_GALLERY = "image-gallery/";
+
+
 }
