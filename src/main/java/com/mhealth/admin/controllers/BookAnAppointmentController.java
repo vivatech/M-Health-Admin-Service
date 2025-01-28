@@ -155,7 +155,7 @@ public class BookAnAppointmentController {
      * Get language list
      */
     @RequestMapping(value = "/get-language", method = RequestMethod.GET)
-    public ResponseEntity<?> getLanguage(@RequestHeader(name = "Accept-Language", required = false, defaultValue = "so") Locale locale) {
+    public ResponseEntity<?> getLanguage(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/get-language");
             Object response = bookAnAppointmentService.getLanguage(locale);
@@ -171,7 +171,7 @@ public class BookAnAppointmentController {
      * Get language list
      */
     @RequestMapping(value = "/sort-by", method = RequestMethod.GET)
-    public ResponseEntity<?> getSortBy(@RequestHeader(name = "Accept-Language", required = false, defaultValue = "so") Locale locale) {
+    public ResponseEntity<?> getSortBy(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/sort-by");
             Object response = bookAnAppointmentService.getSortBy(locale);
@@ -187,7 +187,7 @@ public class BookAnAppointmentController {
      * Get language list
      */
     @RequestMapping(value = "/payment-method", method = RequestMethod.GET)
-    public ResponseEntity<?> getPaymentMethod(@RequestHeader(name = "Accept-Language", required = false, defaultValue = "so") Locale locale) {
+    public ResponseEntity<?> getPaymentMethod(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/payment-method");
             Object response = bookAnAppointmentService.getPaymentMethod(locale);
@@ -203,14 +203,30 @@ public class BookAnAppointmentController {
      */
     @RequestMapping(value = "/cancel-appointment", method = RequestMethod.POST)
     public ResponseEntity<?> cancelAppointment(@RequestBody CancelAppointmentRequest request,
-                                               @RequestHeader(name = "Accept-Language", required = false, defaultValue = "so")
-                                               Locale locale,
-                                               @RequestHeader(name = "Authorization") String authorization) {
+                                               @RequestHeader(name = "X-localization", required = false, defaultValue = "so")
+                                               Locale locale) {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/cancel-appointment");
             log.info("Request Body : {}", request);
             Object response = bookAnAppointmentService.cancelAppointment(request, locale);
             log.info("Exiting /api/v1/admin/user/appointment/cancel-appointment and it's ResponseBody is : {}", response);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            log.error("Exception : {}", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    /**
+     * Specialization List
+     */
+    @RequestMapping(value = "/get-specialization", method = RequestMethod.GET)
+    public ResponseEntity<?> getSpecialization(@RequestHeader(name = "X-localization", required = false, defaultValue = "so")
+                                               Locale locale) {
+        try {
+            log.info("Entry in /api/v1/admin/user/appointment/get-specialization");
+            Object response = bookAnAppointmentService.getSpecialization(locale);
+            log.info("Exiting /api/v1/admin/user/appointment/get-specialization and it's ResponseBody is : {}", response);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             log.error("Exception : {}", e);
