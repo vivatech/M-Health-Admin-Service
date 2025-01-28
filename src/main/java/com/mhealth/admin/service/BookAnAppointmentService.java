@@ -11,6 +11,7 @@ import com.mhealth.admin.dto.enums.RequestType;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
+import com.mhealth.admin.payment.PaymentService;
 import com.mhealth.admin.repository.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,10 +48,15 @@ public class BookAnAppointmentService {
     private ConsultationRepository consultationRepository;
     @Value("${cancel.appointment.difference}")
     private Long timeDifference;
+    @Value("${transaction.mode}")
+    private Integer transactionMode;
     @Autowired
     private OrdersRepository ordersRepository;
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
+
+    @Autowired
+    private PaymentService paymentService;
 
     public Object viewDoctorProfile(Integer doctorId, Locale locale) {
         Users doctor = usersRepository.findByUserIdAndType(doctorId, UserType.Doctor).orElse(null);
@@ -177,10 +183,14 @@ public class BookAnAppointmentService {
 
         WalletTransaction currentTransaction = createWalletTransactionEntry(orders, existTransaction);
 
-        //TODO : refund should be done from admin to patient wallet through waafi
-//        if(payment == success) {
-//            //update the status
-//        }
+        //payment
+        if(transactionMode == 3) {
+            Response response = paymentService.refundPayment(existTransaction.getPayerMobile(), existTransaction.getTransactionId(), com.mhealth.admin.config.Constants.DEFAULT_COUNTRY);
+            if (response.getStatus().equals(Status.FAILED)) {
+                return new Response(Status.FAILED, FORBIDDEN_STATUS_CODE, "Payment Failed");
+            }
+        }
+
         consultationRepository.save(consultation);
         ordersRepository.save(orders);
         currentTransaction.setTransactionStatus(Transaction_COMPLETE);

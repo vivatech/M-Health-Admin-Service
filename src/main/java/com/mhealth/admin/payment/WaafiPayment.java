@@ -126,9 +126,7 @@ public class WaafiPayment implements PaymentInterface {
         apiParams.put("serviceParams", generateRefundParams(walletTransaction, referenceNumber));
 
         //Prepare the request
-        Map<String, Object> response = null; //sendRequestToWaafi(apiParams, msisdn);
-
-
+        Map<String, Object> response = sendRequestToWaafi(apiParams, msisdn);
 
         if (response != null) {
             if ("0".equals(response.get("errorCode"))) {

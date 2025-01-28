@@ -11,6 +11,7 @@ import com.mhealth.admin.dto.dto.CancelAppointmentRequest;
 import com.mhealth.admin.dto.dto.DoctorAvailabilityRequest;
 import com.mhealth.admin.dto.dto.SearchDocResponse;
 import com.mhealth.admin.dto.dto.SearchDoctorRequest;
+import com.mhealth.admin.dto.request.RescheduleRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.BookAnAppointmentService;
 
@@ -209,7 +210,7 @@ public class BookAnAppointmentController {
             log.info("Entry in /api/v1/admin/user/appointment/cancel-appointment");
             log.info("Request Body : {}", request);
             Object response = bookAnAppointmentService.cancelAppointment(request, locale);
-            log.info("Exiting /api/v1/admin/user/appointment/cancel-appointment and it's ResponseBody is : {}", response.getBody());
+            log.info("Exiting /api/v1/admin/user/appointment/cancel-appointment and it's ResponseBody is : {}", response);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             log.error("Exception : {}", e);
