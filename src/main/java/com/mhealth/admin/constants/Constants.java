@@ -172,4 +172,7 @@ public interface Constants {
     String IMAGE_GALLERY = "image-gallery/";
 
 
+    String REFUND_TRANSFER = "refund_transfer";
+    String Transaction_PENDING = "Pending";
+    String Transaction_COMPLETE = "Completed";
 }

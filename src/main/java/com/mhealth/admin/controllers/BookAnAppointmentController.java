@@ -11,6 +11,7 @@ import com.mhealth.admin.dto.dto.CancelAppointmentRequest;
 import com.mhealth.admin.dto.dto.DoctorAvailabilityRequest;
 import com.mhealth.admin.dto.dto.SearchDocResponse;
 import com.mhealth.admin.dto.dto.SearchDoctorRequest;
+import com.mhealth.admin.dto.request.RescheduleRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.BookAnAppointmentService;
 
@@ -208,22 +209,9 @@ public class BookAnAppointmentController {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/cancel-appointment");
             log.info("Request Body : {}", request);
-            String url = "https://baanobackend.vivatechrnd.com/patient/dashboard/cancel-appointment";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set(HttpHeaders.AUTHORIZATION, authorization);
-            headers.set("Accept-Language", locale.toString());
-
-            // Combine headers and body into an HttpEntity
-            HttpEntity<CancelAppointmentRequest> entity = new HttpEntity<>(request, headers);
-
-            // Initialize RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<BaseResponseDto> response = restTemplate.exchange(url, HttpMethod.POST, entity, BaseResponseDto.class);
-            log.info("Exiting /api/v1/admin/user/appointment/cancel-appointment and it's ResponseBody is : {}", response.getBody());
-            return ResponseEntity.ok().body(response.getBody());
-
+            Object response = bookAnAppointmentService.cancelAppointment(request, locale);
+            log.info("Exiting /api/v1/admin/user/appointment/cancel-appointment and it's ResponseBody is : {}", response);
+            return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             log.error("Exception : {}", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);

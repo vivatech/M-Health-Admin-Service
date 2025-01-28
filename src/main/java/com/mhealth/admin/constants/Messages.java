@@ -68,4 +68,9 @@ public interface Messages {
 
 
 
+
+//    Book appointment
+    String CONSULTATION_NOT_FOUND = "consultation.not.found";
+    String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
+    String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
 }
