@@ -127,7 +127,7 @@ public class DoctorUserService {
                 .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
                 .append("u.clinic_name AS clinicName, ")
                 .append("u.is_international AS isInternational, ")
-                .append("(SELECT GROUP_CONCAT(s.name) FROM mh_specialisation s WHERE s.id = u.specialization_id) AS specializations, ")
+                .append("(SELECT GROUP_CONCAT(s.name) FROM mh_doctor_specialization ds JOIN mh_specialisation s ON ds.specialization_id = s.id WHERE ds.user_id = u.user_id) AS specializations, ")
                 .append("(SELECT JSON_ARRAYAGG( ")
                 .append("    JSON_OBJECT( ")
                 .append("        'feeType', c.fee_type, ")
@@ -1144,9 +1144,9 @@ public class DoctorUserService {
             List<Integer> specializationIds = specializationList.stream()
                     .map(spec -> spec.getSpecializationId().getId())
                     .collect(Collectors.toList());
-            doctorUserResponseDto.setSpecializations(specializationIds);
+            doctorUserResponseDto.setSpecializationList(specializationIds);
         } else {
-            doctorUserResponseDto.setSpecializations(Collections.emptyList());
+            doctorUserResponseDto.setSpecializationList(Collections.emptyList());
         }
 
         // Profile and documents

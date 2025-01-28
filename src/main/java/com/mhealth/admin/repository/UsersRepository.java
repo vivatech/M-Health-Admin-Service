@@ -112,4 +112,6 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
             Pageable pageable
     );
 
+    @Query(value = "SELECT u.* FROM mh_users u WHERE u.status = 'A' AND u.type = 'Clinic' AND u.is_hpcz_verified = 'Yes'",nativeQuery = true)
+    List<Users> getHospitalList();
 }

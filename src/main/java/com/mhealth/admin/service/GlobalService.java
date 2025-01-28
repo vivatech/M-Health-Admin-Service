@@ -78,6 +78,16 @@ public class GlobalService {
                 .collect(Collectors.toMap(State::getId, State::getName));
     }
 
+    public Map<Integer, String> getHospitalList(Locale locale) {
+        // Fetch hospitals directly using the repository
+        List<Users> hospitals = usersRepository.getHospitalList();
+
+        // Map the list to a key-value pair of hospitalId and clinicName
+        return hospitals.stream()
+                .collect(Collectors.toMap(Users::getUserId, Users::getClinicName));
+    }
+
+
     public Object deleteProfilePicture(Locale locale, Integer userId) throws IOException {
         Response response = new Response();
 

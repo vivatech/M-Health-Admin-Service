@@ -41,7 +41,7 @@ public class DoctorUserResponseDto {
     private Float callFinalConsultationFee;
     private String notificationLanguage;
     private List<String> languagesFluency;
-    private List<Integer> specializations;
+    private List<Integer> specializationList;
     private String profilePicture;
     private List<Map<String, String>> documents;
 }
