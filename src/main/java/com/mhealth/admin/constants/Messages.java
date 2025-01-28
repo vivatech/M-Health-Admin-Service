@@ -47,4 +47,30 @@ public interface Messages {
     String LAB_CATEGORY_NOT_FOUND = "app.lab.master.category.not.found";
     String LAB_SUB_CATEGORY_NOT_FOUND = "app.lab.sub.category.not.found";
     String LAB_PRICE_EXISTS = "lab.price.exists";
+    String AVAILABILITY_SORT = "availability.sort.by";
+    String AVAILABLE_LIST_RETRIEVED = "AVAILABLE.LIST.RETRIEVED";
+    String LANGUAGE_LIST_RETRIEVED = "LANGUAGE.LIST.RETRIEVED";
+    String SORT_BY = "sort.by";
+    String SORT_LIST_RETRIEVED = "SORT.LIST.RETRIEVED";
+    String RECORD_FOUND = "List.Found";
+    String FILE_NAME_EXISTS = "file.name.exists";
+    String FILE_CREATED = "file.created";
+    String FILE_DELETED = "file.deleted";
+    String GALLERY_LIST_FETCHED = "gallery.list.fetched";
+
+    String FILE_EMPTY = "file.empty";
+    String IMAGE_SIZE = "image.size";
+    String IMAGE_EXTENSION = "image.extension";
+
+
+
+
+
+
+
+
+//    Book appointment
+    String CONSULTATION_NOT_FOUND = "consultation.not.found";
+    String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
+    String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
 }
