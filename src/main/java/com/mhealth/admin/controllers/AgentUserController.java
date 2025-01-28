@@ -36,7 +36,7 @@ public class AgentUserController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) StatusAI status,
             @RequestParam(required = false) String contactNumber,
-            @RequestParam(required = false) Integer sortBy,
+            @RequestParam(defaultValue = "1") Integer sortBy,
             @RequestParam(required = false) String sortField,
             @RequestParam(defaultValue = "0") int page, // Adjusted default value
             @RequestParam(defaultValue = "10") int size

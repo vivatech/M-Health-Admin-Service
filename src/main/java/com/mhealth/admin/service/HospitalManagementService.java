@@ -15,7 +15,6 @@ import com.mhealth.admin.model.Users;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +24,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -471,21 +465,21 @@ public class HospitalManagementService {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(id, UserType.Clinic);
-        if (existingMarketingUser.isEmpty()) {
+        Optional<Users> existingData = usersRepository.findByUserIdAndType(id, UserType.Clinic);
+        if (existingData.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingMarketingUser.get();
+        Users existingUser = existingData.get();
 
         String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
 
-        hospitalMerchantNumberRepository.deleteByUserId(existingMarketingUser.get().getUserId());
+        hospitalMerchantNumberRepository.deleteByUserId(existingData.get().getUserId());
 
-        hospitalDetailsRepository.deleteByUserId(existingMarketingUser.get().getUserId());
+        hospitalDetailsRepository.deleteByUserId(existingData.get().getUserId());
 
         String profileId = null;
         if(existingUser.getProfilePicture() != null){
@@ -513,17 +507,17 @@ public class HospitalManagementService {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
-        if (existingMarketingUser.isEmpty()) {
+        Optional<Users> existingData = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
+        if (existingData.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingMarketingUser.get();
+        Users existingUser = existingData.get();
 
-        HospitalManagementResponseDto responseDto = convertToMarketingUserResponseDto(existingUser);
+        HospitalManagementResponseDto responseDto = convertToUserResponseDto(existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -535,7 +529,7 @@ public class HospitalManagementService {
 
     }
 
-    private HospitalManagementResponseDto convertToMarketingUserResponseDto(Users users) {
+    private HospitalManagementResponseDto convertToUserResponseDto(Users users) {
         HospitalManagementResponseDto responseDto = new HospitalManagementResponseDto();
         responseDto.setUserId(users.getUserId());
         responseDto.setClinicName(users.getClinicName());
