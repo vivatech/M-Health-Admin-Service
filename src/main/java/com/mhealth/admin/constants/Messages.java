@@ -53,4 +53,9 @@ public interface Messages {
     String SORT_BY = "sort.by";
     String SORT_LIST_RETRIEVED = "SORT.LIST.RETRIEVED";
     String RECORD_FOUND = "List.Found";
+
+//    Book appointment
+    String CONSULTATION_NOT_FOUND = "consultation.not.found";
+    String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
+    String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
 }
