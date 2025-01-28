@@ -50,7 +50,7 @@ public class VideoGalleryService {
                 .map(image -> new GalleryResponseDto(
                         image.getId(),
                         image.getName(),
-                        "/" + Constants.VIDEO_GALLERY + image.getId() + "/" + image.getName() // Assuming file location
+                        Constants.VIDEO_GALLERY + image.getId() + "/" + image.getName() // Assuming file location
                 ))
                 .toList();
 
