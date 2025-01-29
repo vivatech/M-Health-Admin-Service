@@ -541,7 +541,7 @@ public class HospitalManagementService {
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         responseDto.setPriority(users.getSort());
         responseDto.setStatus(users.getStatus().toString());
-        responseDto.setProfilePicture(users.getProfilePicture());
+        responseDto.setProfilePicture(users.getProfilePicture() != null ? Constants.USER_PROFILE_PICTURE + users.getUserId() + "/" + users.getProfilePicture() : null);
         HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
         if(hospitalMerchantNumber != null){
             responseDto.setMerchantNumber(hospitalMerchantNumber.getMerchantNumber());        }
