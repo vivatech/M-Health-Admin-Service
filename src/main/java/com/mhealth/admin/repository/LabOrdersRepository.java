@@ -18,4 +18,7 @@ public interface LabOrdersRepository extends JpaRepository<LabOrders, Integer> {
 
     @Query("Select u from LabOrders u where u.patientId.userId = ?1 and DATE(u.createdAt) >= ?2 and DATE(u.createdAt) <= ?3")
     Page<LabOrders> findByPatientIdAndDate(Integer userId, LocalDate start,LocalDate end, Pageable pageable);
+
+    @Query(value = "SELECT u from LabOrders u where u.lab.userId = ?1 order by id desc")
+    List<LabOrders> findByLabOrders(Integer labId);
 }

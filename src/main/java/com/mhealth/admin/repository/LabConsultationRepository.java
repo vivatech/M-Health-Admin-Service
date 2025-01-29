@@ -23,8 +23,8 @@ public interface LabConsultationRepository extends JpaRepository<LabConsultation
     @Query("Select u from LabConsultation u where u.patient.userId = ?1 AND u.caseId IS NULL AND u.labOrdersId IS NULL")
     List<LabConsultation> findByPatientId(Integer caseId);
 
-    @Query("Select u from LabConsultation u where  u.labOrdersId.id = ?1")
-    List<LabConsultation> findByLabOrderId(Integer id);
+    @Query(value = "Select s.sub_cat_name from mh_lab_consultation u LEFT JOIN mh_lab_sub_cat_master s ON s.sub_cat_id = u.sub_cat_id where u.lab_orders_id = ?1", nativeQuery = true)
+    List<String> findByLabOrderId(Integer id);
 
     @Query("Select u from LabConsultation u where u.patient.userId = ?1 and u.caseId.caseId = ?2 and u.categoryId.catId = ?3 and u.subCatId = ?4 order by u.labConsultId DESC")
     List<LabConsultation> findByPatientIdCaseIdCategoryIdSubCategoryId(Integer userId, Integer caseId, Integer categoryId, Integer subcategoryId);
@@ -75,4 +75,7 @@ public interface LabConsultationRepository extends JpaRepository<LabConsultation
             @Param("caseId") Integer caseId,
             @Param("consultationDate") LocalDate consultationDate,
             Pageable pageable);
+
+    @Query(value = "SELECT s.subCatName FROM LabConsultation u LEFT JOIN LabSubCategoryMaster s ON s.subCatId = u.subCatId WHERE u.labOrdersId.id = ?1")
+    String findByLabOrderIdAndName(Integer id);
 }
