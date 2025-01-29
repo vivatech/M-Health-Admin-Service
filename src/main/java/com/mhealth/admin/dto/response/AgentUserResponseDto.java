@@ -15,5 +15,7 @@ public class AgentUserResponseDto {
     private String contactNumber;
     private String notificationLanguage;
     private String status;
+    private String firstName;
+    private String lastName;
 }
 

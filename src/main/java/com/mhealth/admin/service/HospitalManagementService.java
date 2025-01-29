@@ -107,7 +107,7 @@ public class HospitalManagementService {
             dto.setPriority(user.getSort());
             dto.setClinicAddress(user.getHospitalAddress());
             dto.setNotificationLanguage(user.getNotificationLanguage());
-            dto.setStatus(user.getStatus().toString());
+            dto.setStatus(user.getStatus() != null ? user.getStatus().toString() : StatusAI.I.toString());
             return dto;
         });
 
@@ -285,6 +285,8 @@ public class HospitalManagementService {
     @Transactional
     public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementRequestDto requestDto) throws Exception {
         Response response = new Response();
+
+        requestDto.setPriority(null);
 
         // Find the user
         Optional<Users> existUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
@@ -539,6 +541,7 @@ public class HospitalManagementService {
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         responseDto.setPriority(users.getSort());
         responseDto.setStatus(users.getStatus().toString());
+        responseDto.setProfilePicture(users.getProfilePicture());
         HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
         if(hospitalMerchantNumber != null){
             responseDto.setMerchantNumber(hospitalMerchantNumber.getMerchantNumber());        }

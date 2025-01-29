@@ -3,6 +3,7 @@ package com.mhealth.admin.dto.request;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Pattern;
 
@@ -54,12 +55,12 @@ public class AgentUserRequestDto {
     }
 
     private void validatePassword(String value, StringBuilder validationErrors) {
-        if (value == null || value.trim().isEmpty()) {
-            validationErrors.append("Password is required. ");
-        } else if (value.length() < 8 || value.length() > 15) {
-            validationErrors.append("Password must be between 8 and 15 characters. ");
-        } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", value)) {
-            validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
+        if (!StringUtils.isEmpty(value)) {
+            if (value.length() < 8 || value.length() > 15) {
+                validationErrors.append("Password must be between 8 and 15 characters. ");
+            } else if (!Pattern.matches("^(?=.*\\d)(?=.*[$@$!%*#?&])(?=.*[A-Z])[A-Za-z\\d$@$!%*#?&]{8,}$", value)) {
+                validationErrors.append("Password must have at least one number, one special character, and one capital letter. ");
+            }
         }
     }
 
