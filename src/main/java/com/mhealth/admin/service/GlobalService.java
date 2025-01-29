@@ -124,4 +124,12 @@ public class GlobalService {
         return response;
 
     }
+    public Object getAllCityList(Locale locale) {
+        // Fetch all cities list
+        List<City> cities = cityRepository.findAll();
+
+        // Map city IDs to city names
+        return cities.stream()
+                .collect(Collectors.toMap(City::getId, City::getName));
+    }
 }

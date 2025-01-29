@@ -127,4 +127,21 @@ public class GlobalController {
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    /**
+     * Get all cities
+     */
+    @RequestMapping(value = "/get-all-city", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllCityList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-all-city");
+
+            Object response = globalService.getAllCityList(locale);
+
+            log.info("Response Sent For /api/v1/admin/global/get-all-city : {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception : ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
