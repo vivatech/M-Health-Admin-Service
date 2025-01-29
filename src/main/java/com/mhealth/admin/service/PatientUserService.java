@@ -481,7 +481,7 @@ public class PatientUserService {
 
     private PatientUserResponseDto convertToPatientUserResponseDto(Users user, Locale locale) {
         PatientUserResponseDto dto = new PatientUserResponseDto();
-        dto.setProfilePicture(user.getProfilePicture());
+        dto.setProfilePicture(StringUtils.isEmpty(user.getProfilePicture()) ? null : Constants.USER_PROFILE_PICTURE + user.getUserId() + "/" + user.getProfilePicture());
         dto.setUserId(user.getUserId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());

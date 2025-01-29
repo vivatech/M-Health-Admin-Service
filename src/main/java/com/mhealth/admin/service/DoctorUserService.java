@@ -887,19 +887,20 @@ public class DoctorUserService {
 
         Map<String, List<DoctorAvailabilityResponseDto>> dtoList = mapResultListIntoDoctorAvailabilityResponseDto(resultList);
 
-        if(dtoList.isEmpty()){
-            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(RECORD_NOT_FOUND, null, locale));
-        }
-
         return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(DOCTOR_AVAILABILITY_FOUND, null, locale), dtoList);
     }
 
     private Map<String, List<DoctorAvailabilityResponseDto>> mapResultListIntoDoctorAvailabilityResponseDto(List<Object[]> resultList) {
         Map<String, List<DoctorAvailabilityResponseDto>> responseMap = new HashMap<>();
+        List<String> weekDays = Arrays.asList("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+
         resultList.forEach(row ->
-                responseMap.computeIfAbsent((String) row[1], k -> new ArrayList<>())
+                responseMap.computeIfAbsent(((String) row[1]).toLowerCase(), k -> new ArrayList<>())
                         .add(new DoctorAvailabilityResponseDto((Integer) row[0], (String) row[2], (Integer) row[3], (Time) row[4]))
         );
+
+        weekDays.forEach(day -> responseMap.putIfAbsent(day, new ArrayList<>()));
+
         return responseMap;
     }
 
