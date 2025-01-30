@@ -18,6 +18,7 @@ import com.mhealth.admin.service.BookAnAppointmentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -43,6 +44,8 @@ public class BookAnAppointmentController {
 
     @Autowired
     private MessageSource messageSource;
+    @Value("${request.url}")
+    private String domain;
 
     /**
      * Search list of doctors from given city, clinic id, list of specialization in the form of id's
@@ -56,7 +59,7 @@ public class BookAnAppointmentController {
         try {
             log.info("Entry in /api/v1/admin/user/appointment");
             log.info("Request Body : {}", r);
-            String url = "https://baanobackend.vivatechrnd.com/patient/book-appointment/search-doctor";
+            String url = domain + "/patient/book-appointment/search-doctor";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Accept-Language", "en");
@@ -94,7 +97,7 @@ public class BookAnAppointmentController {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/doctor-availability-latest-list");
             log.info("Request Body : {}", request);
-            String url = "https://baanobackend.vivatechrnd.com/patient/book-appointment/doctor-availability-latest-list";
+            String url = domain + "/patient/book-appointment/doctor-availability-latest-list";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Accept-Language", locale.toString());

@@ -25,4 +25,7 @@ public interface LabCategoryMasterRepository extends JpaRepository<LabCategoryMa
     Page<LabCategoryMaster> findByCatNameContainingAndCatStatus(
             @Param("catName") String catName,
             @Param("catStatus") StatusAI catStatus, Pageable pageable);
+
+    @Query(value = "SELECT * FROM mh_lab_cat_master lcm WHERE lcm.cat_status = 'Active' ", nativeQuery = true)
+    List<LabCategoryMaster> findAllByCatStatus();
 }

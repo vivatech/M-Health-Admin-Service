@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LabSubCategoryMasterRepository extends JpaRepository<LabSubCategoryMaster, Integer> {
@@ -23,4 +24,7 @@ public interface LabSubCategoryMasterRepository extends JpaRepository<LabSubCate
             @Param("catId") Integer catId,
             @Param("subCatStatus") CategoryStatus subCatStatus,
             Pageable pageable);
+
+    @Query(value = "SELECT s FROM LabSubCategoryMaster s WHERE s.labCategory.catId = ?1 AND s.subCatStatus = ?2")
+    List<LabSubCategoryMaster> findByCatIdAndStatus(Integer categoryId, CategoryStatus status);
 }
