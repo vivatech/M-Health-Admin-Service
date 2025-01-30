@@ -46,7 +46,7 @@ public class LabPriceManagementController {
             log.info("Request Parameters: labId={}, categoryName={}, subCategoryName={}, sortField={}, sortBy={}, page={}, size={}"
                     , labId, categoryName, subCategoryName, sortField, sortBy, page, size);
 
-            Object response = labPriceManagementService.getLabPriceList(locale, labId, categoryName, subCategoryName, sortField, sortBy, page, size);
+            Object response = labPriceManagementService.getFilteredLabPrice(locale, labId, categoryName, subCategoryName, sortField, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/lab/lab-price/labId? by lab ID: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);
