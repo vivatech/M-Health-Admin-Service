@@ -178,7 +178,7 @@ public interface Constants {
 
     String HEALTH_TIPS_CATEGORY = "category/";
     String HEALTH_TIPS = "healthTip/";
-    String HEALTH_TIPS_VIDEO_THUMB = "/thumb/";
+    String HEALTH_TIPS_VIDEO_THUMB = "/thumb";
 
 
 }

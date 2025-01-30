@@ -11,6 +11,7 @@ import com.mhealth.admin.model.HealthTip;
 import com.mhealth.admin.model.HealthTipCategoryMaster;
 import com.mhealth.admin.repository.HealthTipCategoryMasterRepository;
 import com.mhealth.admin.repository.HealthTipRepository;
+import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -42,6 +43,7 @@ public class HealthTipService {
     @Autowired
     private FileService fileService;
 
+    @Transactional
     public ResponseEntity<Response> createHealthTip(HealthTipRequest request, Locale locale) throws Exception {
         HealthTipCategoryMaster category = categoryRepository.findById(request.getCategoryId())
                 .orElse(null);
@@ -95,7 +97,7 @@ public class HealthTipService {
             filePath = filePath + com.mhealth.admin.constants.Constants.HEALTH_TIPS_VIDEO_THUMB;
 
             // Save the file
-            fileService.saveFile(request.getPhoto(), filePath, newFileNameThumb);
+            fileService.saveFile(request.getVideoThumb(), filePath, newFileNameThumb);
         }
 
         return ResponseEntity.ok(new Response(Status.SUCCESS, Constants.SUCCESS_CODE,

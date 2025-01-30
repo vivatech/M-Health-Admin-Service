@@ -1,18 +1,21 @@
 package com.mhealth.admin.service;
 
 import com.mhealth.admin.config.Constants;
+import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.request.HealthTipCategoryRequest;
 import com.mhealth.admin.dto.request.HealthTipCategorySearchRequest;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.exception.AdminModuleExceptionHandler;
 import com.mhealth.admin.model.HealthTip;
 import com.mhealth.admin.model.HealthTipCategoryMaster;
 import com.mhealth.admin.model.HealthTipPackageCategories;
 import com.mhealth.admin.repository.HealthTipCategoryMasterRepository;
 import com.mhealth.admin.repository.HealthTipPackageCategoriesRepository;
 import com.mhealth.admin.repository.HealthTipRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -29,6 +32,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+
+import static com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY;
+import static com.mhealth.admin.constants.Constants.SUCCESS;
 
 @Service
 public class HealthTipCategoryMasterService {
@@ -71,7 +77,7 @@ public class HealthTipCategoryMasterService {
         category = repository.save(category);
 
         if (request.getPhoto() != null) {
-            String filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY + category.getCategoryId();
+            String filePath = HEALTH_TIPS_CATEGORY + category.getCategoryId();
 
             // Save the file
             fileService.saveFile(request.getPhoto(), filePath, newFileName);
@@ -101,7 +107,7 @@ public class HealthTipCategoryMasterService {
 
         if (request.getPhoto() != null) {
 
-            String filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY + category.getCategoryId();
+            String filePath = HEALTH_TIPS_CATEGORY + category.getCategoryId();
 
             // delete exist old profile
             if (category.getPhoto() != null) {
@@ -148,7 +154,8 @@ public class HealthTipCategoryMasterService {
             HealthTipCategorySearchRequest request, Locale locale) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
         Page<HealthTipCategoryMaster> page = repository.findByNameContainingAndStatus(
-                request.getName(), ObjectUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus()), pageable);
+                request.getName(), ObjectUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus()),
+                request.getSortBy(), request.getSortDirection(), pageable);
 
         if (page.getContent().isEmpty()) {
             return ResponseEntity.ok(new PaginationResponse<>(
@@ -200,5 +207,17 @@ public class HealthTipCategoryMasterService {
         String newFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         // Handle file upload here
         return newFileName;
+    }
+
+    public ResponseEntity<Response> getCategoryById(Integer id, Locale locale) {
+
+        HealthTipCategoryMaster category = repository.findById(id).orElseThrow(()-> new AdminModuleExceptionHandler(messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_NOT_FOUND, null, locale)));
+
+        if(!StringUtils.isEmpty(category.getPhoto()))
+             category.setPhoto(HEALTH_TIPS_CATEGORY + category.getCategoryId() + "/" + category.getPhoto());
+        return ResponseEntity.ok(new Response(
+                Status.SUCCESS, SUCCESS, "HealthTip Category Fetched Success",
+                category
+        ));
     }
 }

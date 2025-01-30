@@ -23,4 +23,6 @@ public class HealthTipCategorySearchRequest {
 
     //@Min(value = 1, message = "Page size must be 1 or greater")
     private Integer size;
+    private String sortBy;
+    private String sortDirection;
 }
