@@ -206,23 +206,26 @@ public class HospitalManagementService {
             user.setSort(Integer.valueOf(requestDto.getPriority()));
         }
 
-        user = usersRepository.save(user);
+        String fileName = null;
+
+        if (requestDto.getProfilePicture() != null) {
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
+
+            // Generate a random file name
+            fileName = UUID.randomUUID() + "." + extension;
+
+            user.setProfilePicture(fileName);
+        }
+
+            user = usersRepository.save(user);
 
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
-            // Extract the file extension
-            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
-
-            // Generate a random file name
-            String fileName = UUID.randomUUID() + "." + extension;
-
             // Save the file
             fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
-
-            user.setProfilePicture(fileName);
-
         }
 
         if(requestDto.getMerchantNumber() != null){

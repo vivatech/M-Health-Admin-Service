@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -43,27 +44,45 @@ public class HealthTipCategoryMasterService {
     @Autowired
     private HealthTipRepository healthTipRepository;
 
-    public ResponseEntity<Response> addCategory(HealthTipCategoryRequest request, Locale locale) {
-        String newFileName = uploadFile(request.getPhoto());
+    @Autowired
+    private FileService fileService;
+
+    public ResponseEntity<Response> addCategory(HealthTipCategoryRequest request, Locale locale) throws Exception {
+
         HealthTipCategoryMaster category = new HealthTipCategoryMaster();
         category.setName(request.getName());
         category.setNameSl(request.getNameSl());
         category.setDescription(request.getDescription());
         category.setDescriptionSl(request.getDescriptionSl());
-        category.setPhoto(newFileName);
         category.setStatus(request.getStatus());
         category.setIsFeatured(request.getIsFeatured());
         category.setPriority(request.getPriority());
         category.setCreatedAt(LocalDateTime.now());
 
-        repository.save(category);
+        String newFileName = null;
+
+        if (request.getPhoto() != null) {
+            String extension = fileService.getFileExtension(Objects.requireNonNull(request.getPhoto().getOriginalFilename()));
+            newFileName = UUID.randomUUID() + "." + extension;
+
+            category.setPhoto(newFileName);
+        }
+
+        category = repository.save(category);
+
+        if (request.getPhoto() != null) {
+            String filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY + category.getCategoryId();
+
+            // Save the file
+            fileService.saveFile(request.getPhoto(), filePath, newFileName);
+        }
 
         return ResponseEntity.ok(new Response(
                 Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_ADDED_SUCCESSFULLY, null, locale)));
     }
 
-    public ResponseEntity<Response> updateCategory(Integer id, HealthTipCategoryRequest request, Locale locale) {
+    public ResponseEntity<Response> updateCategory(Integer id, HealthTipCategoryRequest request, Locale locale) throws Exception {
         HealthTipCategoryMaster category = repository.findById(id).orElse(null);
         if (category == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -71,16 +90,35 @@ public class HealthTipCategoryMasterService {
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_NOT_FOUND, null, locale)));
         }
 
-        String newFileName = uploadFile(request.getPhoto());
         category.setName(request.getName());
         category.setNameSl(request.getNameSl());
         category.setDescription(request.getDescription());
         category.setDescriptionSl(request.getDescriptionSl());
-        category.setPhoto(newFileName);
         category.setStatus(request.getStatus());
         category.setIsFeatured(request.getIsFeatured());
         category.setPriority(request.getPriority());
         category.setUpdatedAt(LocalDateTime.now());
+
+        if (request.getPhoto() != null) {
+
+            String filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY + category.getCategoryId();
+
+            // delete exist old profile
+            if (category.getPhoto() != null) {
+                fileService.deleteFile(filePath, category.getPhoto());
+            }
+
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(request.getPhoto().getOriginalFilename()));
+
+            // Generate a random file name
+            String fileName = UUID.randomUUID() + "." + extension;
+
+            // Save the file
+            fileService.saveFile(request.getPhoto(), filePath, fileName);
+
+            category.setPhoto(fileName);
+        }
 
         repository.save(category);
 
@@ -144,7 +182,7 @@ public class HealthTipCategoryMasterService {
         }
 
         List<HealthTip> healthTip = healthTipRepository.findByHealthTipCategory(category);
-        if(!healthTip.isEmpty()){
+        if (!healthTip.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new Response(Status.FAILED, Constants.FAILED_CODE,
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE, null, locale)));

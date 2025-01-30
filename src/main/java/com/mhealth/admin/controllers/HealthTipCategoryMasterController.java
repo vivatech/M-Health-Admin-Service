@@ -35,7 +35,7 @@ public class HealthTipCategoryMasterController {
     @PostMapping
     public ResponseEntity<Response> addCategory(
             @Valid @ModelAttribute HealthTipCategoryRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) throws Exception {
         return service.addCategory(request, locale);
     }
 
@@ -47,7 +47,7 @@ public class HealthTipCategoryMasterController {
     public ResponseEntity<Response> updateCategory(
             @PathVariable Integer id,
             @Valid @ModelAttribute HealthTipCategoryRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) throws Exception {
         return service.updateCategory(id, request, locale);
     }
 

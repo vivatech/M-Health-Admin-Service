@@ -34,7 +34,7 @@ public class HealthTipController {
     @PostMapping
     public ResponseEntity<Response> createHealthTip(
             @Valid @ModelAttribute HealthTipRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) throws Exception {
         return healthTipService.createHealthTip(request,locale);
     }
 

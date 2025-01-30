@@ -175,4 +175,10 @@ public interface Constants {
     String REFUND_TRANSFER = "refund_transfer";
     String Transaction_PENDING = "Pending";
     String Transaction_COMPLETE = "Completed";
+
+    String HEALTH_TIPS_CATEGORY = "category/";
+    String HEALTH_TIPS = "healthTip/";
+    String HEALTH_TIPS_VIDEO_THUMB = "/thumb/";
+
+
 }
