@@ -14,6 +14,7 @@ import com.mhealth.admin.repository.HealthTipRepository;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
@@ -42,6 +46,8 @@ public class HealthTipService {
 
     @Autowired
     private FileService fileService;
+    @Value("${storage.location}")
+    private String uploadDirectoryLocation;
 
     @Transactional
     public ResponseEntity<Response> createHealthTip(HealthTipRequest request, Locale locale) throws Exception {
@@ -94,7 +100,7 @@ public class HealthTipService {
         }
 
         if (request.getVideoThumb() != null) {
-            filePath = filePath + com.mhealth.admin.constants.Constants.HEALTH_TIPS_VIDEO_THUMB;
+            filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS + healthTip.getHealthTipId() + com.mhealth.admin.constants.Constants.HEALTH_TIPS_VIDEO_THUMB;
 
             // Save the file
             fileService.saveFile(request.getVideoThumb(), filePath, newFileNameThumb);
