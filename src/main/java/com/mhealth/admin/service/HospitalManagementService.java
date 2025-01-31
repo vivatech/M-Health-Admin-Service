@@ -8,6 +8,7 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.HospitalManagementRequestDto;
+import com.mhealth.admin.dto.request.HospitalManagementUpdateRequestDto;
 import com.mhealth.admin.dto.response.*;
 import com.mhealth.admin.model.HospitalDetails;
 import com.mhealth.admin.model.HospitalMerchantNumber;
@@ -17,6 +18,7 @@ import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -283,10 +285,8 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementRequestDto requestDto) throws Exception {
+    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementUpdateRequestDto requestDto) throws Exception {
         Response response = new Response();
-
-        requestDto.setPriority(null);
 
         // Find the user
         Optional<Users> existUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
@@ -309,15 +309,18 @@ public class HospitalManagementService {
         }
 
         // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+        if(StringUtils.isEmpty(requestDto.getEmail())) {
+            long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+            if (emailCount > 0) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
         long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Clinic, userId);
 
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
@@ -337,7 +340,7 @@ public class HospitalManagementService {
 
         // Update the user fields
         existingUser.setClinicName(requestDto.getClinicName());
-        existingUser.setEmail(requestDto.getEmail());
+        existingUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? existingUser.getEmail() : requestDto.getEmail());
         existingUser.setContactNumber(requestDto.getContactNumber());
         existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);

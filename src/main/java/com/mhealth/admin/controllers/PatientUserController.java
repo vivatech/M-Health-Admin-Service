@@ -81,8 +81,8 @@ public class PatientUserController {
      */
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updatePatientUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestParam Integer userId,
-                                                 @ModelAttribute PatientUserRequestDto patientUserRequestDto) {
+                                               @RequestParam Integer userId,
+                                               @ModelAttribute PatientUserRequestDto patientUserRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/patient/update");
             log.info("Request Parameter: userId={}", userId);

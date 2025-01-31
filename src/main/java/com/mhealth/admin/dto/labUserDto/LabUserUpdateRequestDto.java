@@ -6,22 +6,18 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class LabUserRequestDto {
+@NoArgsConstructor
+@Data
+public class LabUserUpdateRequestDto {
     private MultipartFile profilePicture;
     private String labName;
     private String fullName;
     private String email;
     private String contactNumber;
-    private String password;
-    private String confirmPassword;
     private String labRegistrationNumber;
     private Integer countryId;
     private Integer provinceId;
@@ -44,15 +40,6 @@ public class LabUserRequestDto {
         } else if (!Pattern.matches("\\d{9}", contactNumber)) {
             // Validate if contact number is exactly 9 digits
             validationErrors.append("Contact number must be exactly 9 digits. ");
-        }
-        if (StringUtils.isEmpty(password)) {
-            validationErrors.append("Password is required. ");
-        }
-        if (StringUtils.isEmpty(confirmPassword)) {
-            validationErrors.append("Confirm password is required. ");
-        }
-        if (!StringUtils.isEmpty(confirmPassword) && !StringUtils.isEmpty(password) && (!confirmPassword.equals(password))) {
-            validationErrors.append("Confirm password and Password should be same. ");
         }
         if (StringUtils.isEmpty(labRegistrationNumber)) {
             validationErrors.append("Lab Registration Number is required. ");

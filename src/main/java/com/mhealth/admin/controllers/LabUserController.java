@@ -3,6 +3,7 @@ package com.mhealth.admin.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.labUserDto.LabUserRequestDto;
+import com.mhealth.admin.dto.labUserDto.LabUserUpdateRequestDto;
 import com.mhealth.admin.service.LabUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -85,13 +86,13 @@ public class LabUserController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updateLabUser(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                            @RequestParam Integer userId,
-                                           @ModelAttribute LabUserRequestDto labUserRequestDto) {
+                                           @ModelAttribute LabUserUpdateRequestDto labUserUpdateRequestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/update");
             log.info("Request Parameter: userId={}", userId);
-            log.info("Request Body: {}", labUserRequestDto);
+            log.info("Request Body: {}", labUserUpdateRequestDto);
 
-            Object response = labUserService.updateLabUser(locale, userId, labUserRequestDto);
+            Object response = labUserService.updateLabUser(locale, userId, labUserUpdateRequestDto);
 
             log.info("Response Sent For /api/v1/admin/user/lab/update: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);

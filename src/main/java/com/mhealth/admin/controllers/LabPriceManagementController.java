@@ -35,18 +35,18 @@ public class LabPriceManagementController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> getListOfLabPricesByLabId(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
                                                   @RequestParam Integer labId,
-                                                  @RequestParam(required = false) String categoryName,
-                                                  @RequestParam(required = false) String subCategoryName,
+                                                  @RequestParam(required = false) Integer categoryId,
+                                                  @RequestParam(required = false) Integer subCategoryId,
                                                   @RequestParam(required = false, defaultValue = "labPriceComment") String sortField,
                                                   @RequestParam(required = false, defaultValue = "1") String sortBy,
                                                   @RequestParam(defaultValue = "1") int page,
                                                   @RequestParam(defaultValue = "10") int size) {
         try {
             log.info("Request Received For /api/v1/admin/user/lab/lab-price/labId? api");
-            log.info("Request Parameters: labId={}, categoryName={}, subCategoryName={}, sortField={}, sortBy={}, page={}, size={}"
-                    , labId, categoryName, subCategoryName, sortField, sortBy, page, size);
+            log.info("Request Parameters: labId={}, categoryId={}, subCategoryId={}, sortField={}, sortBy={}, page={}, size={}"
+                    , labId, categoryId, subCategoryId, sortField, sortBy, page, size);
 
-            Object response = labPriceManagementService.getFilteredLabPrice(locale, labId, categoryName, subCategoryName, sortField, sortBy, page, size);
+            Object response = labPriceManagementService.getFilteredLabPrice(locale, labId, categoryId, subCategoryId, sortField, sortBy, page, size);
 
             log.info("Response Sent For /api/v1/admin/user/lab/lab-price/labId? by lab ID: {}", objectMapper.writeValueAsString(response));
             return new ResponseEntity<>(response, HttpStatus.OK);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.request.HospitalManagementRequestDto;
+import com.mhealth.admin.dto.request.HospitalManagementUpdateRequestDto;
 import com.mhealth.admin.service.HospitalManagementService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -77,8 +78,8 @@ public class HospitalManagementController {
 
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public ResponseEntity<?> updateHospitalManagement(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
-                                                 @RequestParam Integer hospitalId,
-                                                 @ModelAttribute HospitalManagementRequestDto requestDto) {
+                                                      @RequestParam Integer hospitalId,
+                                                      @ModelAttribute HospitalManagementUpdateRequestDto requestDto) {
         try {
             log.info("Request Received For /api/v1/admin/user/hospital/update");
             log.info("Request Parameter: hospitalId={}", hospitalId);
