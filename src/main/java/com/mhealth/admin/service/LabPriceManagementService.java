@@ -121,9 +121,9 @@ public class LabPriceManagementService {
 
     }
 
-    public Response getFilteredLabPrice(Locale locale, Integer labId, String categoryName, String subCategoryName, String sortField, String sortBy, int page, int size) {
+    public Response getFilteredLabPrice(Locale locale, Integer labId, Integer categoryId, Integer subCategoryId, String sortField, String sortBy, int page, int size) {
         if (page == 0) page = 1;
-        Specification<LabPrice> specification = filterByParams(labId, categoryName, subCategoryName, sortField, sortBy);
+        Specification<LabPrice> specification = filterByParams(labId, categoryId, subCategoryId, sortField, sortBy);
         // Pagination
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<LabPrice> pageableResponse = labPriceRepository.findAll(specification, pageable);
@@ -134,7 +134,7 @@ public class LabPriceManagementService {
         return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.LAB_PRICE_LIST_FETCH, null, locale), data);
     }
 
-    public static Specification<LabPrice> filterByParams(Integer labId, String categoryName, String subCategoryName, String sortField, String sortBy) {
+    public static Specification<LabPrice> filterByParams(Integer labId, Integer categoryId, Integer subCategoryId, String sortField, String sortBy) {
         if(!sortByValues.contains(sortField)){
             sortField = "labPriceComment";
         }
@@ -149,15 +149,15 @@ public class LabPriceManagementService {
             }
 
             // Filter by categoryName
-            if (!StringUtils.isEmpty(categoryName)) {
+            if (categoryId != null && categoryId > 0) {
                 Join<LabPrice, LabCategoryMaster> category = root.join("catId");
-                predicates.add(criteriaBuilder.equal(category.get("catName"), categoryName));
+                predicates.add(criteriaBuilder.equal(category.get("catId"), categoryId));
             }
 
             // Filter by subCategoryName
-            if (!StringUtils.isEmpty(subCategoryName)) {
+            if (subCategoryId != null && subCategoryId > 0) {
                 Join<LabPrice, LabSubCategoryMaster> subCategory = root.join("subCatId");
-                predicates.add(criteriaBuilder.equal(subCategory.get("subCatName"), subCategoryName));
+                predicates.add(criteriaBuilder.equal(subCategory.get("subCatId"), subCategoryId));
             }
 
             // Sorting logic

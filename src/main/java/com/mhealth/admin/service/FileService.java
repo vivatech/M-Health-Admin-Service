@@ -29,7 +29,10 @@ public class FileService {
     public ValidateResult validateFile(Locale locale, MultipartFile file, List<String> allowedExtensions, long maxSize) throws Exception {
         String extension = getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
         if (!allowedExtensions.contains(extension)) {
-            return new ValidateResult(false, messageSource.getMessage(Messages.SELECT_PROFILE_PICTURE, null, locale));
+            String errorMessage = allowedExtensions.contains("pdf")
+                    ? "PDF not found!"
+                    : messageSource.getMessage(Messages.SELECT_PROFILE_PICTURE, null, locale);
+            return new ValidateResult(false, errorMessage);
         }
         if (file.getSize() > maxSize) {
             return new ValidateResult(false, messageSource.getMessage(Messages.DOCTOR_ID_SIZE_LIMIT, null, locale));
