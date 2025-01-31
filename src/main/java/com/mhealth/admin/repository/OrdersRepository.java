@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.OrderStatus;
+import com.mhealth.admin.dto.enums.RequestType;
 import com.mhealth.admin.model.Consultation;
 import com.mhealth.admin.model.Orders;
 import org.springframework.data.domain.Page;
@@ -47,15 +48,25 @@ public interface OrdersRepository extends JpaRepository<Orders, Integer> {
             " AND (:consultationDate IS NULL OR c.consultationDate = :consultationDate)")
     Page<Orders> searchOrders(String patientName, String doctorName, String consultationDate, Pageable pageable);
 
-    @Query("SELECT o FROM Orders o " +
-            " JOIN o.patientId p " +
-            " JOIN o.doctorId d " +
-            " JOIN o.caseId c " +
-            " WHERE (:patientName IS NULL OR :patientName = '' OR CONCAT(LOWER(p.firstName),' ',LOWER(p.lastName)) LIKE LOWER(CONCAT('%', :patientName, '%'))) " +
-            " AND (:doctorName IS NULL OR :doctorName = '' OR CONCAT(LOWER(d.firstName),' ',LOWER(d.lastName)) LIKE LOWER(CONCAT('%', :doctorName, '%'))) " +
-            " AND (:consultationDate IS NULL OR c.consultationDate = :consultationDate) " +
-            " AND c.caseId IS NOT NULL")
-    Page<Orders> fetchOrders(String patientName, String doctorName, LocalDate consultationDate, Pageable pageable);
+    @Query("SELECT o FROM Orders o \n" +
+            "JOIN o.patientId p \n" +  // Change from patientId to patient
+            "JOIN o.doctorId d \n" +  // Change from doctorId to doctor
+            "JOIN o.caseId c \n" +
+            "WHERE (:patientName IS NULL OR :patientName = '' \n" +
+            "       OR LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :patientName, '%'))) \n" +
+            "AND (:doctorName IS NULL OR :doctorName = '' \n" +
+            "       OR LOWER(CONCAT(d.firstName, ' ', d.lastName)) LIKE LOWER(CONCAT('%', :doctorName, '%'))) \n" +
+            "AND (:consultationDate IS NULL OR c.consultationDate = :consultationDate) \n" +
+            "AND c.requestType = :requestType \n" +
+            "AND c.caseId IS NOT NULL\n")
+    Page<Orders> fetchOrders(
+            @Param("patientName") String patientName,
+            @Param("doctorName") String doctorName,
+            @Param("consultationDate") LocalDate consultationDate,
+            @Param("requestType") RequestType requestType,
+            Pageable pageable);
+
+
 
 
     Orders findByCaseId(Consultation in);
