@@ -77,6 +77,8 @@ public class HealthTipService {
             newFileName = UUID.randomUUID() + "." + extension;
 
             healthTip.setPhoto(newFileName);
+        } else {
+            healthTip.setPhoto("");
         }
 
         String newFileNameThumb = null;
@@ -126,15 +128,15 @@ public class HealthTipService {
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_NOT_FOUND, null, locale)));
         }
 
-        String photoFileName = uploadFile(request.getPhoto());
-        String videoThumbFileName = uploadFile(request.getVideoThumb());
+//        String photoFileName = uploadFile(request.getPhoto());
+//        String videoThumbFileName = uploadFile(request.getVideoThumb());
 
         healthTip.setHealthTipCategory(category);
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
-        healthTip.setPhoto(StringUtils.isEmpty(photoFileName) ? "" : photoFileName);
+        //healthTip.setPhoto(StringUtils.isEmpty(photoFileName) ? "" : photoFileName);
         healthTip.setVideo(request.getVideo());
-        healthTip.setVideoThumb(videoThumbFileName);
+        //healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());
         healthTip.setUpdatedAt(new Date());
 
@@ -144,7 +146,7 @@ public class HealthTipService {
             filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS + healthTip.getHealthTipId();
 
             // delete exist old profile
-            if (healthTip.getPhoto() != null) {
+            if (!StringUtils.isEmpty(healthTip.getPhoto())) {
                 fileService.deleteFile(filePath, healthTip.getPhoto());
             }
 
@@ -162,7 +164,7 @@ public class HealthTipService {
 
         if (request.getVideoThumb() != null) {
 
-            filePath = filePath + com.mhealth.admin.constants.Constants.HEALTH_TIPS_VIDEO_THUMB;
+            filePath = com.mhealth.admin.constants.Constants.HEALTH_TIPS + healthTip.getHealthTipId() + com.mhealth.admin.constants.Constants.HEALTH_TIPS_VIDEO_THUMB;
 
             // delete exist old profile
             if (healthTip.getVideoThumb() != null) {
