@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -161,8 +162,8 @@ public class HealthTipPackageService {
                             messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_NOT_FOUND, null, locale)));
         }
 
-        HealthTipPackageUser healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
-        if (healthTipPackageUser != null) {
+        List<HealthTipPackageUser> healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
+        if (!healthTipPackageUser.isEmpty()) {
             return ResponseEntity.ok(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                     messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER, null, locale)));
         }

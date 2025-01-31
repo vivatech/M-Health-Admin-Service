@@ -147,6 +147,6 @@ public interface HealthTipPackageUserRepository extends JpaRepository<HealthTipP
             @Param("packageName") String packageName,
             @Param("filterDate") LocalDate filterDate,
             Pageable pageable);
-  
-    HealthTipPackageUser findByHealthTipPackage(HealthTipPackage healthTipPackage);
+
+    List<HealthTipPackageUser> findByHealthTipPackage(HealthTipPackage healthTipPackage);
 }

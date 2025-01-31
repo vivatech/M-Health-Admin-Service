@@ -192,7 +192,7 @@ public class HealthTipCategoryMasterService {
         if (!healthTip.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new Response(Status.FAILED, Constants.FAILED_CODE,
-                            messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE, null, locale)));
+                            messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP, null, locale)));
         }
 
         repository.deleteById(id);
