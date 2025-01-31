@@ -23,6 +23,7 @@ import java.util.List;
 
 @RestController
 @Tag(name = "Patient Transaction", description = "APIs for managing patient transaction")
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/patient-transaction")
 public class PatientTransactionController {
 
