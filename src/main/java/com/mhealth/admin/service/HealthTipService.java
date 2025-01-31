@@ -59,14 +59,14 @@ public class HealthTipService {
                             messageSource.getMessage(Constants.HEALTH_TIP_CATEGORY_NOT_FOUND, null, locale)));
         }
 
-        String videoThumbFileName = uploadFile(request.getVideoThumb());
+        //String videoThumbFileName = uploadFile(request.getVideoThumb());
 
         HealthTip healthTip = new HealthTip();
         healthTip.setHealthTipCategory(category);
         healthTip.setTopic(request.getTopic());
         healthTip.setDescription(request.getDescription());
         healthTip.setVideo(request.getVideo());
-        healthTip.setVideoThumb(videoThumbFileName);
+        //healthTip.setVideoThumb(videoThumbFileName);
         healthTip.setStatus(request.getStatus());
         healthTip.setCreatedAt(new Date());
 
