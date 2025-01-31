@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -161,8 +162,8 @@ public class HealthTipPackageService {
                             messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_NOT_FOUND, null, locale)));
         }
 
-        HealthTipPackageUser healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
-        if (healthTipPackageUser != null) {
+        List<HealthTipPackageUser> healthTipPackageUser = healthTipPackageUserRepository.findByHealthTipPackage(healthTipPackage);
+        if (!healthTipPackageUser.isEmpty()) {
             return ResponseEntity.ok(new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
                     messageSource.getMessage(Constants.HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER, null, locale)));
         }
@@ -180,10 +181,11 @@ public class HealthTipPackageService {
     public ResponseEntity<PaginationResponse<HealthTipPackageCategories>> searchHealthTipPackages(HealthTipPackageSearchRequest request, Locale locale) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize() != null ? request.getSize() : Constants.DEFAULT_PAGE_SIZE);
         StatusAI status = !StringUtils.isEmpty(request.getStatus()) ? StatusAI.valueOf(request.getStatus()) : null;
-        Page<HealthTipPackageCategories> page = repository.findByNameAndStatusAndDuration(
+        Page<HealthTipPackageCategories> page = repository.findByNameAndStatusAndDurationAndCategory(
                 request.getPackageName(),
                 status,
                 request.getDurationId(),
+                request.getCategoryId(),
                 pageable
         );
         if (page.getContent().isEmpty()) {
