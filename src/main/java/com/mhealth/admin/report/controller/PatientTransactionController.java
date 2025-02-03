@@ -40,12 +40,11 @@ public class PatientTransactionController {
     @Operation(summary = "Get patient transaction", description = "Fetch patient transaction details with filters and pagination")
     public PaginationResponse<PatientTransactionDto> getPatientTransaction(
             @RequestBody PatientTransactionRequestDto request) {
-
         try {
-            // Set pagination and sorting
-            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "created_at"));
+            // Create Pageable objects for both queries to apply pagination
+            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            // Fetch system transactions
+            // Fetch system transactions with pagination
             Page<SystemTransaction> systemTransactionPage = systemTransactionRepository.fetchPatientTransaction(
                     request.getServiceType(),
                     request.getStatus(),
@@ -56,26 +55,15 @@ public class PatientTransactionController {
                     pageable
             );
 
-            // Fetch nod transactions
-            List<Object[]> nodLogPage = systemTransactionRepository.fetchNodTransaction(
+            // Fetch nod transactions with pagination
+            Page<NodLog> nodLogPage = systemTransactionRepository.fetchNodTransaction(
                     request.getServiceType(),
                     request.getStatus(),
                     request.getOrderType(),
                     request.getChannel(),
                     request.getFromDate(),
                     request.getToDate(),
-                    pageable.getPageSize(),
-                    pageable.getPageNumber() * pageable.getPageSize()
-            );
-
-            // Fetch the total count of records (for pagination)
-            long totalNodElements = systemTransactionRepository.countNodTransaction(
-                    request.getServiceType(),
-                    request.getStatus(),
-                    request.getOrderType(),
-                    request.getChannel(),
-                    request.getFromDate(),
-                    request.getToDate()
+                    pageable
             );
 
             // Combine and map transactions to DTOs
@@ -88,38 +76,45 @@ public class PatientTransactionController {
             });
 
             // Map NodLog to DTO
-            for (Object[] row : nodLogPage) {
-                PatientTransactionDto dto = mapNodLogToDto(row);
+            nodLogPage.getContent().forEach(nodLog -> {
+                PatientTransactionDto dto = mapNodLogToDto(nodLog);
                 patientTransactionDTOs.add(dto);
-            }
+            });
 
-            // Sort DTOs by createdAt (already descending from the query, redundant but safe)
+            // Sort the DTOs by createdAt (descending)
             patientTransactionDTOs.sort(Comparator.comparing(PatientTransactionDto::getCreatedAt).reversed());
+
+            // Calculate total count from both pages
+            long totalElements = systemTransactionPage.getTotalElements() + nodLogPage.getTotalElements();
+
+            // Apply pagination manually if needed
+            int start = Math.min(request.getPage() * request.getSize(), patientTransactionDTOs.size());
+            int end = Math.min((request.getPage() + 1) * request.getSize(), patientTransactionDTOs.size());
+            List<PatientTransactionDto> paginatedList = patientTransactionDTOs.subList(start, end);
 
             // Return the paginated response
             return new PaginationResponse<>(
                     Status.SUCCESS,
                     Constants.SUCCESS,
                     "",
-                    patientTransactionDTOs,
-                    systemTransactionPage.getTotalElements() + totalNodElements,
+                    paginatedList,
+                    totalElements,
                     (long) request.getSize(),
                     (long) request.getPage()
             );
-
         } catch (Exception e) {
             e.printStackTrace();
             return new PaginationResponse<>(e);
         }
     }
 
+
+
     private PatientTransactionDto mapSystemTransactionToDto(SystemTransaction transaction) {
         PatientTransactionDto dto = new PatientTransactionDto();
-
         if (transaction.getRefId() != null) {
             Consultation consultation = transaction.getRefId();
             dto.setRefId(consultation.getCaseId() != null ? consultation.getCaseId().toString() : null);
-
             if (consultation.getDoctorId() != null) {
                 dto.setDoctorOrNurse(consultation.getDoctorId().getFirstName() + " " +
                         consultation.getDoctorId().getLastName());
@@ -131,7 +126,6 @@ public class PatientTransactionController {
                     }
                 }
             }
-
             if (consultation.getPatientId() != null) {
                 dto.setMobile(consultation.getPatientId().getContactNumber());
                 dto.setPatientName(consultation.getPatientId().getFirstName() + " " +
@@ -141,22 +135,18 @@ public class PatientTransactionController {
                 dto.setPatientAddress(consultation.getPatientId().getResidenceAddress());
             }
         }
-
         dto.setServiceType(transaction.getTransactionType());
         dto.setOrderType(transaction.getOrderType());
         dto.setStatus(transaction.getStatus());
         dto.setChannel(transaction.getChannel());
         dto.setCreatedAt(transaction.getCreatedAt());
-
         return dto;
     }
-
-    private PatientTransactionDto mapNodLogToDto(Object[] row) {
+    private PatientTransactionDto mapNodLogToDto(NodLog nodLog) {
         PatientTransactionDto dto = new PatientTransactionDto();
-
-        if (row[2] != null) {
-            dto.setRefId((String) row[2]);
-            Users user = usersRepository.findById((Integer) row[1]).orElse(null);
+        if (nodLog.getSearchId() != null) {
+            dto.setRefId(nodLog.getSearchId());
+            Users user = usersRepository.findById(nodLog.getUserId()).orElse(null);
             if (user != null) {
                 dto.setMobile(user.getContactNumber());
                 dto.setPatientName(user.getFirstName() + " " + user.getLastName());
@@ -165,14 +155,11 @@ public class PatientTransactionController {
                 dto.setPatientAddress(user.getResidenceAddress());
             }
         }
-
-
-        dto.setServiceType((String) row[8]);
-        dto.setOrderType(Character.toString((Character) row[7]));
-        dto.setStatus((String) row[9]);
-        dto.setChannel(Channel.valueOf((String) row[6]));
-        dto.setCreatedAt(((Timestamp) row[10]).toLocalDateTime());
-
+        dto.setServiceType(nodLog.getTransactionType());
+        dto.setOrderType(nodLog.getOrderType());
+        dto.setStatus(nodLog.getStatus());
+        dto.setChannel(nodLog.getChannel());
+        dto.setCreatedAt(nodLog.getCreatedAt());
         return dto;
     }
 
