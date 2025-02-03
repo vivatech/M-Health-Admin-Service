@@ -3,6 +3,7 @@ package com.mhealth.admin.report.controller;
 
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.enums.Channel;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.report.controller.dto.PatientTransactionDto;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -40,7 +43,7 @@ public class PatientTransactionController {
 
         try {
             // Set pagination and sorting
-            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "created_at"));
 
             // Fetch system transactions
             Page<SystemTransaction> systemTransactionPage = systemTransactionRepository.fetchPatientTransaction(
@@ -54,14 +57,25 @@ public class PatientTransactionController {
             );
 
             // Fetch nod transactions
-            Page<NodLog> nodLogPage = systemTransactionRepository.fetchNodTransaction(
+            List<Object[]> nodLogPage = systemTransactionRepository.fetchNodTransaction(
                     request.getServiceType(),
                     request.getStatus(),
                     request.getOrderType(),
                     request.getChannel(),
                     request.getFromDate(),
                     request.getToDate(),
-                    pageable
+                    pageable.getPageSize(),
+                    pageable.getPageNumber() * pageable.getPageSize()
+            );
+
+            // Fetch the total count of records (for pagination)
+            long totalNodElements = systemTransactionRepository.countNodTransaction(
+                    request.getServiceType(),
+                    request.getStatus(),
+                    request.getOrderType(),
+                    request.getChannel(),
+                    request.getFromDate(),
+                    request.getToDate()
             );
 
             // Combine and map transactions to DTOs
@@ -74,10 +88,10 @@ public class PatientTransactionController {
             });
 
             // Map NodLog to DTO
-            nodLogPage.getContent().forEach(nodLog -> {
-                PatientTransactionDto dto = mapNodLogToDto(nodLog);
+            for (Object[] row : nodLogPage) {
+                PatientTransactionDto dto = mapNodLogToDto(row);
                 patientTransactionDTOs.add(dto);
-            });
+            }
 
             // Sort DTOs by createdAt (already descending from the query, redundant but safe)
             patientTransactionDTOs.sort(Comparator.comparing(PatientTransactionDto::getCreatedAt).reversed());
@@ -88,7 +102,7 @@ public class PatientTransactionController {
                     Constants.SUCCESS,
                     "",
                     patientTransactionDTOs,
-                    systemTransactionPage.getTotalElements() + nodLogPage.getTotalElements(),
+                    systemTransactionPage.getTotalElements() + totalNodElements,
                     (long) request.getSize(),
                     (long) request.getPage()
             );
@@ -137,13 +151,12 @@ public class PatientTransactionController {
         return dto;
     }
 
-    private PatientTransactionDto mapNodLogToDto(NodLog nodLog) {
+    private PatientTransactionDto mapNodLogToDto(Object[] row) {
         PatientTransactionDto dto = new PatientTransactionDto();
 
-        if (nodLog.getSearchId() != null) {
-            dto.setRefId(nodLog.getSearchId());
-
-            Users user = usersRepository.findById(nodLog.getUserId()).orElse(null);
+        if (row[2] != null) {
+            dto.setRefId((String) row[2]);
+            Users user = usersRepository.findById((Integer) row[1]).orElse(null);
             if (user != null) {
                 dto.setMobile(user.getContactNumber());
                 dto.setPatientName(user.getFirstName() + " " + user.getLastName());
@@ -153,11 +166,12 @@ public class PatientTransactionController {
             }
         }
 
-        dto.setServiceType(nodLog.getTransactionType());
-        dto.setOrderType(nodLog.getOrderType());
-        dto.setStatus(nodLog.getStatus());
-        dto.setChannel(nodLog.getChannel());
-        dto.setCreatedAt(nodLog.getCreatedAt());
+
+        dto.setServiceType((String) row[8]);
+        dto.setOrderType(Character.toString((Character) row[7]));
+        dto.setStatus((String) row[9]);
+        dto.setChannel(Channel.valueOf((String) row[6]));
+        dto.setCreatedAt(((Timestamp) row[10]).toLocalDateTime());
 
         return dto;
     }
