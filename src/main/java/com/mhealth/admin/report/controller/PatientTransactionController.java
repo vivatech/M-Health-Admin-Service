@@ -8,6 +8,7 @@ import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.report.controller.dto.PatientTransactionDto;
 import com.mhealth.admin.report.controller.dto.PatientTransactionRequestDto;
+import com.mhealth.admin.repository.CityRepository;
 import com.mhealth.admin.repository.SystemTransactionRepository;
 import com.mhealth.admin.repository.UsersRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @Tag(name = "Patient Transaction", description = "APIs for managing patient transaction")
@@ -35,6 +37,8 @@ public class PatientTransactionController {
 
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private CityRepository cityRepository;
 
     @PostMapping("/get")
     @Operation(summary = "Get patient transaction", description = "Fetch patient transaction details with filters and pagination")
@@ -109,7 +113,6 @@ public class PatientTransactionController {
     }
 
 
-
     private PatientTransactionDto mapSystemTransactionToDto(SystemTransaction transaction) {
         PatientTransactionDto dto = new PatientTransactionDto();
         if (transaction.getRefId() != null) {
@@ -127,12 +130,20 @@ public class PatientTransactionController {
                 }
             }
             if (consultation.getPatientId() != null) {
-                dto.setMobile(consultation.getPatientId().getContactNumber());
+                dto.setMobile(consultation.getPatientId().getCountryCode() + consultation.getPatientId().getContactNumber());
                 dto.setPatientName(consultation.getPatientId().getFirstName() + " " +
                         consultation.getPatientId().getLastName());
                 dto.setAge(consultation.getPatientId().getDob());
                 dto.setGender(consultation.getPatientId().getGender());
-                dto.setPatientAddress(consultation.getPatientId().getResidenceAddress());
+
+                String cityName = "";
+                if (consultation.getPatientId().getCity() != null) {
+                    Optional<City> city = cityRepository.findById(consultation.getPatientId().getCity());
+                    if (city.isPresent()) {
+                        cityName = city.get().getName();
+                    }
+                }
+                dto.setPatientAddress(consultation.getPatientId().getResidenceAddress() + " - " + cityName);
             }
         }
         dto.setServiceType(transaction.getTransactionType());
@@ -142,17 +153,26 @@ public class PatientTransactionController {
         dto.setCreatedAt(transaction.getCreatedAt());
         return dto;
     }
+
     private PatientTransactionDto mapNodLogToDto(NodLog nodLog) {
         PatientTransactionDto dto = new PatientTransactionDto();
         if (nodLog.getSearchId() != null) {
             dto.setRefId(nodLog.getSearchId());
             Users user = usersRepository.findById(nodLog.getUserId()).orElse(null);
             if (user != null) {
-                dto.setMobile(user.getContactNumber());
+                dto.setMobile(user.getCountryCode() + user.getContactNumber());
                 dto.setPatientName(user.getFirstName() + " " + user.getLastName());
                 dto.setAge(user.getDob());
                 dto.setGender(user.getGender());
-                dto.setPatientAddress(user.getResidenceAddress());
+
+                String cityName = "";
+                if(user.getCity() != null){
+                    Optional<City> city = cityRepository.findById(user.getCity());
+                    if (city.isPresent()) {
+                        cityName = city.get().getName();
+                    }
+                }
+                dto.setPatientAddress(user.getResidenceAddress() + " - " + cityName);
             }
         }
         dto.setServiceType(nodLog.getTransactionType());
@@ -162,7 +182,6 @@ public class PatientTransactionController {
         dto.setCreatedAt(nodLog.getCreatedAt());
         return dto;
     }
-
 
 
 }

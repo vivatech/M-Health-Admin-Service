@@ -10,4 +10,5 @@ public class InternationalPaymentHistoryDto {
     private String amount;
     private String transactionId;
     private String paymentDate;
+    private String proofFile;
 }

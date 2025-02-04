@@ -96,6 +96,9 @@ public class InternationalPaymentHistoryController {
                  paymentHistoryDto.setDoctorId(payment.getUserId().getUserId());
                  paymentHistoryDto.setDoctorName(payment.getUserId().getFirstName() + " " + payment.getUserId().getLastName());
 
+                 if(payment.getProofFile() != null){
+                     paymentHistoryDto.setProofFile(Constants.INTERNATIONAL_PAYMENT_FILE + payment.getId() + "/" + payment.getProofFile());
+                 }
                 paymentHistoryDtos.add(paymentHistoryDto);
             }
 
