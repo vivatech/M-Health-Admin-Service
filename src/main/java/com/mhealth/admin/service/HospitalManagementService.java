@@ -349,16 +349,9 @@ public class HospitalManagementService {
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
         if(requestDto.getPriority() != null){
-            if(!Objects.equals(existingUser.getSort(), requestDto.getPriority())){
-                Users existSort = usersRepository.findBySort(Integer.valueOf(requestDto.getPriority()));
-                if(existSort != null){
-                    response.setCode(Constants.CODE_O);
-                    response.setMessage(messageSource.getMessage(Messages.PRIORITY_ALREADY_EXISTS, null, locale));
-                    response.setStatus(Status.FAILED);
-                    return response;
-                }
-            }
             existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
+        } else {
+            existingUser.setSort(null);
         }
 
         // Save profile picture if provided
@@ -546,7 +539,8 @@ public class HospitalManagementService {
         responseDto.setContactNumber(users.getContactNumber());
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         responseDto.setPriority(users.getSort());
-        responseDto.setStatus(users.getStatus().toString());
+        responseDto.setStatus(users.getStatus() != null ? users.getStatus().toString() : StatusAI.I.toString());
+
         responseDto.setProfilePicture(users.getProfilePicture() != null ? Constants.USER_PROFILE_PICTURE + users.getUserId() + "/" + users.getProfilePicture() : null);
         HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
         if(hospitalMerchantNumber != null){
