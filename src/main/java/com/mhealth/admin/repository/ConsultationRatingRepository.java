@@ -12,11 +12,11 @@ import java.util.List;
 public interface ConsultationRatingRepository extends JpaRepository<ConsultationRating, Integer> {
     List<ConsultationRating> findByDoctorId(Users val);
 
-    @Query(value = "SELECT AVG(cr.rating) FROM mh_consultation_rating cr WHERE cr.doctor_id = ?1", nativeQuery = true)
-    float findDoctorRating(Integer userId);
+    @Query(value = "SELECT AVG(cr.rating) FROM ConsultationRating cr WHERE cr.doctorId.userId = ?1")
+    Float findDoctorRating(Integer userId);
 
     @Query(value = "SELECT COUNT(DISTINCT(cr.patient_id)) FROM mh_consultation_rating cr WHERE cr.doctor_id = ?1", nativeQuery = true)
-    int findReviews(Integer userId);
+    Integer findReviews(Integer userId);
 
     @Query("SELECT SUM(cr.rating) FROM ConsultationRating cr WHERE cr.doctorId.userId = ?1 AND cr.status = 'Approve'")
     Double sumRatingsByDoctorId(Integer doctorId);
@@ -43,4 +43,6 @@ public interface ConsultationRatingRepository extends JpaRepository<Consultation
 
     @Query("SELECT count(cr) FROM ConsultationRating cr WHERE cr.caseId = ?1 and cr.patientId.userId = ?2")
     Long countByCaseIdAndPatientId(Integer caseId, Integer userId);
+
+    List<ConsultationRating> findByDoctorIdIn(List<Users> doctorIds);
 }

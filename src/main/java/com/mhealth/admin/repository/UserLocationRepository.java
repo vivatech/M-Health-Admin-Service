@@ -1,6 +1,7 @@
 package com.mhealth.admin.repository;
 
 import com.mhealth.admin.model.UserLocation;
+import com.mhealth.admin.model.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +17,7 @@ public interface UserLocationRepository extends JpaRepository<UserLocation, Inte
     List<UserLocation> findWithinRadius(@Param("minLat") double minLat,@Param("maxLat") double maxLat,
                                         @Param("minLng") double minLng,@Param("maxLng") double maxLng,
                                         @Param("lat") double lat,@Param("lng") double lng,@Param("range") double range);
+
+    @Query(value = "select u from UserLocation u Where u.user.userId = ?1")
+    UserLocation findByUser(Integer id);
 }

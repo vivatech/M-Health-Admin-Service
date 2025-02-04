@@ -348,19 +348,6 @@ public class HospitalManagementService {
         existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
-        if(requestDto.getPriority() != null){
-            if(!Objects.equals(existingUser.getSort(), requestDto.getPriority())){
-                Users existSort = usersRepository.findBySort(Integer.valueOf(requestDto.getPriority()));
-                if(existSort != null){
-                    response.setCode(Constants.CODE_O);
-                    response.setMessage(messageSource.getMessage(Messages.PRIORITY_ALREADY_EXISTS, null, locale));
-                    response.setStatus(Status.FAILED);
-                    return response;
-                }
-            }
-            existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
-        }
-
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
