@@ -1,5 +1,7 @@
 package com.mhealth.admin.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.request.PermissionRoleRequest;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.PermissionRoleService;
@@ -9,13 +11,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
 
 @RestController
+@Slf4j
 @Tag(name = "Permission Roles", description = "APIs for managing permission roles")
 @RequestMapping("/api/v1/admin/permission-roles")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
@@ -55,5 +60,39 @@ public class PermissionRoleController {
     public ResponseEntity<Response> fetchPermissionRoles(
             @RequestHeader(name = "X-localization", required = false, defaultValue = "en") Locale locale) {
         return permissionRoleService.fetchPermissionRoles(locale);
+    }
+
+    /**
+     * Find all roles
+     */
+    @RequestMapping(value = "/get-roles", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllRoles(@RequestHeader(name = "X-localization", required = false, defaultValue = "en") Locale locale) {
+        try{
+            log.info("Entering into /api/v1/admin/permission-roles/get-roles ");
+            Response response = permissionRoleService.getAllRoles(locale);
+            log.info("Exiting from /api/v1/admin/permission-roles/get-roles - RESPONSE : {}", new ObjectMapper().writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            log.error("Exception : {}", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Fetch Permissions by role
+     */
+    @RequestMapping(value = "/find-by-role", method = RequestMethod.GET)
+    public ResponseEntity<?> findByRole(@RequestParam String role,
+                                        @RequestHeader(name = "X-localization", required = false, defaultValue = "en") Locale locale) {
+        try{
+            log.info("Entering into /api/v1/admin/permission-roles/find-by-role ");
+            log.info("Request Param : role={}", role);
+            Response response = permissionRoleService.findByRole(locale, role);
+            log.info("Exiting from /api/v1/admin/permission-roles/find-by-role - RESPONSE : {}", new ObjectMapper().writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            log.error("Exception : {}", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

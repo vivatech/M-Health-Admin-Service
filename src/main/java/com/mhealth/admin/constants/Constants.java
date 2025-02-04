@@ -73,6 +73,7 @@ public interface Constants {
     public static final String Paid_Lab_Report_Orders = "paid_against_lab_report";
     public static final String Payment_Done = "Payment Complete";
     public static final String Currency_USD = "USD";
+    String Dollar_Currency = "Dollar";
     public static final String Duration_Daily = "Daily";
     public static final String Price_FREE = "Free";
     public static final String Active_Categories_List = "Categories list";
@@ -141,10 +142,43 @@ public interface Constants {
     public static final String Status_IN_ACTIVE = "I";
     String SOMETHING_WENT_WRONG = "Something Went Wrong";
 
+    String VISIT = "visit";
+    String VIDEO = "video";
+    String BOTH = "both";
+
     String DEFAULT_LANGUAGE = "sl";
+    String ENGLISH_LANGUAGE = "en";
     String LOCALE_SOMALIA = "so";
     String LOCALE_ENGLISH = "en";
 
+    String MALE = "Male";
+    String FEMALE = "Female";
+
     String CODE_O = "0";
     String CODE_1 = "1";
+
+    //Lab User
+    String APP_LINK = "APP_LINK";
+
+    // Directories Path
+    String DOCTOR_DOCUMENT_PATH = "DoctorDocument/";
+    String USER_PROFILE_PICTURE = "UserProfile/";
+
+    String LOCAL_COUNTRY_CODE = "252";
+    String INDIA_COUNTRY_CODE = "91";
+    String GENERAL_PRACTITIONER = "general_practitioner";
+
+    String VIDEO_GALLERY = "video/";
+    String IMAGE_GALLERY = "image-gallery/";
+
+
+    String REFUND_TRANSFER = "refund_transfer";
+    String Transaction_PENDING = "Pending";
+    String Transaction_COMPLETE = "Completed";
+
+    String HEALTH_TIPS_CATEGORY = "category/";
+    String HEALTH_TIPS = "healthTip/";
+    String HEALTH_TIPS_VIDEO_THUMB = "/thumb";
+
+
 }

@@ -15,6 +15,7 @@ import java.util.Base64;
 
 @RestController
 @Slf4j
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin")
 public class AdminFileController {
 

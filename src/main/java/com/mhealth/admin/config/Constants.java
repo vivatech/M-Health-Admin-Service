@@ -1,10 +1,13 @@
 package com.mhealth.admin.config;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public class Constants {
 
     public static final Integer DEFAULT_PAGE_SIZE = 30;
 
     public static final String SUCCESS_CODE = "200";
+    public static final String FAILED_CODE = "400";
     public static final String INTERNAL_SERVER_ERROR_CODE = "10001";
     public static final String INTERNAL_SERVER_ERROR = "500";
 
@@ -13,6 +16,7 @@ public class Constants {
     public static final String BLANK_DATA_GIVEN = "blank.data.given";
     public static final String USER_NOT_FOUND_CODE = "10004";
     public static final String NO_RECORD_FOUND_CODE = "404";
+
     public static final String BLANK_DATA_GIVEN_CODE = "403";
     public static final String INVALID_PASSWORD_CODE = "401";
     public static final String CONFLICT_CODE = "409";
@@ -131,6 +135,10 @@ public class Constants {
     public static final String HEALTH_TIP_PACKAGE_DELETED_SUCCESS = "app.health.tip.package.deleted.success";
     public static final String HEALTH_TIP_PACKAGE_STATUS_UPDATED_SUCCESS = "app.health.tip.package.status.updated.success";
     public static final String HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND = "app.health.tip.package.duplicate.category";
+    public static final String HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE = "app.health.tip.package.in.used.category";
+    public static final String HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP = "app.health.tip.in.used.category";
+    public static final String HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER = "app.health.tip.package.in.used.package.user";
+
 
     public static final String RATINGS_FETCHED_SUCCESS = "app.consultation.rating.fetched.success";
     public static final String CONSULTATION_RATING_NOT_FOUND = "app.consultation.rating.not.found";
@@ -165,5 +173,14 @@ public class Constants {
     public static final String TERMS_AND_CONDITION = "app.terms.and.condition";
     public static final String PATIENT_CREATE_SUCCESSFULLY = "app.patient.create.successfully";
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
+  
     public static final String DEFAULT_COUNTRY = "SO";
+    public static final String USER_TYPE_NOT_FOUND = "app.user.type.not.found";
+    public static final String COUNTRY_SOMALIA = "SOMALIA";
+    public static final String COUNTRY_KENYA = "KENYA";
+    public static final String KEY_NOT_FOUND = "Key Value not found";
+
+    @Value("${m-health.country.code}")
+    public static String COUNTRY_CODE;
 }
+

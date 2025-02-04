@@ -103,14 +103,14 @@ public class AuthService {
             String token = authConfig.generateToken(request.getContactNumber(), existingUser.getUserId());
             boolean isInternational = existingUser.getIsInternational().equals(YesNo.Yes);
 
-            PermissionRoleDto permission = null;
-            try {
-                PermissionRole role = permissionRoleRepository.findByUserType(existingUser.getType()).orElse(null);
-                if(role!=null){
-                    permission = getPermissions(role);
-                }
-            }catch (Exception e){
-
+            //permission list
+            List<String> permissions = null;
+            PermissionRole role = permissionRoleRepository.findByUserType(existingUser.getType()).orElse(null);
+            if(role != null){
+                List<Integer> list = Arrays.stream(role.getPermissions().split(","))
+                        .map(Integer::parseInt)
+                        .toList();
+                permissions = permissionRepository.findByIds(list).stream().map(Permission::getCode).toList();
             }
 
             // Populate the DTO
@@ -118,7 +118,7 @@ public class AuthService {
                     existingUser.getUserId().toString(),
                     token,
                     isInternational,
-                    permission
+                    permissions
             );
 
             message = messageSource.getMessage(Constants.USER_LOGIN_IS_SUCCESS, null, locale);

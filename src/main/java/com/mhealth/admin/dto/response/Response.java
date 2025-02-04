@@ -14,7 +14,6 @@ public class Response {
     private String message = Constants.SUCCESS;
     private Status status = Status.SUCCESS;
     private Object data;
-    private long totalElements; // Add this field to handle pagination
 
 
     public Response(Exception e){
@@ -39,7 +38,6 @@ public class Response {
         this.code = code;
         this.message = message;
         this.data = data;
-        this.totalElements = totalElements;
     }
 
     public Response(Status status,String code,String message,Object data){

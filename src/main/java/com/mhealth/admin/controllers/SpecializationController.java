@@ -1,5 +1,6 @@
 package com.mhealth.admin.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.request.SpecializationRequest;
@@ -14,13 +15,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Locale;
 
 
+@Slf4j
 @RestController
 @Tag(name = "Specialization Management", description = "APIs for managing specializations")
 @CrossOrigin(originPatterns = "*", allowedHeaders = "*")
@@ -29,6 +34,9 @@ public class SpecializationController {
 
     @Autowired
     private SpecializationService service;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Operation(summary = "Add a new specialization", responses = {
             @ApiResponse(responseCode = "200", description = "Specialization added successfully", content = @Content(schema = @Schema(implementation = Response.class))),
@@ -96,5 +104,20 @@ public class SpecializationController {
             @PathVariable Integer id,
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.findSpecializationById(id, locale);
+    }
+
+    @RequestMapping(value = "/get", method = RequestMethod.GET)
+    public ResponseEntity<?> getSpecializationList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        try {
+            log.info("Request Received For /api/v1/admin/location/get-specialization");
+
+            Object response = service.getSpecializationList(locale);
+
+            log.info("Response Sent For /api/v1/admin/location/get-specialization: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(com.mhealth.admin.constants.Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

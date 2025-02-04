@@ -20,6 +20,6 @@ public class PermissionRole {
     @Enumerated(EnumType.STRING)
     private UserType roleType = UserType.Doctor;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String permissions;
 }

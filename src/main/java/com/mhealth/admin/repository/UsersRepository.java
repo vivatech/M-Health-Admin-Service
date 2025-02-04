@@ -4,6 +4,8 @@ import com.mhealth.admin.dto.enums.StatusAI;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.model.City;
 import com.mhealth.admin.model.Users;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -76,4 +78,43 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
   
     Users findByUserIdAndType(Users userId, String userType);
 
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.type = 'Clinic'
+    AND (:name IS NULL OR u.clinicName LIKE :name)
+    AND (:email IS NULL OR u.email LIKE :email)
+    AND (:status IS NULL OR u.status = :status)
+    AND (:contactNumber IS NULL OR u.contactNumber LIKE :contactNumber)
+""")
+    Page<Users> findHospitalsWithFilters(
+            @Param("name") String name,
+            @Param("email") String email,
+            @Param("status") StatusAI status,
+            @Param("contactNumber") String contactNumber,
+            Pageable pageable
+    );
+
+    Users findBySort(Integer priority);
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    WHERE u.type = 'Agentuser'
+    AND u.status is not null
+    AND (:name IS NULL OR CONCAT(u.firstName, ' ', u.lastName) LIKE :name)
+    AND (:email IS NULL OR u.email LIKE :email)
+    AND (:status IS NULL OR u.status = :status)
+    AND (:contactNumber IS NULL OR u.contactNumber LIKE :contactNumber)
+""")
+    Page<Users> findAgentWithFilters(
+            @Param("name") String name,
+            @Param("email") String email,
+            @Param("status") StatusAI status,
+            @Param("contactNumber") String contactNumber,
+            Pageable pageable
+    );
+
+    @Query(value = "SELECT u.* FROM mh_users u WHERE u.status = 'A' AND u.type = 'Clinic' AND u.is_hpcz_verified = 'Yes'",nativeQuery = true)
+    List<Users> getHospitalList();
 }

@@ -2,15 +2,17 @@ package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.model.LabPrice;
+import com.mhealth.admin.model.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface LabPriceRepository extends JpaRepository<LabPrice, Integer> {
+public interface LabPriceRepository extends JpaRepository<LabPrice, Integer>, JpaSpecificationExecutor<LabPrice> {
 
     @Query("Select u from LabPrice u where u.subCatId.subCatId in ?1 and u.labUser.type = ?2 and u.labUser.status = ?3")
     List<LabPrice> findBySubCatIdAndUserTypeAndStatus(List<Integer> labcatIds, UserType userType, String status);
@@ -26,4 +28,8 @@ public interface LabPriceRepository extends JpaRepository<LabPrice, Integer> {
     Page<LabPrice> findByCategoryAndSubCategory(@Param("categoryId") Integer categoryId,
                                                 @Param("subCategoryId") Integer subCategoryId,
                                                 Pageable pageable);
+
+    Page<LabPrice> findByLabUser(Users lab, Pageable pageable);
+
+    LabPrice findByLabPriceIdAndLabUser(Integer labPriceId, Users lab);
 }

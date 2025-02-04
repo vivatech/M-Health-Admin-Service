@@ -3,9 +3,12 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.dto.PermissionDto;
+import com.mhealth.admin.dto.dto.UpdatePermissionResponseData;
+import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.request.PermissionRoleRequest;
 import com.mhealth.admin.dto.response.PermissionRoleDto;
 import com.mhealth.admin.dto.response.Response;
+import com.mhealth.admin.dto.response.RolesResponseDto;
 import com.mhealth.admin.exception.AdminModuleExceptionHandler;
 import com.mhealth.admin.model.Permission;
 import com.mhealth.admin.model.PermissionRole;
@@ -16,10 +19,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 @Service
 public class PermissionRoleService {
@@ -69,12 +69,23 @@ public class PermissionRoleService {
 
         permissionRole.setRoleType(request.getRoleType());
         permissionRole.setPermissions(request.getPermissions());
-        permissionRoleRepository.save(permissionRole);
+        permissionRole = permissionRoleRepository.save(permissionRole);
+
+        List<String> permissions = null;
+        List<Integer> list = Arrays.stream(permissionRole.getPermissions().split(","))
+                .map(Integer::parseInt)
+                .toList();
+        permissions = permissionRepository.findByIds(list).stream().map(Permission::getCode).toList();
+
+        UpdatePermissionResponseData responseData = new UpdatePermissionResponseData();
+        responseData.setId(permissionRole.getId());
+        responseData.setRoleType(permissionRole.getRoleType());
+        responseData.setPermissions(permissions);
 
         return ResponseEntity.ok(new Response(
                 Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.PERMISSION_ROLE_UPDATED,null,locale),
-                permissionRole));    }
+                responseData));    }
 
     public ResponseEntity<Response> fetchPermissionRoles(Locale locale) {
         List<PermissionRoleDto> respose = new ArrayList<>();
@@ -139,6 +150,68 @@ public class PermissionRoleService {
         }
 
         return response;
+    }
+
+    public Response getAllRoles(Locale locale) {
+        List<PermissionRole> roleList = permissionRoleRepository.findAll();
+        if(roleList.isEmpty()){
+            return new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.NO_RECORD_FOUND,null,locale));
+        }
+        List<RolesResponseDto> responseDtoList = mapRoleListToRoleResponseDto(roleList);
+
+        return new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
+                messageSource.getMessage(Constants.PERMISSION_ROLE_FETCHED,null,locale), responseDtoList);
+    }
+
+    private List<RolesResponseDto> mapRoleListToRoleResponseDto(List<PermissionRole> roleList) {
+        return roleList.stream().map(row-> new RolesResponseDto(row.getId(), row.getPermissions(), row.getRoleType().name())).toList();
+    }
+
+    public Response findByRole(Locale locale, String role) {
+        if(!checkUserType(role)){
+            return new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.USER_TYPE_NOT_FOUND,null,locale));
+        }
+        PermissionRole roles = permissionRoleRepository.findByUserType(UserType.valueOf(role)).orElse(null);
+        if(roles == null){
+            return new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.PERMISSION_ROLE_NOT_FOUND,null,locale));
+        }
+        List<String> permissions = null;
+        List<Integer> list = Arrays.stream(roles.getPermissions().split(","))
+                .map(Integer::parseInt)
+                .toList();
+        List<Permission> permissionList = permissionRepository.findByIds(list);
+
+        if(permissionList.isEmpty()){
+            return new Response(Status.FAILED, Constants.NO_RECORD_FOUND_CODE,
+                    messageSource.getMessage(Constants.PERMISSION_NOT_FOUND,null,locale));
+        }
+
+        Map<String, List<String>> response = mapPermissionListIntoResponse(permissionList);
+
+        return new Response(Status.SUCCESS, Constants.SUCCESS_CODE,
+                messageSource.getMessage(Constants.PERMISSIONS_FETCHED,null,locale), response);
+    }
+
+    private Map<String, List<String>> mapPermissionListIntoResponse(List<Permission> permissionList) {
+        Map<String, List<String>> response = new HashMap<>();
+        permissionList.forEach(row -> {
+            String key = "list" + row.getLevel();
+
+            List<String> permissions = response.computeIfAbsent(key, k -> new ArrayList<>());
+
+            permissions.add(row.getCode());
+        });
+        return response;
+    }
+
+    private boolean checkUserType(String role) {
+        for(UserType values : UserType.values()){
+            if(values.name().equals(role)) return true;
+        }
+        return false;
     }
 }
 
