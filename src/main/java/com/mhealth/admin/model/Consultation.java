@@ -96,6 +96,8 @@ public class Consultation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "channel", nullable = false)
     private Channel channel;
 
     @Column(name = "meeting_id")
