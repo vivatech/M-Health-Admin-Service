@@ -82,8 +82,8 @@ public class SafariPayment implements PaymentInterface{
     }
 
     @Override
-    public Response sendPayment(String msisdn, Double amount) {
-        return makeB2CPayment(msisdn, String.valueOf(amount));
+    public Response sendPayment(PaymentDto paymentDto) {
+        return makeB2CPayment(paymentDto.getPaymentNumber(), String.valueOf(paymentDto.getAmount()));
     }
 
     @Override
