@@ -73,4 +73,11 @@ public interface Messages {
     String CONSULTATION_NOT_FOUND = "consultation.not.found";
     String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
     String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
+    String HOSPITAL_LIST_FETCH = "hospital.list.fetch.successfully";
+    String DAY_TODAY = "Today";
+    String DAY_TOMORROW = "Tomorrow";
+    String Within_7_Days = "Within.7.days";
+    String SORT_BY_EXPERIENCE = "Years.Of.Experience";
+    String SORT_BY_RECOMMENDATION = "Recommendation";
+    String DOCTOR_LIST_FOUND = "Doctor.list.found";
 }

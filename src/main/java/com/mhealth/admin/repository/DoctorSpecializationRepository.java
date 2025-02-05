@@ -16,4 +16,7 @@ public interface DoctorSpecializationRepository extends JpaRepository<DoctorSpec
     @Query(value = "DELETE FROM mh_doctor_specialization WHERE user_id = :userId", nativeQuery = true)
     @Transactional
     void deleteByUserId(@Param("userId") Integer userId);
+
+    @Query(value = "SELECT u.specializationId.name FROM DoctorSpecialization u WHERE u.userId.userId = ?1 ")
+    List<String> findSpName(Integer userId);
 }

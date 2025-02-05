@@ -348,12 +348,13 @@ public class HospitalManagementService {
         existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
+
         if(requestDto.getPriority() != null){
             existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
         } else {
             existingUser.setSort(null);
         }
-
+      
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
