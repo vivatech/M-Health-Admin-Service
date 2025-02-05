@@ -348,6 +348,13 @@ public class HospitalManagementService {
         existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
+
+        if(requestDto.getPriority() != null){
+            existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
+        } else {
+            existingUser.setSort(null);
+        }
+      
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
@@ -533,7 +540,8 @@ public class HospitalManagementService {
         responseDto.setContactNumber(users.getContactNumber());
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         responseDto.setPriority(users.getSort());
-        responseDto.setStatus(users.getStatus().toString());
+        responseDto.setStatus(users.getStatus() != null ? users.getStatus().toString() : StatusAI.I.toString());
+
         responseDto.setProfilePicture(users.getProfilePicture() != null ? Constants.USER_PROFILE_PICTURE + users.getUserId() + "/" + users.getProfilePicture() : null);
         HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
         if(hospitalMerchantNumber != null){

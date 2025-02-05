@@ -101,6 +101,29 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
     @Query("Select COUNT(u) from Consultation u where u.requestType = ?1 and DATE(u.consultationDate) = DATE(?2)")
     Long getTotalConsultations(RequestType requestType,LocalDate date);
 
+    @Query(value = "SELECT u.first_name, u.last_name, COUNT(*) AS total_bookings FROM mh_consultation c JOIN mh_users u ON c.doctor_id = u.user_id WHERE c.request_type = 'Book' GROUP BY c.doctor_id ORDER BY total_bookings DESC LIMIT 5",
+            nativeQuery = true)
+    List<Object[]> findByTopMostBookDoctor();
+
+    @Query(value = "SELECT u.first_name, u.last_name, COUNT(*) AS total_bookings FROM mh_consultation c JOIN mh_users u \n" +
+            "ON c.patient_id = u.user_id GROUP BY c.patient_id ORDER BY total_bookings DESC LIMIT 5;",
+            nativeQuery = true)
+    List<Object[]> findByTopMostBookPatient();
+
+    @Query(value = "SELECT u.first_name, u.last_name, AVG(r.rating) AS average_rating FROM mh_consultation_rating r JOIN mh_users u ON r.doctor_id = u.user_id WHERE r.status = 'Approve' GROUP BY r.doctor_id ORDER BY average_rating DESC LIMIT 5",
+            nativeQuery = true)
+    List<Object[]> findByTopMostDoctorReview();
+
+    @Query(value = "SELECT (select p.clinic_name from mh_users p where p.user_id = u.hospital_id and u.hospital_id) as clinic , COUNT(c.case_id) AS total_bookings \n" +
+            "FROM mh_consultation c \n" +
+            "JOIN mh_users u ON c.doctor_id = u.user_id \n" +
+            "WHERE c.request_type = 'Book'\n" +
+            "GROUP BY u.hospital_id\n" +
+            "ORDER BY total_bookings DESC \n" +
+            "LIMIT 5",
+            nativeQuery = true)
+    List<Object[]> findByTopMostHospital();
+  
     Consultation findByCaseIdAndRequestType(Integer caseId, RequestType requestType);
 
     @Query("""
@@ -113,7 +136,7 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
       AND (c.consultType IS NOT NULL)
       AND (c.requestType IS NOT NULL)
       AND (c.consultationType IS NOT NULL)
-""")
+    """)
     Page<Consultation> fetchConsultationList(
             @Param("doctorId") String doctorId,
             @Param("status") RequestType status,
@@ -122,6 +145,5 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Inte
             @Param("toDate") LocalDate toDate,
             Pageable pageable
     );
-
 
 }
