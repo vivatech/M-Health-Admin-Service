@@ -591,7 +591,19 @@ public class LabUserService {
 
     private List<DocumentResponseDto> mapLabDocumentsToDocumentResponseDtoList(List<DoctorDocument> labDocuments) {
         return labDocuments.stream().map(row -> new DocumentResponseDto(
+<<<<<<< Updated upstream
                 row.getUserId(), row.getDocumentId(), row.getDocumentFileName()
+=======
+                row.getUserId(),
+                row.getDocumentId(),
+                StringUtils.isEmpty(row.getDocumentFileName())
+                        ? null
+                        : Constants.DOCTOR_DOCUMENT_PATH + row.getUserId() + "/" + row.getDocumentFileName(),
+                row.getDocumentName()
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
         )).collect(Collectors.toList());
     }
 
