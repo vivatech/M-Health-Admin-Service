@@ -75,8 +75,6 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     long countByContactNumberAndTypeAndUserIdNot(String contactNumber, UserType type, Integer userId);
 
     Optional<Users> findByUserIdAndType(Integer userId, UserType type);
-  
-    Users findByUserIdAndType(Users userId, String userType);
 
     @Query("""
     SELECT u

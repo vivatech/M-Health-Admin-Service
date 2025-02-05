@@ -333,9 +333,9 @@ public class ConsultationService {
         consultationRepository.save(consultation);
 
         //notification
-        Users patient = usersRepository.findByUserIdAndType(consultation.getPatientId(), PATIENT);
+        Users patient = usersRepository.findByUserIdAndType(consultation.getPatientId().getUserId(), UserType.Patient).orElseThrow(() -> new AdminModuleExceptionHandler("Patient not found."));
 
-        Users doctor = usersRepository.findByUserIdAndType(consultation.getDoctorId(), TYPE_DOCTOR);
+        Users doctor = usersRepository.findByUserIdAndType(consultation.getDoctorId().getUserId(), UserType.Doctor).orElseThrow(() -> new AdminModuleExceptionHandler("Doctor not found."));
 
         //TODO: send doctor notification for rescheduling of the time slot
         String message = getMessage("aap.reschedule.created.success", locale, patient.getFullName(), oldTime, doctor.getFullName(), newTime);
