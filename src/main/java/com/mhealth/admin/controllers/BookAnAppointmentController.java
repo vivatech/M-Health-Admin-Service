@@ -7,6 +7,7 @@ import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.BaseResponseDto;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.consultationDto.BookConsultationRequest;
 import com.mhealth.admin.dto.dto.CancelAppointmentRequest;
 import com.mhealth.admin.dto.dto.DoctorAvailabilityRequest;
 import com.mhealth.admin.dto.dto.SearchDocResponse;
@@ -16,6 +17,7 @@ import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.service.BookAnAppointmentService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,33 +55,15 @@ public class BookAnAppointmentController {
      * @return list of doctors in pagination form
      */
     @RequestMapping(value = "/search-doctor", method = RequestMethod.POST)
-    public ResponseEntity<?> searchDoctor(@RequestBody SearchDoctorRequest r,
+    public ResponseEntity<?> searchDoctor(@RequestBody SearchDoctorRequest request,
                                           @RequestHeader(name = "X-localization", required = false, defaultValue = "so")
                                           Locale locale) {
         try {
-            log.info("Entry in /api/v1/admin/user/appointment");
-            log.info("Request Body : {}", r);
-            String url = domain + "/patient/book-appointment/search-doctor";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Accept-Language", "en");
-
-            // Combine headers and body into an HttpEntity
-            HttpEntity<SearchDoctorRequest> entity = new HttpEntity<>(r, headers);
-
-            // Initialize RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<BaseResponseDto> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    BaseResponseDto.class
-            );
-
-//            SearchDocResponse responseDto = new ObjectMapper().readValue((DataInput) response.getBody(), SearchDocResponse.class);
-            log.info("Exiting /api/v1/admin/user/appointment and it's ResponseBody is : {}", response.getBody());
-            return ResponseEntity.ok().body(response.getBody());
+            log.info("Entry in /api/v1/admin/user/appointment/search-doctor");
+            log.info("Request Body : {}", request);
+            Object responses = bookAnAppointmentService.searchDoctor(locale, request);
+            log.info("Exiting /api/v1/admin/user/appointment/search-doctor and it's ResponseBody is : {}", responses);
+            return ResponseEntity.ok().body(responses);
 
         } catch (Exception e) {
             log.error("Exception : {}", e);
@@ -91,26 +75,15 @@ public class BookAnAppointmentController {
      * Doctor latest available slots lists from current date
      */
     @RequestMapping(value = "/doctor-availability-latest-list", method = RequestMethod.POST)
-    public ResponseEntity<?> searchDoctor(@RequestBody DoctorAvailabilityRequest request,
-                                          @RequestHeader(name = "X-localization", required = false, defaultValue = "so")
-                                          Locale locale) {
+    public ResponseEntity<?> getDoctorAvailabilityLatestList(@Valid @RequestBody DoctorAvailabilityRequest request,
+                                                             @RequestHeader(name = "X-localization", required = false, defaultValue = "so")
+                                                             Locale locale) {
         try {
             log.info("Entry in /api/v1/admin/user/appointment/doctor-availability-latest-list");
             log.info("Request Body : {}", request);
-            String url = domain + "/patient/book-appointment/doctor-availability-latest-list";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Accept-Language", locale.toString());
-
-            // Combine headers and body into an HttpEntity
-            HttpEntity<DoctorAvailabilityRequest> entity = new HttpEntity<>(request, headers);
-
-            // Initialize RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<BaseResponseDto> response = restTemplate.exchange(url, HttpMethod.POST, entity, BaseResponseDto.class);
-            log.info("Exiting /api/v1/admin/user/appointment/doctor-availability-latest-list and it's ResponseBody is : {}", response.getBody());
-            return ResponseEntity.ok().body(response.getBody());
+            Object responses = bookAnAppointmentService.getDoctorAvailabilityLatestList(request, locale);
+            log.info("Exiting /api/v1/admin/user/appointment/doctor-availability-latest-list and it's ResponseBody is : {}", responses);
+            return ResponseEntity.ok().body(responses);
 
         } catch (Exception e) {
             log.error("Exception : {}", e);
@@ -171,7 +144,7 @@ public class BookAnAppointmentController {
     }
 
     /**
-     * Get language list
+     * Get Sort By
      */
     @RequestMapping(value = "/sort-by", method = RequestMethod.GET)
     public ResponseEntity<?> getSortBy(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
@@ -187,7 +160,7 @@ public class BookAnAppointmentController {
     }
 
     /**
-     * Get language list
+     * Get Payment method
      */
     @RequestMapping(value = "/payment-method", method = RequestMethod.GET)
     public ResponseEntity<?> getPaymentMethod(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
@@ -236,4 +209,43 @@ public class BookAnAppointmentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+
+    /**
+     * Hospital List
+     */
+    @RequestMapping(value = "/get-hospital-list", method = RequestMethod.GET)
+    public ResponseEntity<?> getHospitalList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                             @RequestParam(required = false) String clinicName,
+                                             @RequestParam(required = false) String address,
+                                             @RequestParam(defaultValue = "1") int page,
+                                             @RequestParam(defaultValue = "10") int size) {
+        try {
+            log.info("Entry in /api/v1/admin/user/appointment/get-hospital-list");
+            log.info("Request Param : clinicName={}, address={}, page={}, size={}", clinicName, address, page, size);
+            Object response = bookAnAppointmentService.getHospitalList(locale, clinicName, address, page, size);
+            log.info("Exiting /api/v1/admin/user/appointment/get-hospital-list and it's ResponseBody is : {}", response);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            log.error("Exception : {}", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    /**
+     * Payment of Book-Appointment
+     */
+//    @RequestMapping(value = "/book-consultation", method = RequestMethod.GET)
+//    public ResponseEntity<?> bookConsultation(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+//                                             @RequestBody BookConsultationRequest request) {
+//        try {
+//            log.info("Entry in /api/v1/admin/user/appointment/book-consultation");
+//            log.info("Request Param : );
+//            Object response = bookAnAppointmentService.bookConsultation(request, locale);
+//            log.info("Exiting /api/v1/admin/user/appointment/book-consultation and it's ResponseBody is : {}", response);
+//            return ResponseEntity.ok().body(response);
+//        } catch (Exception e) {
+//            log.error("Exception : {}", e);
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+//        }
+//    }
 }
