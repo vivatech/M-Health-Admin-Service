@@ -173,7 +173,8 @@ public class Constants {
     public static final String TERMS_AND_CONDITION = "app.terms.and.condition";
     public static final String PATIENT_CREATE_SUCCESSFULLY = "app.patient.create.successfully";
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
-  
+
+
     public static final String DEFAULT_COUNTRY = "SO";
     public static final String USER_TYPE_NOT_FOUND = "app.user.type.not.found";
     public static final String COUNTRY_SOMALIA = "SOMALIA";

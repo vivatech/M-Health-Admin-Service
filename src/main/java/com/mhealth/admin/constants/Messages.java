@@ -73,6 +73,12 @@ public interface Messages {
     String CONSULTATION_NOT_FOUND = "consultation.not.found";
     String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
     String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
+
+    //consultation sms
+    public static final String REMINDER_SMS_FOR_TELEPHONE_VISIT = "reminder.sms.for.telephone.visit";
+    public static final String REMINDER_SMS_FOR_TELEPHONE_VISIT_DOCTOR = "reminder.sms.for.telephone.visit.doctor";
+    public static final String BOOKING_NOTIFICATION_CLINIC_TO_HOSPITAL = "booking.notification.clinic.to.hospital";
+  
     String HOSPITAL_LIST_FETCH = "hospital.list.fetch.successfully";
     String DAY_TODAY = "Today";
     String DAY_TOMORROW = "Tomorrow";

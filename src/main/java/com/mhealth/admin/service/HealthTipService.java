@@ -27,10 +27,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+
+import static com.mhealth.admin.constants.Constants.HEALTH_TIPS;
+import static com.mhealth.admin.constants.Constants.HEALTH_TIPS_CATEGORY;
 
 @Service
 public class HealthTipService {
@@ -196,9 +196,14 @@ public class HealthTipService {
         StatusAI status = StringUtils.isEmpty(request.getStatus()) ? null : StatusAI.valueOf(request.getStatus());
         Page<HealthTip> page = repository.findByTopicContainingAndStatus(request.getTopic(), status, pageable);
 
+        List<HealthTip> content = page.getContent();
+        content.forEach(ele -> {
+            if (!StringUtils.isEmpty(ele.getPhoto())) ele.setPhoto(HEALTH_TIPS + ele.getHealthTipId() + "/" + ele.getPhoto());
+            if (!StringUtils.isEmpty(ele.getVideoThumb())) ele.setVideoThumb(HEALTH_TIPS + ele.getHealthTipId() + "/thumb/" + ele.getVideoThumb());
+        });
         return ResponseEntity.ok(new PaginationResponse<>(Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.HEALTH_TIP_FETCHED_SUCCESS, null, locale),
-                page.getContent(), page.getTotalElements(), (long) page.getSize(), (long) page.getNumber()));
+                content, page.getTotalElements(), (long) page.getSize(), (long) page.getNumber()));
     }
 
     public ResponseEntity<Response> deleteHealthTip(Integer id, Locale locale) {
