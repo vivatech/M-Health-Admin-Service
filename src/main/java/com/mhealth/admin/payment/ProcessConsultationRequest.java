@@ -276,7 +276,7 @@ public class ProcessConsultationRequest {
         transaction.setPayerId(patient.getUserId());
         transaction.setReferenceNumber(patient.getUserId().toString());  //this is same as payer no
 
-        Users adminContactNumber = usersRepository.findByType(UserType.Superadmin).stream().findFirst().orElseThrow(() -> new AdminModuleExceptionHandler("Admin contact number not found"));
+        Users adminContactNumber = usersRepository.findByTypeAndStatus(UserType.Superadmin, StatusAI.A).stream().findFirst().orElseThrow(() -> new AdminModuleExceptionHandler("Admin contact number not found"));
         transaction.setPayeeMobile(adminContactNumber.getContactNumber());
         transaction.setPayerMobile(patient.getContactNumber());
 
