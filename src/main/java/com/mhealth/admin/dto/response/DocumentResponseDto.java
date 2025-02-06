@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 public class DocumentResponseDto {
     private Integer userId;
     private Integer documentId;
+    private String filePath;
     private String fileName;
 }

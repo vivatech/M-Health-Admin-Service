@@ -683,7 +683,8 @@ public class LabUserService {
                 row.getDocumentId(),
                 StringUtils.isEmpty(row.getDocumentFileName())
                         ? null
-                        : Constants.DOCTOR_DOCUMENT_PATH + row.getUserId() + "/" + row.getDocumentFileName()
+                        : Constants.DOCTOR_DOCUMENT_PATH + row.getUserId() + "/" + row.getDocumentFileName(),
+                row.getDocumentName()
         )).collect(Collectors.toList());
     }
 
