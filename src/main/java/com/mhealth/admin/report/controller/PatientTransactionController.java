@@ -3,7 +3,6 @@ package com.mhealth.admin.report.controller;
 
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.dto.Status;
-import com.mhealth.admin.dto.enums.Channel;
 import com.mhealth.admin.dto.response.PaginationResponse;
 import com.mhealth.admin.model.*;
 import com.mhealth.admin.report.controller.dto.PatientTransactionDto;
@@ -21,10 +20,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Patient Transaction", description = "APIs for managing patient transaction")
@@ -45,11 +43,11 @@ public class PatientTransactionController {
     public PaginationResponse<PatientTransactionDto> getPatientTransaction(
             @RequestBody PatientTransactionRequestDto request) {
         try {
-            // Create Pageable objects for both queries to apply pagination
-            Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            // Create Pageable object for pagination
+            Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
 
-            // Fetch system transactions with pagination
-            Page<SystemTransaction> systemTransactionPage = systemTransactionRepository.fetchPatientTransaction(
+            // Execute the query with pagination and filters
+            Page<Object[]> resultPage = systemTransactionRepository.searchWithFilters(
                     request.getServiceType(),
                     request.getStatus(),
                     request.getOrderType(),
@@ -59,129 +57,52 @@ public class PatientTransactionController {
                     pageable
             );
 
-            // Fetch nod transactions with pagination
-            Page<NodLog> nodLogPage = systemTransactionRepository.fetchNodTransaction(
-                    request.getServiceType(),
-                    request.getStatus(),
-                    request.getOrderType(),
-                    request.getChannel(),
-                    request.getFromDate(),
-                    request.getToDate(),
-                    pageable
-            );
+            // Map results to DTO
+            List<PatientTransactionDto> responseList = mapResultsToPatientTransactionReportResponseDto(resultPage.getContent());
 
-            // Combine and map transactions to DTOs
-            List<PatientTransactionDto> patientTransactionDTOs = new ArrayList<>();
-
-            // Map SystemTransaction to DTO
-            systemTransactionPage.getContent().forEach(transaction -> {
-                PatientTransactionDto dto = mapSystemTransactionToDto(transaction);
-                patientTransactionDTOs.add(dto);
-            });
-
-            // Map NodLog to DTO
-            nodLogPage.getContent().forEach(nodLog -> {
-                PatientTransactionDto dto = mapNodLogToDto(nodLog);
-                patientTransactionDTOs.add(dto);
-            });
-
-            // Sort the DTOs by createdAt (descending)
-            patientTransactionDTOs.sort(Comparator.comparing(PatientTransactionDto::getCreatedAt).reversed());
-
-            // Calculate total count from both pages
-            long totalElements = systemTransactionPage.getTotalElements() + nodLogPage.getTotalElements();
-
-            // Apply pagination manually if needed
-            int start = Math.min(request.getPage() * request.getSize(), patientTransactionDTOs.size());
-            int end = Math.min((request.getPage() + 1) * request.getSize(), patientTransactionDTOs.size());
-            List<PatientTransactionDto> paginatedList = patientTransactionDTOs.subList(start, end);
-
-            // Return the paginated response
             return new PaginationResponse<>(
                     Status.SUCCESS,
                     Constants.SUCCESS,
                     "",
-                    paginatedList,
-                    totalElements,
+                    responseList,
+                    resultPage.getTotalElements(),
                     (long) request.getSize(),
                     (long) request.getPage()
             );
+
         } catch (Exception e) {
             e.printStackTrace();
             return new PaginationResponse<>(e);
         }
     }
 
+    private List<PatientTransactionDto> mapResultsToPatientTransactionReportResponseDto(List<Object[]> results) {
+        return results.stream().map(row -> {
+            Integer userId = (Integer) row[0];
+            String contactNumber = Objects.toString(row[1], "") + Objects.toString(row[2], "");
+            String channel = Objects.toString(row[3], "");
+            String status = Objects.toString(row[4], "");
+            String patientName = Objects.toString(row[5], "") + " " + Objects.toString(row[6], "");
+            String address = Objects.toString(row[7], "") + " - " + Objects.toString(row[8], "");
+            String refId = Objects.toString(row[9], "");
+            String createdBy = Objects.toString(row[10], "");
+            String orderType = Objects.toString(row[11], "");
+            String dob = Objects.toString(row[12], "");
+            String gender = Objects.toString(row[13], "");
+            String drName = Objects.toString(row[14], "");
+            String clinicName = Objects.toString(row[15], "");
+            String transactionType = Objects.toString(row[16], "");
 
-    private PatientTransactionDto mapSystemTransactionToDto(SystemTransaction transaction) {
-        PatientTransactionDto dto = new PatientTransactionDto();
-        if (transaction.getRefId() != null) {
-            Consultation consultation = transaction.getRefId();
-            dto.setRefId(consultation.getCaseId() != null ? consultation.getCaseId().toString() : null);
-            if (consultation.getDoctorId() != null) {
-                dto.setDoctorOrNurse(consultation.getDoctorId().getFirstName() + " " +
-                        consultation.getDoctorId().getLastName());
-                Integer hospitalId = consultation.getDoctorId().getHospitalId();
-                if (hospitalId != null) {
-                    Users hospital = usersRepository.findById(hospitalId).orElse(null);
-                    if (hospital != null) {
-                        dto.setClinicName(hospital.getClinicName());
-                    }
-                }
-            }
-            if (consultation.getPatientId() != null) {
-                dto.setMobile(consultation.getPatientId().getCountryCode() + consultation.getPatientId().getContactNumber());
-                dto.setPatientName(consultation.getPatientId().getFirstName() + " " +
-                        consultation.getPatientId().getLastName());
-                dto.setAge(consultation.getPatientId().getDob());
-                dto.setGender(consultation.getPatientId().getGender());
-
-                String cityName = "";
-                if (consultation.getPatientId().getCity() != null) {
-                    Optional<City> city = cityRepository.findById(consultation.getPatientId().getCity());
-                    if (city.isPresent()) {
-                        cityName = city.get().getName();
-                    }
-                }
-                dto.setPatientAddress(consultation.getPatientId().getResidenceAddress() + " - " + cityName);
-            }
-        }
-        dto.setServiceType(transaction.getTransactionType());
-        dto.setOrderType(transaction.getOrderType());
-        dto.setStatus(transaction.getStatus());
-        dto.setChannel(transaction.getChannel());
-        dto.setCreatedAt(transaction.getCreatedAt());
-        return dto;
+            return new PatientTransactionDto(
+                    userId, contactNumber, channel, status, patientName, address, refId, createdBy, orderType, dob, gender,
+                    drName, clinicName, transactionType
+            );
+        }).collect(Collectors.toList());
     }
 
-    private PatientTransactionDto mapNodLogToDto(NodLog nodLog) {
-        PatientTransactionDto dto = new PatientTransactionDto();
-        if (nodLog.getSearchId() != null) {
-            dto.setRefId(nodLog.getSearchId());
-            Users user = usersRepository.findById(nodLog.getUserId()).orElse(null);
-            if (user != null) {
-                dto.setMobile(user.getCountryCode() + user.getContactNumber());
-                dto.setPatientName(user.getFirstName() + " " + user.getLastName());
-                dto.setAge(user.getDob());
-                dto.setGender(user.getGender());
 
-                String cityName = "";
-                if(user.getCity() != null){
-                    Optional<City> city = cityRepository.findById(user.getCity());
-                    if (city.isPresent()) {
-                        cityName = city.get().getName();
-                    }
-                }
-                dto.setPatientAddress(user.getResidenceAddress() + " - " + cityName);
-            }
-        }
-        dto.setServiceType(nodLog.getTransactionType());
-        dto.setOrderType(nodLog.getOrderType());
-        dto.setStatus(nodLog.getStatus());
-        dto.setChannel(nodLog.getChannel());
-        dto.setCreatedAt(nodLog.getCreatedAt());
-        return dto;
-    }
+
+
 
 
 }
