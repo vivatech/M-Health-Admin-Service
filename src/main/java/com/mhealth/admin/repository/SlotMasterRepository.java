@@ -19,4 +19,6 @@ public interface SlotMasterRepository extends JpaRepository<SlotMaster, Integer>
     List<Integer> findBySlotDayAndSlotStartTime(String[] dayName, LocalTime time, LocalDate date, List<RequestType> type);
     @Query("Select u.slotId from SlotMaster u where u.slotDay IN ?1 AND u.slotType.id = 4 AND u.slotId NOT IN (SELECT c.slotId.slotId FROM Consultation c WHERE c.requestType IN ?4 AND c.consultationDate >= ?2 AND c.consultationDate <= ?3) ORDER BY u.slotStartTime ASC")
     List<Integer> findBySlotDay(String[] dayName, LocalDate startDate, LocalDate endDate, List<RequestType> type);
+
+    SlotMaster findBySlotId(Integer slotId);
 }
