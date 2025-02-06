@@ -35,7 +35,7 @@ public class HealthTipCategoryMasterController {
     @PostMapping
     public ResponseEntity<Response> addCategory(
             @Valid @ModelAttribute HealthTipCategoryRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) throws Exception {
         return service.addCategory(request, locale);
     }
 
@@ -47,7 +47,7 @@ public class HealthTipCategoryMasterController {
     public ResponseEntity<Response> updateCategory(
             @PathVariable Integer id,
             @Valid @ModelAttribute HealthTipCategoryRequest request,
-            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) throws Exception {
         return service.updateCategory(id, request, locale);
     }
 
@@ -81,4 +81,16 @@ public class HealthTipCategoryMasterController {
             @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
         return service.searchCategories(request, locale);
     }
+
+    @Operation(summary = "Getting category master by id", responses = {
+            @ApiResponse(responseCode = "200", description = "Health tip category found success"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Response> getCategoryById(
+            @PathVariable Integer id,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+        return service.getCategoryById(id, locale);
+    }
+
 }

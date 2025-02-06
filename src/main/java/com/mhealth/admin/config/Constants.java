@@ -136,6 +136,7 @@ public class Constants {
     public static final String HEALTH_TIP_PACKAGE_STATUS_UPDATED_SUCCESS = "app.health.tip.package.status.updated.success";
     public static final String HEALTH_TIP_PACKAGE_DUPLICATE_CATEGORY_FOUND = "app.health.tip.package.duplicate.category";
     public static final String HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP_PACKAGE = "app.health.tip.package.in.used.category";
+    public static final String HEALTH_TIP_CATEGORY_USED_IN_HEALTH_TIP = "app.health.tip.in.used.category";
     public static final String HEALTH_TIP_PACKAGE_USED_IN_HEALTH_TIP_PACKAGE_USER = "app.health.tip.package.in.used.package.user";
 
 
@@ -172,7 +173,8 @@ public class Constants {
     public static final String TERMS_AND_CONDITION = "app.terms.and.condition";
     public static final String PATIENT_CREATE_SUCCESSFULLY = "app.patient.create.successfully";
     public static final String PATIENT_UPDATED_SUCCESSFULLY = "app.patient.updated.successfully";
-  
+
+
     public static final String DEFAULT_COUNTRY = "SO";
     public static final String USER_TYPE_NOT_FOUND = "app.user.type.not.found";
     public static final String COUNTRY_SOMALIA = "SOMALIA";

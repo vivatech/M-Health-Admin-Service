@@ -11,4 +11,5 @@ public class B2CPaymentDto {
     private String msisdn;
     private Double amount;
     private String transactionId;
+    private Integer transactionInitiatedBy;
 }

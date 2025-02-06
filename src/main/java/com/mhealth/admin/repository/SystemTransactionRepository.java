@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface SystemTransactionRepository extends JpaRepository<SystemTransaction, Integer> {
 
     @Query("""
@@ -30,7 +32,6 @@ public interface SystemTransactionRepository extends JpaRepository<SystemTransac
             @Param("toDate") String toDate,
             Pageable pageable
     );
-
     @Query("""
     SELECT st
     FROM NodLog st

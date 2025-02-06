@@ -19,19 +19,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Payment History", description = "APIs for managing payment history")
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/payment-history")
 public class PaymentHistoryController {
 
@@ -52,73 +51,60 @@ public class PaymentHistoryController {
 
     @Operation(summary = "Get payment history", description = "Fetch payment history details based on package patient name, doctor name and consultation date with pagination")
     @GetMapping("/get")
-    public PaginationResponse<PaymentHistoryDto> getPaymentHistory(@RequestParam(value = "patientName", required = false) String patientName, @RequestParam(value = "doctorName", required = false) String doctorName, @RequestParam(value = "consultationDate", required = false) String consultationDate, @RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "10") int size) {
+    public PaginationResponse<PaymentHistoryDto> getPaymentHistory(
+            @RequestParam(value = "patientName", required = false) String patientName,
+            @RequestParam(value = "doctorName", required = false) String doctorName,
+            @RequestParam(value = "consultationDate", required = false) String consultationDate,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
 
         try {
-            // Set pagination and sorting
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-
             LocalDate temConsultationDate = (consultationDate == null || consultationDate.isEmpty()) ? null : LocalDate.parse(consultationDate);
 
-            // Fetch orders using custom query (searchOrders)
-            Page<Orders> orderList = ordersRepository.fetchOrders(patientName, doctorName, temConsultationDate, pageable);
+            Page<Orders> orderList = ordersRepository.fetchOrders(patientName, doctorName, temConsultationDate, RequestType.Book, pageable);
 
-            // List to hold payment history DTOs
-            List<PaymentHistoryDto> paymentHistoryDtos = new ArrayList<>();
+            List<PaymentHistoryDto> paymentHistoryDtos = orderList.getContent().stream()
+                    .map(order -> {
+                        WalletTransaction walletTransaction = walletTransactionRepository.findByOrderIdAndPatientIdAndServiceTypeAndisDebitCredit(
+                                order.getId(), order.getPatientId().getUserId());
 
-            for (Orders order : orderList.getContent()) {
-                PaymentHistoryDto paymentHistoryDto = new PaymentHistoryDto();
+                        if (walletTransaction == null) {
+                            return null; // Skip this order if walletTransaction is null
+                        }
 
-                // Set patient and doctor names
-                paymentHistoryDto.setPatientName(order.getPatientId().getFirstName() + " " + order.getPatientId().getLastName());
-                paymentHistoryDto.setDoctorName(order.getDoctorId().getFirstName() + " " + order.getDoctorId().getLastName());
+                        PaymentHistoryDto dto = new PaymentHistoryDto();
+                        dto.setPatientName(order.getPatientId().getFirstName() + " " + order.getPatientId().getLastName());
+                        dto.setDoctorName(order.getDoctorId().getFirstName() + " " + order.getDoctorId().getLastName());
+                        dto.setDoctorCharge(order.getDoctorAmount());
+                        dto.setPatientPaidCharge(order.getAmount());
+                        dto.setCaseId(order.getCaseId().getCaseId());
+                        dto.setAdminCharge(order.getCommission());
 
-                // Set doctor charge and patient paid charge
-                paymentHistoryDto.setDoctorCharge(order.getDoctorAmount());
-                paymentHistoryDto.setPatientPaidCharge(order.getAmount());
-                paymentHistoryDto.setCaseId(order.getCaseId().getCaseId());
-                paymentHistoryDto.setAdminCharge(order.getCommission());
+                        dto.setTransactionId(walletTransaction.getTransactionId());
 
-                // Find wallet transaction for the order (debit type)
-                WalletTransaction walletTransaction = walletTransactionRepository.findByOrderIdAndPatientIdAndServiceTypeAndisDebitCredit(order.getId(), order.getPatientId().getUserId());
-                if (walletTransaction == null) {
-                    continue;  // This skips the record; user might see fewer results than the requested page size
-                }
-                paymentHistoryDto.setTransactionId(walletTransaction.getTransactionId());
+                        Consultation consultation = consultationRepository.findByCaseIdAndRequestType(order.getCaseId().getCaseId(), RequestType.Book);
+                        dto.setConsultationDate(consultation.getConsultationDate());
+                        dto.setConsultationType(consultation.getConsultType());
+                        dto.setConsultationTime(consultation.getSlotId().getSlotTime());
 
-                // Find consultation based on caseId and requestType
-                Consultation consultation = consultationRepository.findByCaseIdAndRequestType(order.getCaseId().getCaseId(), RequestType.Book);
-                if (consultation == null) {
-                    continue;  // Same as above
-                }
+                        Users hospital = usersRepository.findById(order.getDoctorId().getHospitalId()).orElse(null);
+                        dto.setClinicName(hospital != null ? hospital.getClinicName() : null);
 
-                // Set consultation details
-                paymentHistoryDto.setConsultationDate(consultation.getConsultationDate());
-                paymentHistoryDto.setConsultationType(consultation.getConsultType());
-                paymentHistoryDto.setConsultationTime(consultation.getSlotId().getSlotTime());
-
-                // Find hospital details and set clinic name
-                Integer hospitalId = order.getDoctorId().getHospitalId();
-                Users hospital = usersRepository.findById(hospitalId).orElse(null);
-                if (hospital == null) {
-                    continue;  // Same as above
-                }
-                paymentHistoryDto.setClinicName(hospital.getClinicName());
-
-                // Add the payment history DTO to the list
-                paymentHistoryDtos.add(paymentHistoryDto);
-            }
+                        return dto;
+                    })
+                    .filter(Objects::nonNull) // Filter out null PaymentHistoryDto objects
+                    .collect(Collectors.toList());
 
 
-            // Return the paginated response
             return new PaginationResponse<>(Status.SUCCESS, Constants.SUCCESS, "", paymentHistoryDtos, orderList.getTotalElements(), (long) size, (long) page);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Handle and return error response
             return new PaginationResponse<>(e);
         }
     }
+
 
 
 }

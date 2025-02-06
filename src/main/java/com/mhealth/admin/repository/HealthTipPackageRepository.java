@@ -24,15 +24,19 @@ public interface HealthTipPackageRepository extends JpaRepository<HealthTipPacka
 
     @Query("SELECT c FROM HealthTipPackageCategories c " +
             "JOIN c.healthTipPackage p " +
+            "JOIN c.healthTipCategoryMaster h " +
             "WHERE " +
             "(:name IS NULL OR p.packageName LIKE %:name%) AND " +
             "(:status IS NULL OR p.status = :status) AND " +
-            "(:durationId IS NULL OR p.healthTipDuration.durationId = :durationId)")
-    Page<HealthTipPackageCategories> findByNameAndStatusAndDuration(
+            "(:durationId IS NULL OR p.healthTipDuration.durationId = :durationId) AND " +
+            "(:categoryId IS NULL OR h.categoryId = :categoryId)")
+    Page<HealthTipPackageCategories> findByNameAndStatusAndDurationAndCategory(
             @Param("name") String name,
             @Param("status") StatusAI status,
             @Param("durationId") Integer durationId,
+            @Param("categoryId") Integer categoryId,
             Pageable pageable);
+
 
     @Query("SELECT h FROM HealthTipPackage h " +
             "WHERE (:packageName IS NULL OR :packageName = '' OR LOWER(h.packageName) LIKE LOWER(CONCAT('%', :packageName, '%'))) " +

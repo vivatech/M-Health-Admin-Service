@@ -20,5 +20,6 @@ public class HospitalManagementResponseDto {
     private String clinicAddress;
     private String notificationLanguage;
     private String status;
+    private String profilePicture;
 }
 

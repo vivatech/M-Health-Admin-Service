@@ -7,15 +7,18 @@ import com.mhealth.admin.model.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UsersRepository extends JpaRepository<Users,Integer> {
+public interface UsersRepository extends JpaRepository<Users,Integer>, JpaSpecificationExecutor<Users> {
 
     @Query("Select u from Users u where u.userId = ?1")
     Optional<Users> findById(Integer id);
@@ -29,8 +32,8 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     @Query("Select u from Users u where u.status like ?1 and u.type = ?2 and u.isVerified like ?3")
     List<Users> findByStatusAndTypeAndVerified(String a, UserType userType, String yes);
 
-    @Query("Select u from Users u where u.type = ?1")
-    List<Users> findByType(UserType userType);
+
+    List<Users> findByTypeAndStatus(UserType userType, StatusAI statusAI);
 
     List<Users> findByHospitalId(int hospitalId);
 
@@ -57,8 +60,9 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     Long countUsersByType(UserType userType);
 
     @Query("SELECT COUNT(DISTINCT u.doctorId) FROM DoctorAvailability u " +
-            " WHERE u.slotId.slotDay = ?1")
-    Long countAvailableDoctors(String day);
+            "WHERE u.slotId.slotDay = :day AND u.slotId.slotStartTime >= :time")
+    Long countAvailableDoctors(@Param("day") String day, @Param("time") LocalTime time);
+
 
     @Query("Select count(u) from Users u where u.type = ?1 AND u.status = ?2")
     Long countUsersByTypeAndStatus(UserType userType, StatusAI statusAI);
@@ -72,8 +76,6 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
     long countByContactNumberAndTypeAndUserIdNot(String contactNumber, UserType type, Integer userId);
 
     Optional<Users> findByUserIdAndType(Integer userId, UserType type);
-  
-    Users findByUserIdAndType(Users userId, String userType);
 
     @Query("""
     SELECT u
@@ -112,4 +114,8 @@ public interface UsersRepository extends JpaRepository<Users,Integer> {
             Pageable pageable
     );
 
+    @Query(value = "SELECT u.* FROM mh_users u WHERE u.status = 'A' AND u.type = 'Clinic' AND u.is_hpcz_verified = 'Yes'",nativeQuery = true)
+    List<Users> getHospitalList();
+
+    Users findByUserIdAndStatus(Integer hospitalId, StatusAI statusAI);
 }

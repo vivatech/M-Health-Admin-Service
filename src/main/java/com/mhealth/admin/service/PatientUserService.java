@@ -19,7 +19,7 @@ import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -233,15 +233,17 @@ public class PatientUserService {
         }
 
         // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmail(requestDto.getEmail());
+        if(!StringUtils.isEmpty(requestDto.getEmail())) {
+            long emailCount = usersRepository.countByEmail(requestDto.getEmail());
+            if (emailCount > 0) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
         long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Patient);
-
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
@@ -357,6 +359,44 @@ public class PatientUserService {
         return usersRepository.save(patientUser);
     }
 
+    private Users getUpdatedUsers(PatientUserRequestDto requestDto, Locale locale, Users patientUser) {
+        //first name and last name
+        String[] fullName = requestDto.getFullName().trim().split(" ");
+        String lastName = "";
+        StringBuilder sb = new StringBuilder();
+        if(fullName.length > 1){
+            for(int i = 1 ; i < fullName.length ; i++){
+                sb.append(fullName[i]).append(" ");
+            }
+            lastName = sb.toString();
+        }
+
+        patientUser.setFirstName(fullName[0]);
+        patientUser.setLastName(lastName);
+        patientUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? patientUser.getEmail() : requestDto.getEmail());
+        patientUser.setContactNumber(requestDto.getContactNumber());
+
+        if(requestDto.getCountryId() != null && requestDto.getCountryId() > 0) {
+            countryRepository.findById(requestDto.getCountryId()).ifPresent(patientUser::setCountry);
+        }
+
+        if(requestDto.getProvinceId() != null && requestDto.getProvinceId() > 0) {
+            stateRepository.findById(requestDto.getProvinceId()).ifPresent(state -> patientUser.setState(requestDto.getProvinceId()));
+        }
+
+        if(requestDto.getCityId() != null && requestDto.getCityId() > 0) {
+            stateRepository.findById(requestDto.getCityId()).ifPresent(city -> patientUser.setCity(requestDto.getCityId()));
+        }
+
+        patientUser.setGender(StringUtils.isEmpty(requestDto.getGender()) ? patientUser.getGender() : requestDto.getGender());
+        patientUser.setNotificationLanguage(StringUtils.isEmpty(requestDto.getNotificationLanguage()) ? patientUser.getNotificationLanguage() : requestDto.getNotificationLanguage());
+        patientUser.setDob(requestDto.getDob());
+        patientUser.setResidenceAddress(StringUtils.isEmpty(requestDto.getResidentialAddress()) ? patientUser.getResidenceAddress() : requestDto.getResidentialAddress());
+        patientUser.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+
+        return usersRepository.save(patientUser);
+    }
+
     @Transactional
     public Object updatePatientUser(Locale locale, Integer userId, PatientUserRequestDto requestDto) throws Exception {
         Response response = new Response();
@@ -381,7 +421,6 @@ public class PatientUserService {
             return response;
         }
         //profile picture
-        String pp = null;
         if (requestDto.getProfilePicture() != null && !requestDto.getProfilePicture().getName().isEmpty()) {
             ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
@@ -392,23 +431,16 @@ public class PatientUserService {
             }
         }
 
-        // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+        // Check for duplicate contact number
         long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Patient, userId);
-
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users patientUser = getUsers(requestDto, pp,  locale, existingUser);
+        Users patientUser = getUpdatedUsers(requestDto, locale, existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -481,7 +513,7 @@ public class PatientUserService {
 
     private PatientUserResponseDto convertToPatientUserResponseDto(Users user, Locale locale) {
         PatientUserResponseDto dto = new PatientUserResponseDto();
-        dto.setProfilePicture(user.getProfilePicture());
+        dto.setProfilePicture(StringUtils.isEmpty(user.getProfilePicture()) ? null : Constants.USER_PROFILE_PICTURE + user.getUserId() + "/" + user.getProfilePicture());
         dto.setUserId(user.getUserId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());

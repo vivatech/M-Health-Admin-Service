@@ -3,6 +3,7 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.Status;
+import com.mhealth.admin.dto.enums.CategoryStatus;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
@@ -40,6 +41,10 @@ public class GlobalService {
     private MessageSource messageSource;
     @Autowired
     private FileService fileService;
+    @Autowired
+    private LabCategoryMasterRepository labCategoryMasterRepository;
+    @Autowired
+    private LabSubCategoryMasterRepository labSubCategoryMasterRepository;
 
     public Map<Integer, String> getCities(Locale locale, List<Integer> stateIdList) {
         // Fetch cities based on the state IDs
@@ -78,6 +83,16 @@ public class GlobalService {
                 .collect(Collectors.toMap(State::getId, State::getName));
     }
 
+    public Map<Integer, String> getHospitalList(Locale locale) {
+        // Fetch hospitals directly using the repository
+        List<Users> hospitals = usersRepository.getHospitalList();
+
+        // Map the list to a key-value pair of hospitalId and clinicName
+        return hospitals.stream()
+                .collect(Collectors.toMap(Users::getUserId, Users::getClinicName));
+    }
+
+
     public Object deleteProfilePicture(Locale locale, Integer userId) throws IOException {
         Response response = new Response();
 
@@ -113,5 +128,38 @@ public class GlobalService {
 
         return response;
 
+    }
+    public Map<Integer, String> getAllCityList(Locale locale) {
+        // Fetch all cities list
+        List<City> cities = cityRepository.findAll();
+
+        // Map city IDs to city names
+        return cities.stream()
+                .collect(Collectors.toMap(City::getId, City::getName));
+    }
+    public Map<Integer, String> getAllCategoriesList() {
+        //Fetch all lab categories list
+        List<LabCategoryMaster> labCategoryMasterList = labCategoryMasterRepository.findAllByCatStatus();
+
+        // Map categories into -> categories IDs and categories name
+        return labCategoryMasterList.stream()
+                .collect(Collectors.toMap(LabCategoryMaster::getCatId, LabCategoryMaster::getCatName));
+    }
+
+    public Object getAllSubCategoriesList(Locale locale, Integer categoryId) {
+        //Check weather categoryId exists or not
+        LabCategoryMaster categoryMaster = labCategoryMasterRepository.findById(categoryId).orElse(null);
+        if(categoryMaster == null){
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.LAB_CATEGORY_NOT_FOUND, null, locale));
+        }
+        //Now fetch all lab sub categories based on lab category id
+        List<LabSubCategoryMaster> labSubCategoryMasterList = labSubCategoryMasterRepository.findByCatIdAndStatus(categoryId, CategoryStatus.Active);
+        //if list is empty
+        if(labSubCategoryMasterList.isEmpty()){
+            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(Messages.RECORD_NOT_FOUND, null, locale));
+        }
+        // Map categories into -> categories IDs and categories name
+        return labSubCategoryMasterList.stream()
+                .collect(Collectors.toMap(LabSubCategoryMaster::getSubCatId, LabSubCategoryMaster::getSubCatName));
     }
 }

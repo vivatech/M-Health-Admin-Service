@@ -3,6 +3,7 @@ package com.mhealth.admin.service;
 import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.dto.PermissionDto;
+import com.mhealth.admin.dto.dto.UpdatePermissionResponseData;
 import com.mhealth.admin.dto.enums.UserType;
 import com.mhealth.admin.dto.request.PermissionRoleRequest;
 import com.mhealth.admin.dto.response.PermissionRoleDto;
@@ -68,12 +69,23 @@ public class PermissionRoleService {
 
         permissionRole.setRoleType(request.getRoleType());
         permissionRole.setPermissions(request.getPermissions());
-        permissionRoleRepository.save(permissionRole);
+        permissionRole = permissionRoleRepository.save(permissionRole);
+
+        List<String> permissions = null;
+        List<Integer> list = Arrays.stream(permissionRole.getPermissions().split(","))
+                .map(Integer::parseInt)
+                .toList();
+        permissions = permissionRepository.findByIds(list).stream().map(Permission::getCode).toList();
+
+        UpdatePermissionResponseData responseData = new UpdatePermissionResponseData();
+        responseData.setId(permissionRole.getId());
+        responseData.setRoleType(permissionRole.getRoleType());
+        responseData.setPermissions(permissions);
 
         return ResponseEntity.ok(new Response(
                 Status.SUCCESS, Constants.SUCCESS_CODE,
                 messageSource.getMessage(Constants.PERMISSION_ROLE_UPDATED,null,locale),
-                permissionRole));    }
+                responseData));    }
 
     public ResponseEntity<Response> fetchPermissionRoles(Locale locale) {
         List<PermissionRoleDto> respose = new ArrayList<>();

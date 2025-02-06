@@ -6,11 +6,8 @@ import com.mhealth.admin.constants.Constants;
 import com.mhealth.admin.constants.Messages;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
-import com.mhealth.admin.dto.labUserDto.LabFileDto;
-import com.mhealth.admin.dto.labUserDto.LabUserListResponseDto;
+import com.mhealth.admin.dto.labUserDto.*;
 import com.mhealth.admin.dto.Status;
-import com.mhealth.admin.dto.labUserDto.LabUserRequestDto;
-import com.mhealth.admin.dto.labUserDto.LabUserResponseDto;
 import com.mhealth.admin.dto.response.DocumentResponseDto;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.model.*;
@@ -94,7 +91,7 @@ public class LabUserService {
             int page,
             int size) {
         Response response = new Response();
-        if(!sortByValues.contains(sortField)){
+        if (!sortByValues.contains(sortField)) {
             sortField = "user_id";
         }
         StringBuilder baseQuery = new StringBuilder("SELECT ")
@@ -144,7 +141,7 @@ public class LabUserService {
             query.setParameter("labName", "%" + labName + "%");
         }
         if (!StringUtils.isEmpty(status)) {
-            if(!validateStatus(status)){
+            if (!validateStatus(status)) {
                 response.setCode(Constants.CODE_O);
                 response.setData(null);
                 response.setMessage("Invalid value for status: " + status + ". Allowed values are 'A' or 'I'.");
@@ -159,7 +156,7 @@ public class LabUserService {
         if (!StringUtils.isEmpty(labRegistrationNumber)) {
             query.setParameter("labRegistrationNumber", "%" + labRegistrationNumber + "%");
         }
-        if(page <= 0){
+        if (page <= 0) {
             response.setCode(Constants.CODE_O);
             response.setData(null);
             response.setMessage("Invalid value for page: " + page + ". Allowed values should be greater or equal to 1.");
@@ -238,9 +235,9 @@ public class LabUserService {
             Integer cityId = (Integer) row[7];
             String cityName = "";
 
-            if(cityId != null && cityId > 0){
+            if (cityId != null && cityId > 0) {
                 City city = cityRepository.findById(cityId).orElse(null);
-                if(city != null) cityName = city.getName();
+                if (city != null) cityName = city.getName();
             }
 
             return new LabUserListResponseDto(
@@ -263,15 +260,18 @@ public class LabUserService {
         }
 
         // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmail(requestDto.getEmail());
+        if(!StringUtils.isEmpty(requestDto.getEmail())) {
+            long emailCount = usersRepository.countByEmail(requestDto.getEmail());
+            if (emailCount > 0) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
         long contactNumberCount = usersRepository.countByContactNumberAndType(requestDto.getContactNumber(), UserType.Lab);
 
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
@@ -290,16 +290,22 @@ public class LabUserService {
             }
         }
         //Document
-        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
-          for(LabFileDto dto : requestDto.getDocumentList()){
-              ValidateResult validationResult = fileService.validateFile(locale, dto.getDocument(), List.of("pdf"), 5_000_000);
-              if (!validationResult.isResult()) {
-                  response.setCode(Constants.CODE_O);
-                  response.setMessage(validationResult.getError());
-                  response.setStatus(Status.FAILED);
-                  return response;
-              }
-          }
+        if (requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()) {
+            for (LabFileDto dto : requestDto.getDocumentList()) {
+                if (dto.validate() != null) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(dto.validate());
+                    response.setStatus(Status.FAILED);
+                    return response;
+                }
+                ValidateResult validationResult = fileService.validateFile(locale, dto.getDocument(), List.of("pdf"), 5_000_000);
+                if (!validationResult.isResult()) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(validationResult.getError());
+                    response.setStatus(Status.FAILED);
+                    return response;
+                }
+            }
         }
 
         // Create Lab user
@@ -336,8 +342,8 @@ public class LabUserService {
         String[] fullName = requestDto.getFullName().trim().split(" ");
         String lastName = "";
         StringBuilder sb = new StringBuilder();
-        if(fullName.length > 1){
-            for(int i = 1 ; i < fullName.length ; i++){
+        if (fullName.length > 1) {
+            for (int i = 1; i < fullName.length; i++) {
                 sb.append(fullName[i]).append(" ");
             }
             lastName = sb.toString();
@@ -346,12 +352,12 @@ public class LabUserService {
 
         Country c = countryRepository.findById(requestDto.getCountryId()).orElse(null);
 
-        Users labUser = (users == null) ? new Users() : users;
+        Users labUser = new Users();
 
         labUser.setType(UserType.Lab);
         labUser.setFirstName(fullName[0]);
         labUser.setLastName(lastName);
-        labUser.setEmail(requestDto.getEmail());
+        labUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? null : requestDto.getEmail());
         labUser.setProfilePicture(pp);
         labUser.setCountry(c);
         labUser.setState(requestDto.getProvinceId());
@@ -359,6 +365,7 @@ public class LabUserService {
         labUser.setContactNumber(requestDto.getContactNumber());
         labUser.setCountryCode(countryCode);
         labUser.setProfessionalIdentificationNumber(requestDto.getLabRegistrationNumber());
+        labUser.setClinicName(!StringUtils.isEmpty(requestDto.getLabName()) ? requestDto.getLabName() : null);
         labUser.setHospitalAddress(requestDto.getLabAddress());
         labUser.setStatus(StatusAI.A);
         labUser.setIsInternational(YesNo.No);
@@ -367,16 +374,17 @@ public class LabUserService {
         labUser.setIsHpczVerified(YesNo.Yes.name());
         labUser.setIsHospitalVerified(YesNo.Yes.name());
         labUser.setIsSuspended(0);
-        labUser.setAttemptCounter((short)0);
+        labUser.setAttemptCounter((short) 0);
         labUser.setOtpCounter(0);
         labUser.setHospitalId(0);
         labUser.setNotificationLanguage(Constants.DEFAULT_LANGUAGE);
         labUser.setDoctorClassification(GENERAL_PRACTITIONER);
         labUser.setClassification(Classification.from_hospital);
         labUser.setIsInternational(YesNo.No);
+        usersRepository.save(labUser);
 
         //profile picture
-        if(requestDto.getProfilePicture() != null){
+        if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + labUser.getUserId();
             String fileName = requestDto.getProfilePicture().getOriginalFilename();
 
@@ -387,8 +395,76 @@ public class LabUserService {
         }
 
         //Document
-        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
-            for(LabFileDto dto : requestDto.getDocumentList()){
+        if (requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()) {
+            for (LabFileDto dto : requestDto.getDocumentList()) {
+                String filePath = Constants.DOCTOR_DOCUMENT_PATH + labUser.getUserId();
+
+                // Extract the file extension
+                String extension = fileService.getFileExtension(Objects.requireNonNull(dto.getDocument().getOriginalFilename()));
+
+                // Generate a random file name
+                String fileName = UUID.randomUUID() + "." + extension;
+
+                // Save the file
+                fileService.saveFile(dto.getDocument(), filePath, fileName);
+
+                //Insert new entry into Doctor Document table
+                DoctorDocument doc = new DoctorDocument();
+                doc.setUserId(labUser.getUserId());
+                doc.setCreatedAt(LocalDateTime.now());
+                doc.setDocumentName(StringUtils.isEmpty(dto.getDocumentName()) ? "" : dto.getDocumentName());
+                doc.setDocumentFileName(fileName);
+                doc.setUpdatedAt(LocalDateTime.now());
+                doc.setStatus(DocumentStatus.Active);
+
+                doctorDocumentRepository.save(doc);
+            }
+        }
+
+        return usersRepository.save(labUser);
+    }
+
+    private Users updateUser(LabUserUpdateRequestDto requestDto, Locale locale, Users labUser) throws IOException {
+        //first name and last name
+        String[] fullName = requestDto.getFullName().trim().split(" ");
+        String lastName = "";
+        StringBuilder sb = new StringBuilder();
+        if (fullName.length > 1) {
+            for (int i = 1; i < fullName.length; i++) {
+                sb.append(fullName[i]).append(" ");
+            }
+            lastName = sb.toString();
+        }
+
+        labUser.setFirstName(fullName[0]);
+        labUser.setLastName(lastName);
+        labUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? labUser.getEmail() : requestDto.getEmail());
+        Country c = countryRepository.findById(requestDto.getCountryId()).orElse(null);
+        labUser.setCountry(c);
+        labUser.setState(requestDto.getProvinceId());
+        labUser.setCity(requestDto.getCityId());
+        labUser.setContactNumber(requestDto.getContactNumber());
+        labUser.setProfessionalIdentificationNumber(requestDto.getLabRegistrationNumber());
+        labUser.setClinicName(requestDto.getLabName());
+        labUser.setHospitalAddress(requestDto.getLabAddress());
+        labUser.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        usersRepository.save(labUser);
+
+        //profile picture
+        if (requestDto.getProfilePicture() != null) {
+            String filePath = Constants.USER_PROFILE_PICTURE + labUser.getUserId();
+            String fileName = requestDto.getProfilePicture().getOriginalFilename();
+
+            // Save the file
+            fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
+
+            labUser.setProfilePicture(fileName);
+        }
+
+        //Document
+        if (requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()) {
+            for (LabFileDto dto : requestDto.getDocumentList()) {
+
                 String filePath = Constants.DOCTOR_DOCUMENT_PATH + labUser.getUserId();
 
                 // Extract the file extension
@@ -417,7 +493,7 @@ public class LabUserService {
     }
 
     @Transactional
-    public Object updateLabUser(Locale locale, Integer userId, LabUserRequestDto requestDto) throws Exception {
+    public Object updateLabUser(Locale locale, Integer userId, LabUserUpdateRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -439,8 +515,8 @@ public class LabUserService {
             response.setStatus(Status.FAILED);
             return response;
         }
-        //profile picture
-        String pp = null;
+
+        //profile picture validation
         if (requestDto.getProfilePicture() != null) {
             ValidateResult validationResult = fileService.validateFile(locale, requestDto.getProfilePicture(), List.of("jpg", "jpeg", "png"), 1_000_000);
             if (!validationResult.isResult()) {
@@ -450,9 +526,15 @@ public class LabUserService {
                 return response;
             }
         }
-        //Document
-        if(requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()){
-            for(LabFileDto dto : requestDto.getDocumentList()){
+        //Document validation
+        if (requestDto.getDocumentList() != null && !requestDto.getDocumentList().isEmpty()) {
+            for (LabFileDto dto : requestDto.getDocumentList()) {
+                if (dto.validate() != null) {
+                    response.setCode(Constants.CODE_O);
+                    response.setMessage(dto.validate());
+                    response.setStatus(Status.FAILED);
+                    return response;
+                }
                 ValidateResult validationResult = fileService.validateFile(locale, dto.getDocument(), List.of("pdf"), 5_000_000);
                 if (!validationResult.isResult()) {
                     response.setCode(Constants.CODE_O);
@@ -464,22 +546,24 @@ public class LabUserService {
         }
 
         // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
-        long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Patient, userId);
-
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (StringUtils.isEmpty(requestDto.getEmail())) {
+            long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+            if (emailCount > 0) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
+        long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Lab, userId);
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users labUser = getUsers(requestDto, pp, locale, existingUser);
+        Users labUser = updateUser(requestDto, locale, existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -504,7 +588,7 @@ public class LabUserService {
         Users existingUser = existingLabUser.get();
 
         //check the status filed
-        if(!validateStatus(status)){
+        if (!validateStatus(status)) {
             response.setCode(Constants.CODE_O);
             response.setMessage("Invalid value for updating status: " + status + ". Allowed values are 'A' or 'I'.");
             response.setStatus(Status.FAILED);
@@ -564,25 +648,29 @@ public class LabUserService {
         dto.setLabRegistrationNumber(user.getProfessionalIdentificationNumber());
 
         //state
-        if(user.getState() != null && user.getState() != 0){
+        if (user.getState() != null && user.getState() != 0) {
             State state = stateRepository.findById(user.getState()).orElse(null);
-            if(state != null) {
+            if (state != null) {
                 dto.setStateId(state.getId());
                 dto.setStateName(state.getName());
             }
         }
         //city
-        if(user.getCity() != null && user.getCity() != 0){
+        if (user.getCity() != null && user.getCity() != 0) {
             City city = cityRepository.findById(user.getCity()).orElse(null);
-            if(city != null) {
+            if (city != null) {
                 dto.setCityId(city.getId());
                 dto.setCityName(city.getName());
             }
         }
+        //Profile picture
+        if (!StringUtils.isEmpty(user.getProfilePicture())) {
+            dto.setProfilePicture(Constants.USER_PROFILE_PICTURE + user.getUserId() + "/" + user.getProfilePicture());
+        }
 
         //Document
         List<DoctorDocument> labDocuments = doctorDocumentRepository.findByUserIdAndStatus(user.getUserId(), DocumentStatus.Active);
-        if(!labDocuments.isEmpty()){
+        if (!labDocuments.isEmpty()) {
             dto.setDocumentList(mapLabDocumentsToDocumentResponseDtoList(labDocuments));
         }
 
@@ -595,8 +683,7 @@ public class LabUserService {
                 row.getDocumentId(),
                 StringUtils.isEmpty(row.getDocumentFileName())
                         ? null
-                        : Constants.DOCTOR_DOCUMENT_PATH + row.getUserId() + "/" + row.getDocumentFileName(),
-                row.getDocumentName()
+                        : Constants.DOCTOR_DOCUMENT_PATH + row.getUserId() + "/" + row.getDocumentFileName()
         )).collect(Collectors.toList());
     }
 
@@ -616,7 +703,7 @@ public class LabUserService {
 
         //Delete file from directory
         DoctorDocument doc = doctorDocumentRepository.findByUserIdAndDocumentId(labUser.getUserId(), documentId);
-        if(doc == null){
+        if (doc == null) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.DOCUMENT_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
@@ -655,4 +742,5 @@ public class LabUserService {
         response.setStatus(Status.SUCCESS);
         return response;
     }
+
 }

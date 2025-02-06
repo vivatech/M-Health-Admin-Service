@@ -22,10 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +33,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Consultation History", description = "APIs for managing consultation history")
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/consultation-history")
 public class ConsultationHistoryController {
 

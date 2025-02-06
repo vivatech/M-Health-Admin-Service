@@ -27,4 +27,5 @@ public class LabUserResponseDto {
     private String labAddress;
     private String labRegistrationNumber;
     private List<DocumentResponseDto> documentList;
+    private String profilePicture;
 }

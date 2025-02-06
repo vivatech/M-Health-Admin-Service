@@ -55,7 +55,7 @@ public class LabUserRequestDto {
             validationErrors.append("Confirm password and Password should be same. ");
         }
         if (StringUtils.isEmpty(labRegistrationNumber)) {
-            validationErrors.append("Residential Address is required. ");
+            validationErrors.append("Lab Registration Number is required. ");
         }
         if(countryId == null || countryId <= 0){
             validationErrors.append("Country Id is required. ");

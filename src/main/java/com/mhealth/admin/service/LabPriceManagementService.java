@@ -8,10 +8,7 @@ import com.mhealth.admin.dto.labpricedto.LabPriceListDto;
 import com.mhealth.admin.dto.labpricedto.LabPriceRequestDto;
 import com.mhealth.admin.dto.labpricedto.LabPriceResponseDto;
 import com.mhealth.admin.dto.response.Response;
-import com.mhealth.admin.model.LabCategoryMaster;
-import com.mhealth.admin.model.LabPrice;
-import com.mhealth.admin.model.LabSubCategoryMaster;
-import com.mhealth.admin.model.Users;
+import com.mhealth.admin.model.*;
 import com.mhealth.admin.repository.LabCategoryMasterRepository;
 import com.mhealth.admin.repository.LabPriceRepository;
 import com.mhealth.admin.repository.LabSubCategoryMasterRepository;
@@ -19,6 +16,8 @@ import com.mhealth.admin.repository.UsersRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -26,8 +25,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -118,6 +119,68 @@ public class LabPriceManagementService {
 
         return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.LAB_PRICE_LIST_FETCH, null, locale), data);
 
+    }
+
+    public Response getFilteredLabPrice(Locale locale, Integer labId, Integer categoryId, Integer subCategoryId, String sortField, String sortBy, int page, int size) {
+        if (page == 0) page = 1;
+        Specification<LabPrice> specification = filterByParams(labId, categoryId, subCategoryId, sortField, sortBy);
+        // Pagination
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<LabPrice> pageableResponse = labPriceRepository.findAll(specification, pageable);
+        // Build response
+        Map<String, Object> data = new HashMap<>();
+        data.put("labPriceList", mapResultToLabPriceListDto2(pageableResponse.getContent()));
+        data.put("totalCount", pageableResponse.getTotalElements());
+        return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(Messages.LAB_PRICE_LIST_FETCH, null, locale), data);
+    }
+
+    public static Specification<LabPrice> filterByParams(Integer labId, Integer categoryId, Integer subCategoryId, String sortField, String sortBy) {
+        if(!sortByValues.contains(sortField)){
+            sortField = "labPriceComment";
+        }
+        String finalSortField = sortField;
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filter by labId
+            if (labId != null) {
+                Join<LabPrice, Users> lab = root.join("labUser");
+                predicates.add(criteriaBuilder.equal(lab.get("userId"), labId));
+            }
+
+            // Filter by categoryName
+            if (categoryId != null && categoryId > 0) {
+                Join<LabPrice, LabCategoryMaster> category = root.join("catId");
+                predicates.add(criteriaBuilder.equal(category.get("catId"), categoryId));
+            }
+
+            // Filter by subCategoryName
+            if (subCategoryId != null && subCategoryId > 0) {
+                Join<LabPrice, LabSubCategoryMaster> subCategory = root.join("subCatId");
+                predicates.add(criteriaBuilder.equal(subCategory.get("subCatId"), subCategoryId));
+            }
+
+            // Sorting logic
+            if ("desc".equalsIgnoreCase(sortBy)) {
+                query.orderBy(criteriaBuilder.desc(root.get(finalSortField)));
+            } else {
+                query.orderBy(criteriaBuilder.asc(root.get(finalSortField)));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private List<LabPriceListDto> mapResultToLabPriceListDto2(List<LabPrice> results) {
+        return results.stream().map(row->{
+            Integer labPriceId = row.getLabPriceId();
+            String catName = row.getCatId().getCatName();
+            String subCatName = row.getSubCatId().getSubCatName();
+            Float labPrice = row.getLabPrice();
+            String comment = row.getLabPriceComment();
+
+            return new LabPriceListDto(labPriceId, catName, subCatName, Currency_USD + " " + labPrice, comment);
+        }).collect(Collectors.toList());
     }
 
     private List<LabPriceListDto> mapResultToLabPriceListDto(List<Object[]> results) {

@@ -48,6 +48,46 @@ public interface Messages {
     String LAB_SUB_CATEGORY_NOT_FOUND = "app.lab.sub.category.not.found";
     String LAB_PRICE_EXISTS = "lab.price.exists";
 
+
     //Lab portal
     String LAB_REPORT_LIST_FETCH = "lab.list.fetch";
+    String AVAILABILITY_SORT = "availability.sort.by";
+    String AVAILABLE_LIST_RETRIEVED = "AVAILABLE.LIST.RETRIEVED";
+    String LANGUAGE_LIST_RETRIEVED = "LANGUAGE.LIST.RETRIEVED";
+    String SORT_BY = "sort.by";
+    String SORT_LIST_RETRIEVED = "SORT.LIST.RETRIEVED";
+    String RECORD_FOUND = "List.Found";
+    String FILE_NAME_EXISTS = "file.name.exists";
+    String FILE_CREATED = "file.created";
+    String FILE_DELETED = "file.deleted";
+    String GALLERY_LIST_FETCHED = "gallery.list.fetched";
+
+    String FILE_EMPTY = "file.empty";
+    String IMAGE_SIZE = "image.size";
+    String IMAGE_EXTENSION = "image.extension";
+
+
+
+
+
+
+
+
+//    Book appointment
+    String CONSULTATION_NOT_FOUND = "consultation.not.found";
+    String CANCEL_REQUEST_CANNOT_PROCESSED = "cancel.cannot.processed";
+    String CONSULTATION_CANCEL_SUCCESSFULLY = "consultation.cancel";
+
+    //consultation sms
+    public static final String REMINDER_SMS_FOR_TELEPHONE_VISIT = "reminder.sms.for.telephone.visit";
+    public static final String REMINDER_SMS_FOR_TELEPHONE_VISIT_DOCTOR = "reminder.sms.for.telephone.visit.doctor";
+    public static final String BOOKING_NOTIFICATION_CLINIC_TO_HOSPITAL = "booking.notification.clinic.to.hospital";
+  
+    String HOSPITAL_LIST_FETCH = "hospital.list.fetch.successfully";
+    String DAY_TODAY = "Today";
+    String DAY_TOMORROW = "Tomorrow";
+    String Within_7_Days = "Within.7.days";
+    String SORT_BY_EXPERIENCE = "Years.Of.Experience";
+    String SORT_BY_RECOMMENDATION = "Recommendation";
+    String DOCTOR_LIST_FOUND = "Doctor.list.found";
 }

@@ -6,8 +6,10 @@ import com.mhealth.admin.config.Constants;
 import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.response.Response;
 import com.mhealth.admin.exception.AdminModuleExceptionHandler;
+import com.mhealth.admin.model.HospitalMerchantNumber;
 import com.mhealth.admin.model.Users;
 import com.mhealth.admin.model.WalletTransaction;
+import com.mhealth.admin.repository.HospitalMerchantNumberRepository;
 import com.mhealth.admin.repository.UsersRepository;
 import com.mhealth.admin.repository.WalletTransactionRepository;
 import com.mhealth.admin.sms.SMSApiService;
@@ -23,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +34,16 @@ import java.util.Map;
 @Service
 @Slf4j
 public class WaafiPayment implements PaymentInterface {
+    private final HospitalMerchantNumberRepository hospitalMerchantNumberRepository;
     private final WalletTransactionRepository walletTransactionRepository;
     private final UsersRepository usersRepository;
 
     public WaafiPayment(UsersRepository usersRepository,
-                        WalletTransactionRepository walletTransactionRepository) {
+                        WalletTransactionRepository walletTransactionRepository,
+                        HospitalMerchantNumberRepository hospitalMerchantNumberRepository) {
         this.usersRepository = usersRepository;
         this.walletTransactionRepository = walletTransactionRepository;
+        this.hospitalMerchantNumberRepository = hospitalMerchantNumberRepository;
     }
 
     @Value("${waafi.api.url}")
@@ -78,13 +85,20 @@ public class WaafiPayment implements PaymentInterface {
     }
 
     @Override
-    public Response sendPayment(String msisdn, Double amount) {
+    public Response sendPayment(PaymentDto paymentDto) {
         Map<String, Object> apiParams = apiParamsInit();
-        Users users = usersRepository.findByContactNumber(msisdn).orElseThrow(() -> new AdminModuleExceptionHandler("User not found"));
-        apiParams.put("serviceParams", generatePaymentParams(users, amount));
+        apiParams.put("serviceName", "API_PURCHASE");
+        Users users = usersRepository.findByContactNumber(paymentDto.getPaymentNumber()).orElseThrow(() -> new AdminModuleExceptionHandler("Contact number not found"));
+        if (paymentDto.getTransactionType().equals(PaymentTypes.B2C)) {
+            Users sender = usersRepository.findById(paymentDto.getTransactionInitiatedBy()).orElseThrow(() -> new AdminModuleExceptionHandler("User not found"));
+            apiParams.put("serviceParams",generateBusinessToCustomerPaymentParams(users, paymentDto.getAmount(), sender.getContactNumber()));
+        } else {
+            apiParams.put("serviceParams",generateCustomerToBusinessPaymentParams(paymentDto.getPaymentNumber(), paymentDto.getAmount(), paymentDto.getUserId()));
+        }
+
 
         //Prepare the request
-        Map<String, Object> response = null; //sendRequestToWaafi(apiParams, msisdn);
+        Map<String, Object> response = sendRequestToWaafi(apiParams, paymentDto.getPaymentNumber());
 
         if (response != null) {
             if ("0".equals(response.get("errorCode"))) {
@@ -95,19 +109,19 @@ public class WaafiPayment implements PaymentInterface {
                 customResponse.put("currency", currencyCode);
                 customResponse.put("state", response.get("responseMsg"));
                 String message = "Payment Successful for " + projectName + " for case id : " + users.getUserId() + " with transaction id : " + response.get("params.transactionId");
-                sendPaymentNotification("+" + countryCode + msisdn, message);
+                sendPaymentNotification("+" + countryCode + paymentDto.getPaymentNumber(), message);
                 processPayment.completePayment();
                 return new Response(Status.SUCCESS, Constants.SUCCESS_CODE, null, customResponse);
             } else {
                 String errorMessage = getErrorMessage(response);
                 // TODO: Notification will sent
-                sendPaymentNotification("+" + countryCode + msisdn, errorMessage);
+                sendPaymentNotification("+" + countryCode + paymentDto.getPaymentNumber(), errorMessage);
                 processPayment.failedPayment();
                 return new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, errorMessage);
             }
         } else {
             // TODO: Notification will sent
-            sendPaymentNotification("Payment Failed", msisdn);
+            sendPaymentNotification("Payment Failed", paymentDto.getPaymentNumber());
             return new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, "Payment Failed");
         }
 
@@ -126,9 +140,7 @@ public class WaafiPayment implements PaymentInterface {
         apiParams.put("serviceParams", generateRefundParams(walletTransaction, referenceNumber));
 
         //Prepare the request
-        Map<String, Object> response = null; //sendRequestToWaafi(apiParams, msisdn);
-
-
+        Map<String, Object> response = sendRequestToWaafi(apiParams, msisdn);
 
         if (response != null) {
             if ("0".equals(response.get("errorCode"))) {
@@ -165,12 +177,15 @@ public class WaafiPayment implements PaymentInterface {
             response = new ObjectMapper().readValue(responseBody, new TypeReference<>() {});
 
             // Logging
+            String timestamp = ZonedDateTime.now(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+
             log.info(String.format(
                     "[PAYMENT_FROM : %s][REQUEST_MODE : orderPayment][REQUEST : %s][RESPONSE : %s][DATE : %s]%n%n",
                     countryCode + msisdn,
                     apiParams,
                     new ObjectMapper().writeValueAsString(response),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(Instant.now())
+                    timestamp
             ));
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,18 +202,37 @@ public class WaafiPayment implements PaymentInterface {
         return apiParams;
     }
 
-    private Map<String, Object> generatePaymentParams(Users users, Double amount) {
+    private Map<String, Object> generateCustomerToBusinessPaymentParams(String senderMsisdn, Double amount, Integer usersId) {
         Map<String, Object> serviceParams = new HashMap<>();
         serviceParams.put("merchantUid", merchantUid);
         serviceParams.put("apiUserId", userId);
         serviceParams.put("apiKey", apiKey);
         serviceParams.put("paymentMethod", "mwallet_account");
-        serviceParams.put("payerInfo", Map.of("accountNo", countryCode + users.getContactNumber()));
+        serviceParams.put("payerInfo", Map.of("accountNo", countryCode + senderMsisdn));
         serviceParams.put("transactionInfo", Map.of(
                 "invoiceId", Instant.now().getEpochSecond(),
                 "amount", amount,
                 "description", "Payment from " + projectName,
-                "referenceId", users.getUserId(),
+                "referenceId", usersId,
+                "currency", currencyCode
+        ));
+        return serviceParams;
+    }
+
+    private Map<String, Object> generateBusinessToCustomerPaymentParams(Users users, Double amount, String senderMsisdn) {
+        HospitalMerchantNumber merchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElseThrow(() -> new AdminModuleExceptionHandler("Merchant number not found for this user."));
+        Users senderUser = usersRepository.findByContactNumber(senderMsisdn).orElseThrow(() -> new AdminModuleExceptionHandler("Sender user not found"));
+        Map<String, Object> serviceParams = new HashMap<>();
+        serviceParams.put("merchantUid", merchantNumber);
+        serviceParams.put("apiUserId", userId);
+        serviceParams.put("apiKey", apiKey);
+        serviceParams.put("paymentMethod", "mwallet_account");
+        serviceParams.put("payerInfo", Map.of("accountNo", countryCode + senderUser.getContactNumber()));
+        serviceParams.put("transactionInfo", Map.of(
+                "invoiceId", Instant.now().getEpochSecond(),
+                "amount", amount,
+                "description", "Payment from " + projectName,
+                "referenceId", senderUser.getUserId(),
                 "currency", currencyCode
         ));
         return serviceParams;
@@ -223,6 +257,7 @@ public class WaafiPayment implements PaymentInterface {
         return switch (errorCode) {
             case "E10205" -> "Incorrect PIN";
             case "5310" -> "Payment cancelled or rejected";
+            case "E10105" -> "We are unable to process your payment at the moment. Please contact customer support for assistance";
             default -> "Payment failed";
         };
     }

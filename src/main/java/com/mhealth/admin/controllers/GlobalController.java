@@ -94,6 +94,21 @@ public class GlobalController {
         }
     }
 
+    @RequestMapping(value = "/get-hospitals", method = RequestMethod.GET)
+    public ResponseEntity<?> getHospitalList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-hospitals");
+
+            Object response = globalService.getHospitalList(locale);
+
+            log.info("Response Sent For /api/v1/admin/global/get-hospitals: {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Delete user profile picture user
      */
@@ -109,6 +124,58 @@ public class GlobalController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Exception found in /api/v1/admin/global/delete-profile-pic : ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Get all cities
+     */
+    @RequestMapping(value = "/get-all-city", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllCityList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-all-city");
+
+            Object response = globalService.getAllCityList(locale);
+
+            log.info("Response Sent For /api/v1/admin/global/get-all-city : {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception : ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Get all lab categories list
+     */
+    @RequestMapping(value = "/get-categories", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllCategoriesList() {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-categories");
+
+            Object response = globalService.getAllCategoriesList();
+
+            log.info("Response Sent For /api/v1/admin/global/get-categories : {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception : ", e);
+            return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Get all lab categories list
+     */
+    @RequestMapping(value = "/get-sub-categories", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllSubCategoriesList(@RequestHeader(name = "X-localization", required = false, defaultValue = "so") Locale locale,
+                                                     @RequestParam Integer categoryId) {
+        try {
+            log.info("Request Received For /api/v1/admin/global/get-sub-categories");
+
+            Object response = globalService.getAllSubCategoriesList(locale, categoryId);
+
+            log.info("Response Sent For /api/v1/admin/global/get-sub-categories : {}", objectMapper.writeValueAsString(response));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Exception : ", e);
             return new ResponseEntity<>(Constants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

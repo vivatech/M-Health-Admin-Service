@@ -19,6 +19,8 @@ public class HealthTipPackageSearchRequest {
 
     private Integer durationId;
 
+    private Integer categoryId;
+
     private String status;
 
     @NotNull(message = "Page number is required")

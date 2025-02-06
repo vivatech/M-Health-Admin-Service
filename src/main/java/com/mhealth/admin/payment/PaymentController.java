@@ -29,6 +29,9 @@ public class PaymentController {
     @Value("${m-health.country}")
     private String mHealthCountry;
 
+    @Autowired
+    private ProcessConsultationRequest consultationService;
+
     @Operation(summary = "Create a B2C payment by add msisdn and amount in the request body", responses = {
             @ApiResponse(responseCode = "200", description = "Payment Success"),
             @ApiResponse(responseCode = "400", description = "Request body is invalid"),
@@ -44,8 +47,47 @@ public class PaymentController {
         if (StringUtils.isEmpty(request.getMsisdn()) || request.getAmount() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, "Request body is invalid"));
         }
-        return ResponseEntity.ok(paymentService.sendPayment(request.getMsisdn(), request.getAmount(), countryCode.toUpperCase()));
+        PaymentDto paymentDto = PaymentDto.builder()
+                .paymentNumber(request.getMsisdn())
+                .amount(request.getAmount())
+                .transactionInitiatedBy(request.getTransactionInitiatedBy())
+                .transactionType(PaymentTypes.B2C)
+                .build();
+        return ResponseEntity.ok(paymentService.sendPayment(paymentDto, countryCode.toUpperCase()));
     }
+
+    @PostMapping("/send-c2b")
+    public ResponseEntity<Response> sendCustomerToBusinessPayment(
+            @RequestBody B2CPaymentDto request,
+            @RequestHeader(name = "country-code", required = false, defaultValue = Constants.DEFAULT_COUNTRY) String countryCode,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+
+        if (StringUtils.isEmpty(request.getMsisdn()) || request.getAmount() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(Status.FAILED, Constants.INTERNAL_SERVER_ERROR_CODE, "Request body is invalid"));
+        }
+
+        PaymentDto paymentDto = PaymentDto.builder()
+                .paymentNumber(request.getMsisdn())
+                .amount(request.getAmount())
+                .transactionInitiatedBy(request.getTransactionInitiatedBy())
+                .transactionType(PaymentTypes.B2C)
+                .build();
+
+        return ResponseEntity.ok(paymentService.sendPayment(paymentDto, countryCode.toUpperCase()));
+    }
+
+    //agent is booking consultation on the behalf of patient
+    @PostMapping("/consultation-booking")
+    public ResponseEntity<Response> bookConsultationForPatient(
+            @RequestBody ConsultationPaymentDto request,
+            @RequestHeader(name = "country-code", required = false, defaultValue = Constants.DEFAULT_COUNTRY) String countryCode,
+            @RequestHeader(name = "X-localization", required = false, defaultValue = Constants.DEFAULT_LOCALE) Locale locale) {
+
+        request.setCountry(countryCode);
+        return ResponseEntity.ok(consultationService.paymentGateway(request, locale));
+    }
+
+
 
     @PostMapping("/refund-payment")
     public ResponseEntity<Response> refundPayment(@RequestBody B2CPaymentDto request) {

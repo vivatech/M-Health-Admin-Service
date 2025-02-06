@@ -1,9 +1,6 @@
 package com.mhealth.admin.model;
 
-import com.mhealth.admin.dto.enums.AddedType;
-import com.mhealth.admin.dto.enums.ConsultStatus;
-import com.mhealth.admin.dto.enums.ConsultationType;
-import com.mhealth.admin.dto.enums.RequestType;
+import com.mhealth.admin.dto.enums.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -98,4 +95,11 @@ public class Consultation {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "channel", nullable = false)
+    private Channel channel;
+
+    @Column(name = "meeting_id")
+    private String meetingId;
 }

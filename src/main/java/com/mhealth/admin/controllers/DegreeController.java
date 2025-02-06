@@ -22,6 +22,7 @@ import java.util.Locale;
 
 @RestController
 @Tag(name = "Degree Management", description = "APIs for managing degrees")
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/admin/degrees")
 public class DegreeController {
 

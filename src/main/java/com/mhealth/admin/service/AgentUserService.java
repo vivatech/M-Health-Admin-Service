@@ -15,6 +15,7 @@ import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -112,6 +113,13 @@ public class AgentUserService {
         if (validationMessage != null) {
             response.setCode(Constants.CODE_O);
             response.setMessage(validationMessage);
+            response.setStatus(Status.FAILED);
+            return response;
+        }
+
+        if (StringUtils.isEmpty(requestDto.getPassword())) {
+            response.setCode(Constants.CODE_O);
+            response.setMessage("Password is required");
             response.setStatus(Status.FAILED);
             return response;
         }
@@ -322,7 +330,9 @@ public class AgentUserService {
     private AgentUserResponseDto convertToResponseDto(Users users) {
         AgentUserResponseDto responseDto = new AgentUserResponseDto();
         responseDto.setUserId(users.getUserId());
-        responseDto.setName(users.getFirstName() + " " + users.getLastName());
+        //responseDto.setName(users.getFirstName() + " " + users.getLastName());
+        responseDto.setFirstName(users.getFirstName());
+        responseDto.setLastName(users.getLastName());
         responseDto.setEmail(users.getEmail());
         responseDto.setContactNumber(users.getContactNumber());
         responseDto.setNotificationLanguage(users.getNotificationLanguage());

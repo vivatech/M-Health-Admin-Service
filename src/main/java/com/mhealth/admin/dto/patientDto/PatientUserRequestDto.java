@@ -45,15 +45,6 @@ public class PatientUserRequestDto {
         if (StringUtils.isEmpty(residentialAddress)) {
             validationErrors.append("Residential Address is required. ");
         }
-        if(countryId == null || countryId <= 0){
-            validationErrors.append("Country Id is required. ");
-        }
-        if(provinceId == null || provinceId <= 0){
-            validationErrors.append("State Id is required. ");
-        }
-        if(cityId == null || cityId <= 0){
-            validationErrors.append("City Id is required. ");
-        }
 
         return validationErrors.toString().isEmpty() ? null : validationErrors.toString().trim();
     }

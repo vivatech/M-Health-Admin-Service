@@ -8,6 +8,7 @@ import com.mhealth.admin.dto.Status;
 import com.mhealth.admin.dto.ValidateResult;
 import com.mhealth.admin.dto.enums.*;
 import com.mhealth.admin.dto.request.HospitalManagementRequestDto;
+import com.mhealth.admin.dto.request.HospitalManagementUpdateRequestDto;
 import com.mhealth.admin.dto.response.*;
 import com.mhealth.admin.model.HospitalDetails;
 import com.mhealth.admin.model.HospitalMerchantNumber;
@@ -15,9 +16,9 @@ import com.mhealth.admin.model.Users;
 import com.mhealth.admin.repository.*;
 import com.mhealth.admin.sms.SMSApiService;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -25,12 +26,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -113,7 +109,7 @@ public class HospitalManagementService {
             dto.setPriority(user.getSort());
             dto.setClinicAddress(user.getHospitalAddress());
             dto.setNotificationLanguage(user.getNotificationLanguage());
-            dto.setStatus(user.getStatus().toString());
+            dto.setStatus(user.getStatus() != null ? user.getStatus().toString() : StatusAI.I.toString());
             return dto;
         });
 
@@ -212,23 +208,26 @@ public class HospitalManagementService {
             user.setSort(Integer.valueOf(requestDto.getPriority()));
         }
 
-        user = usersRepository.save(user);
+        String fileName = null;
+
+        if (requestDto.getProfilePicture() != null) {
+            // Extract the file extension
+            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
+
+            // Generate a random file name
+            fileName = UUID.randomUUID() + "." + extension;
+
+            user.setProfilePicture(fileName);
+        }
+
+            user = usersRepository.save(user);
 
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + user.getUserId();
 
-            // Extract the file extension
-            String extension = fileService.getFileExtension(Objects.requireNonNull(requestDto.getProfilePicture().getOriginalFilename()));
-
-            // Generate a random file name
-            String fileName = UUID.randomUUID() + "." + extension;
-
             // Save the file
             fileService.saveFile(requestDto.getProfilePicture(), filePath, fileName);
-
-            user.setProfilePicture(fileName);
-
         }
 
         if(requestDto.getMerchantNumber() != null){
@@ -289,7 +288,7 @@ public class HospitalManagementService {
     }
 
     @Transactional
-    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementRequestDto requestDto) throws Exception {
+    public Object updateHospitalManagement(Locale locale, Integer userId, HospitalManagementUpdateRequestDto requestDto) throws Exception {
         Response response = new Response();
 
         // Find the user
@@ -313,15 +312,18 @@ public class HospitalManagementService {
         }
 
         // Check for duplicate email and contact number
-        long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+        if(StringUtils.isEmpty(requestDto.getEmail())) {
+            long emailCount = usersRepository.countByEmailAndUserIdNot(requestDto.getEmail(), userId);
+            if (emailCount > 0) {
+                response.setCode(Constants.CODE_O);
+                response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
+                response.setStatus(Status.FAILED);
+                return response;
+            }
+        }
         long contactNumberCount = usersRepository.countByContactNumberAndTypeAndUserIdNot(requestDto.getContactNumber(), UserType.Clinic, userId);
 
-        if (emailCount > 0) {
-            response.setCode(Constants.CODE_O);
-            response.setMessage(messageSource.getMessage(Messages.EMAIL_ALREADY_EXISTS, null, locale));
-            response.setStatus(Status.FAILED);
-            return response;
-        } else if (contactNumberCount > 0) {
+        if (contactNumberCount > 0) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.CONTACT_NUMBER_ALREADY_EXISTS, null, locale));
             response.setStatus(Status.FAILED);
@@ -341,24 +343,18 @@ public class HospitalManagementService {
 
         // Update the user fields
         existingUser.setClinicName(requestDto.getClinicName());
-        existingUser.setEmail(requestDto.getEmail());
+        existingUser.setEmail(StringUtils.isEmpty(requestDto.getEmail()) ? existingUser.getEmail() : requestDto.getEmail());
         existingUser.setContactNumber(requestDto.getContactNumber());
         existingUser.setHospitalAddress(requestDto.getClinicAddress());
         existingUser.setNotificationLanguage(requestDto.getNotificationLanguage() != null ? requestDto.getNotificationLanguage() : Constants.DEFAULT_LANGUAGE);
 
-        if(requestDto.getPriority() != null){
-            if(!Objects.equals(existingUser.getSort(), requestDto.getPriority())){
-                Users existSort = usersRepository.findBySort(Integer.valueOf(requestDto.getPriority()));
-                if(existSort != null){
-                    response.setCode(Constants.CODE_O);
-                    response.setMessage(messageSource.getMessage(Messages.PRIORITY_ALREADY_EXISTS, null, locale));
-                    response.setStatus(Status.FAILED);
-                    return response;
-                }
-            }
-            existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
-        }
 
+        if(requestDto.getPriority() != null){
+            existingUser.setSort(Integer.valueOf(requestDto.getPriority()));
+        } else {
+            existingUser.setSort(null);
+        }
+      
         // Save profile picture if provided
         if (requestDto.getProfilePicture() != null) {
             String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
@@ -471,21 +467,21 @@ public class HospitalManagementService {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(id, UserType.Clinic);
-        if (existingMarketingUser.isEmpty()) {
+        Optional<Users> existingData = usersRepository.findByUserIdAndType(id, UserType.Clinic);
+        if (existingData.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingMarketingUser.get();
+        Users existingUser = existingData.get();
 
         String filePath = Constants.USER_PROFILE_PICTURE + existingUser.getUserId();
 
-        hospitalMerchantNumberRepository.deleteByUserId(existingMarketingUser.get().getUserId());
+        hospitalMerchantNumberRepository.deleteByUserId(existingData.get().getUserId());
 
-        hospitalDetailsRepository.deleteByUserId(existingMarketingUser.get().getUserId());
+        hospitalDetailsRepository.deleteByUserId(existingData.get().getUserId());
 
         String profileId = null;
         if(existingUser.getProfilePicture() != null){
@@ -513,17 +509,17 @@ public class HospitalManagementService {
         Response response = new Response();
 
         // Find the user
-        Optional<Users> existingMarketingUser = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
-        if (existingMarketingUser.isEmpty()) {
+        Optional<Users> existingData = usersRepository.findByUserIdAndType(userId, UserType.Clinic);
+        if (existingData.isEmpty()) {
             response.setCode(Constants.CODE_O);
             response.setMessage(messageSource.getMessage(Messages.USER_NOT_FOUND, null, locale));
             response.setStatus(Status.FAILED);
             return response;
         }
 
-        Users existingUser = existingMarketingUser.get();
+        Users existingUser = existingData.get();
 
-        HospitalManagementResponseDto responseDto = convertToMarketingUserResponseDto(existingUser);
+        HospitalManagementResponseDto responseDto = convertToUserResponseDto(existingUser);
 
         // Prepare success response
         response.setCode(Constants.CODE_1);
@@ -535,7 +531,7 @@ public class HospitalManagementService {
 
     }
 
-    private HospitalManagementResponseDto convertToMarketingUserResponseDto(Users users) {
+    private HospitalManagementResponseDto convertToUserResponseDto(Users users) {
         HospitalManagementResponseDto responseDto = new HospitalManagementResponseDto();
         responseDto.setUserId(users.getUserId());
         responseDto.setClinicName(users.getClinicName());
@@ -544,7 +540,9 @@ public class HospitalManagementService {
         responseDto.setContactNumber(users.getContactNumber());
         responseDto.setNotificationLanguage(users.getNotificationLanguage());
         responseDto.setPriority(users.getSort());
-        responseDto.setStatus(users.getStatus().toString());
+        responseDto.setStatus(users.getStatus() != null ? users.getStatus().toString() : StatusAI.I.toString());
+
+        responseDto.setProfilePicture(users.getProfilePicture() != null ? Constants.USER_PROFILE_PICTURE + users.getUserId() + "/" + users.getProfilePicture() : null);
         HospitalMerchantNumber hospitalMerchantNumber = hospitalMerchantNumberRepository.findByUserId(users.getUserId()).orElse(null);
         if(hospitalMerchantNumber != null){
             responseDto.setMerchantNumber(hospitalMerchantNumber.getMerchantNumber());        }

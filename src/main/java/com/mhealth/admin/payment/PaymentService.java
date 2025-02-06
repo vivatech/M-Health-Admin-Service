@@ -26,9 +26,9 @@ public class PaymentService {
         return null;
     }
 
-    public Response sendPayment(String msisdn, Double amount, String country){
+    public Response sendPayment(PaymentDto paymentDto, String country){
         PaymentInterface matchedProcessor = getMatchedProcessor(getPaymentAggregator(country));
-        return matchedProcessor.sendPayment(msisdn, amount);
+        return matchedProcessor.sendPayment(paymentDto);
     }
 
     public Response refundPayment(String msisdn, String transactionId, String country){

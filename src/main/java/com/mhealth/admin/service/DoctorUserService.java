@@ -127,7 +127,7 @@ public class DoctorUserService {
                 .append("CONCAT(u.first_name, ' ', u.last_name) AS name, ")
                 .append("u.clinic_name AS clinicName, ")
                 .append("u.is_international AS isInternational, ")
-                .append("(SELECT GROUP_CONCAT(s.name) FROM mh_specialisation s WHERE s.id = u.specialization_id) AS specializations, ")
+                .append("(SELECT GROUP_CONCAT(s.name) FROM mh_doctor_specialization ds JOIN mh_specialisation s ON ds.specialization_id = s.id WHERE ds.user_id = u.user_id) AS specializations, ")
                 .append("(SELECT JSON_ARRAYAGG( ")
                 .append("    JSON_OBJECT( ")
                 .append("        'feeType', c.fee_type, ")
@@ -887,19 +887,20 @@ public class DoctorUserService {
 
         Map<String, List<DoctorAvailabilityResponseDto>> dtoList = mapResultListIntoDoctorAvailabilityResponseDto(resultList);
 
-        if(dtoList.isEmpty()){
-            return new Response(Status.FAILED, Constants.CODE_O, messageSource.getMessage(RECORD_NOT_FOUND, null, locale));
-        }
-
         return new Response(Status.SUCCESS, Constants.CODE_1, messageSource.getMessage(DOCTOR_AVAILABILITY_FOUND, null, locale), dtoList);
     }
 
     private Map<String, List<DoctorAvailabilityResponseDto>> mapResultListIntoDoctorAvailabilityResponseDto(List<Object[]> resultList) {
         Map<String, List<DoctorAvailabilityResponseDto>> responseMap = new HashMap<>();
+        List<String> weekDays = Arrays.asList("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday");
+
         resultList.forEach(row ->
-                responseMap.computeIfAbsent((String) row[1], k -> new ArrayList<>())
+                responseMap.computeIfAbsent(((String) row[1]).toLowerCase(), k -> new ArrayList<>())
                         .add(new DoctorAvailabilityResponseDto((Integer) row[0], (String) row[2], (Integer) row[3], (Time) row[4]))
         );
+
+        weekDays.forEach(day -> responseMap.putIfAbsent(day, new ArrayList<>()));
+
         return responseMap;
     }
 
@@ -1144,9 +1145,9 @@ public class DoctorUserService {
             List<Integer> specializationIds = specializationList.stream()
                     .map(spec -> spec.getSpecializationId().getId())
                     .collect(Collectors.toList());
-            doctorUserResponseDto.setSpecializations(specializationIds);
+            doctorUserResponseDto.setSpecializationList(specializationIds);
         } else {
-            doctorUserResponseDto.setSpecializations(Collections.emptyList());
+            doctorUserResponseDto.setSpecializationList(Collections.emptyList());
         }
 
         // Profile and documents
