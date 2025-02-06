@@ -23,5 +23,4 @@ public class LabReportResponseDto {
     private String status;
     private ViewRequestInformation viewRequestInformation;
     private List<ReportDocumentDto> reportDocument;
-
 }

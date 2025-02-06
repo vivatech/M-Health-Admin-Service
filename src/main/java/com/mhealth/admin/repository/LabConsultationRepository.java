@@ -2,16 +2,18 @@ package com.mhealth.admin.repository;
 
 import com.mhealth.admin.dto.dto.LabConsultationResponseDTO;
 import com.mhealth.admin.model.LabConsultation;
+import jakarta.persistence.Tuple;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public interface LabConsultationRepository extends JpaRepository<LabConsultation, Integer> {
+public interface LabConsultationRepository extends JpaRepository<LabConsultation, Integer>, JpaSpecificationExecutor<LabConsultationResponseDTO> {
     @Query("Select u from LabConsultation u where u.patient.userId = ?1 and u.labOrdersId is null and u.caseId is null")
     List<LabConsultation> findByPatientIdANdLabOrderIsNullAndCaseIsNull(Integer userId);
 
