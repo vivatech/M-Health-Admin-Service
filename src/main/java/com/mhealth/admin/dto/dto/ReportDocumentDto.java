@@ -1,4 +1,4 @@
-package com.mhealth.admin.dto.response;
+package com.mhealth.admin.dto.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class DocumentResponseDto {
-    private Integer userId;
+public class ReportDocumentDto {
     private Integer documentId;
-    private String filePath;
-    private String fileName;
+    private String documentName;
+    private String documentPath;
 }

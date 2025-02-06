@@ -47,6 +47,10 @@ public interface Messages {
     String LAB_CATEGORY_NOT_FOUND = "app.lab.master.category.not.found";
     String LAB_SUB_CATEGORY_NOT_FOUND = "app.lab.sub.category.not.found";
     String LAB_PRICE_EXISTS = "lab.price.exists";
+
+
+    //Lab portal
+    String LAB_REPORT_LIST_FETCH = "lab.list.fetch";
     String AVAILABILITY_SORT = "availability.sort.by";
     String AVAILABLE_LIST_RETRIEVED = "AVAILABLE.LIST.RETRIEVED";
     String LANGUAGE_LIST_RETRIEVED = "LANGUAGE.LIST.RETRIEVED";

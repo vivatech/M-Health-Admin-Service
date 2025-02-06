@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Setter
@@ -110,5 +111,8 @@ public class LabOrders {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "labOrdersId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<LabConsultation> labConsultationList;
 }
 

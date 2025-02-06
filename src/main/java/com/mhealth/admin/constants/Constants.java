@@ -181,7 +181,6 @@ public interface Constants {
     String HEALTH_TIPS_VIDEO_THUMB = "/thumb";
 
     String INTERNATIONAL_PAYMENT_FILE = "international_payment/";
-
-
+    String LAB_DOCUMENT_PATH = "lab/";
 
 }
